@@ -90,6 +90,46 @@
     
 
     <div class="content container">
+      <div class="page">
+        <style>
+          .content-container {
+              margin: 20 auto;
+              padding: 10 20px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+          }
+
+
+
+          .grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+              grid-gap: 20px;
+              margin-top: 20px;
+          }
+
+          .grid-item {
+              background: #f1f1f1;
+              padding: 20px;
+              border-radius: 20px;
+              box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+              cursor: pointer;
+              transition: all 0.3s ease-in-out;
+          }
+
+          .grid-item:hover {
+              transform: scale(1.02);
+              box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.2);
+          }
+
+          .grid-item img {
+              width: 100%;
+              border-radius: 20px;
+          }
+        </style>
+
+      </div>
       <h1>Papers</h1>
       <div class="grid" id="project-list">
         <!-- Grid items here -->
