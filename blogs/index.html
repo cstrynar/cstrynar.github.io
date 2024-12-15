@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <meta name="description" content="Homepage of Chris Strynar">
+  <meta name="keywords" content="Chris Strynar, Mathematician, Physicist, Machine learning">
+  <meta name="author" content="Chris Strynar">
+
+  
+  <title>
+    
+      Chris &middot; Homepage
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+  <link rel="stylesheet" href="/public/css/fade_in.css">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+
+  <!---JS-->
+  <script src="/javascript/type.js"></script>
+
+   
+    
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+
+  <!-- MathJax -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    messageStyle: "none",
+    tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+  </script>
+  <script type="text/javascript" async
+          src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_CHTML">
+  </script>
+
+</head>
+
+
+
+  <body>
+
+    <div class="sidebar animated">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>Discover</h1>
+      <p class="lead"></p>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item active">
+        <a href="/">Home</a>
+      </li>
+
+      <li class="sidebar-nav-item">
+        <a href="/papers/">Papers</a>
+     </li>
+              
+       <li class="sidebar-nav-item">
+        <a href="/cv/">Resume/CV</a>
+       </li>
+
+
+       <li class="sidebar-nav-item">
+          <a href="/blogs/">Blogs</a>
+       </li>
+
+       <li class="sidebar-nav-item">
+        <a href="/About me/">About Me</a>
+        </li>
+
+      
+    </ul>
+
+    <p><br>
+      &copy; 2024. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+
+
+
+<h1>Blogs</h1>
+<div class="grid" id="project-list">
+    <!-- Grid items here -->
+
+    <!-- New grid item for PixeLearner -->
+    <div class="grid-item" onclick="showProjectDetails('makingNondeterminismOutOfDeterminism')">
+    <!--<img src="/assets/pix.gif" alt="PixeLearner Project" style="cursor: pointer; width:100%; height: auto; ">-->
+    <p>Making Nondeterminism out of Determinism</p>
+    </div>
+    
+</div>
+
+    <!-- Project details -->
+
+
+<!-- PixeLearner project details -->
+<div class="project-detail" id="makingNondeterminismOutOfDeterminism" style="text-align: left;">
+  <button class="back-button" onclick="hideProjectDetails()">Go Back</button>
+  <div style="margin-top: 10px;">
+      <h4>Making Nondeterminism out of Determinism</h4>
+  </div>
+  <p>
+      The following is a hypothetical conversation between two physicists.
+  </p>
+
+  <p>
+    Physicist 1: The existence of fundamentally unpredictable observables implies physics is nondeterministic.
+    Physicist 2: Wrong.
+    Physicist 1: Excuse me?
+    Physicist 2: Your inference is not valid.
+    P1: ... assuming the unpredictableness is not a result of our own ignorance, hence the phrase "fundamentally unpredictable" instead of "unpredictable as of today". And in relation to the unpredictable quantum observables I had in mind when I made my statement, calling those the result of ignorance is hardly defendable.
+    P2: Fair clarification, but that wasn't my problem with your inference.
+    P1: Okay, well you are mistaken in that case. In fact, I can sketch a proof:
+    
+    Define determinism as the assertion that "there exists a well-defined mapping from now states to later states". 
+    Define an observable as any well-defined mapping from world-states to values.
+    
+    Then under a deterministic physics, knowing the present state *exactly determines* the value of any observable at any later time. Use the deterministic physics function to map the current state to the later state, and then apply the observable's function to the later state to get the observable's value.
+    
+    The existence of observables that cannot be predicted then implies that physics is nondeterministic. QED.
+    
+    P2: I agree that the stated reasoning is valid. However I still have a problem with your initial claim, which is false. 
+    P1: Care to explain how that could be remotely possible?
+    P2: Absolutely! I'll take somewhat of my own route to get there, instead of directly responding to your points. For the sake of clarity, let's imagine ourselves to live in a classical world, with deterministic physics, and a known world-state. I claim I can devise an experiment whose outcome *cannot* be predicted.
+    P1: That hardly seems possible.
+    P2: Try to devise such an experiment yourself.
+    P1: ... well I suppose something as simple as a coin toss done by a human isn't <i>practically</i> predictable with infinite certainty. You'd need to calculate the motion of the tosser's muscles based off of their brain-state in the moment of the known world-state, and you'd need to calculate air currents. 
+    P2: Correct, but I don't care much for the practicality of this prediction. Suppose I am logically omniscient, and can calculate all of that out with no problem.
+    P1: I suppose I could prevent you in particular from making the prediction if I were to kill you before you are able to do your calculations. 
+    P2: Good job thinking outside the box, but no, we're looking for an experiment that is fundamentally unpredictable. Any other ideas?
+    P1: Well then no! No such experiment exists, for reasons I laid out quite clearly in my proof!
+    P2: An experiment can be devised as follows:
+    
+    Step 1: I put you to sleep. Not strictly necessary, but it will aid in your imagining of the experiment.
+    Step 2: I observe your current state and construct an exact replica of you atom-by-atom.
+    Step 3: I place the two yous in different rooms, one painted red and one painted blue.
+    The observable of the experiment is: which color will you observe when you wake up?
+    
+    P1: ... Wow, that's quite clever! Despite the fact that we know the end state of the experiment exactly, the observable "which me will I find myself to be" has no well-defined answer. We could answer any questions about the particles making up this world state, ie this copy of me over here observes red and the copy over there observes blue, but the experiment is not a question about the world's particles in this way: which me I end up as doesn't correspond to any physical process. For this reason, I'm almost tempted to discount the outcome as "not an observable", were it not for the fact that we could arrange this in real life and I would be unable to predict what I would see!
+    P2: That's all correct! Do you see the flaw in your prior reasoning now?
+    P1: Yes. It's not that the proof sketch was invalid, since even you agreed the reasoning was sound, it's that the premises don't apply. If you define observables as "well-defined mappings from world-states to values", then you are forced to exclude the outcomes of some experiments from your definition of observables! Your experiment proves the existence of some such observables.
+    P2: Now you're getting it! 
+    P1: How on Earth did you come up with that? How long did it take you to have that idea?
+    P2: It's hardly fair to say it was my idea, it was reality's idea. You already mentioned that QM has observables that, to all appearances up to our best understanding, are fundamentally unpredictable. And while this lends itself well to nondeterministic interpretations, the Many Worlds interpretation is entirely deterministic. One may wonder, especially if they are convinced by your initial reasoning, how such an arrangement is even logically possible. Investigating the mechanism through which MWI achieves this effect leads you to the idea of indexical uncertainty as a source of unpredictableness, which is then readily applicable to any deterministic setting, even one as straightforward as classical mechanics. That is the clever way that fundamental unpredictableness can arise from determinism.
+  </p>
+</div>
+
+</body>
+
+</html>
