@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <meta name="description" content="Homepage of Chris Strynar">
+  <meta name="keywords" content="Chris, Strynar, Mathematics, Physics, Machine Learning">
+  <meta name="author" content="Chris Strynar">
+  
+  <title>
+    
+      Making Nondeterminism &middot; Chris
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+  <link rel="stylesheet" href="/public/css/fade_in.css">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+   
+
+
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+
+  <!-- MathJax -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    messageStyle: "none",
+    tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+  </script>
+  <script type="text/javascript" async
+          src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_CHTML">
+  </script>
+
+</head>
+
+
+<body>
+
+  
+  <div class="sidebar animated">
+    <div class="container sidebar-sticky">
+      <div class="sidebar-about">
+        <h1>Discover</h1>
+        <p class="lead"></p>
+      </div>
+  
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item">
+          <a href="/">Home</a>
+        </li>
+  
+        <li class="sidebar-nav-item">
+          <a href="/papers/">Papers</a>
+       </li>
+                
+         <li class="sidebar-nav-item">
+          <a href="/cv/">Resume/CV</a>
+         </li>
+  
+  
+         <li class="sidebar-nav-item active">
+            <b><a href="/blogs/">Blogs</a></b>
+         </li>
+  
+         <li class="sidebar-nav-item">
+          <a href="/About me/">About Me</a>
+          </li>
+
+    
+  </ul>
+
+  <p><br>
+    &copy; 2024. All rights reserved.
+  </p>
+</div>
+</div>
+
+
+    <div class="content container">
+      <div class="page">
+        <style>
+            .back-button {
+              font-size: 16px;
+              background-color: #444;
+              color: #ffffff;
+              border: none;
+              border-radius: 50px;
+              padding: 10px 20px;
+              cursor: pointer;
+              transition: all 0.3s;
+            }
+            .back-button:hover {
+              background-color: #7a7979;
+            }
+            .back-button::before {
+              content: "\2190";
+              padding-right: 5px;
+            }
+          </style>
+        <button class="back-button" onclick="location.href='/blogs/';">Go Back</button>
+
+          <h1 class="fade-in">Paper Review: Utility Engineering</h1>
+
+            <p>I'd like to summarize and discuss the following paper, 
+                <a target="_blank" href="https://drive.google.com/file/d/1QAzSj24Fp0O6GfkskmnULmI1Hmx7k_EJ/view">Utility Engineering: 
+                    Analyzing and Controlling Emergent Value Systems in AIs</a> by Mazeika et al. </p>
+
+            <p>I would frame and summarize the main takeaways of the article as: </p>
+            <ol>
+                <li>Coherent value systems can be observed in current models, moreso as capability increases.</li>
+                <li>The values of the "default face" that the model puts on do not look all that great.</li>
+                <li>Supervised Fine-tuning (SFT) can influence this "default value system". </li>
+            </ol>
+
+            <p>What follows are some of my rudimentary thoughts on the paper. Note that some points are my own interpretation more than the paper's. </p>
+
+            <p>The basic gist is that by asking models to choose between two options repeatedly and in a variety of ways, we can tally its responses and construct a probability distribution for the model's "value" of the two options. They assume the distributions over one outcome are normal, calling this the "Thurstonian model". </p>
+
+            <p>What they have observed is that the completeness and transitivity of these values increase significantly with scale. These two properties are central to utility coherence, making up the first two of the four <a target="_blank" href="https://en.wikipedia.org/wiki/Von_Neumann%E2%80%93Morgenstern_utility_theorem">VNM-utility axioms</a> (and I believe are usually included in variants as well). "Completeness" is not quite meant in the usual sense, since they force the AI to give an answer no matter what, but instead they measure the AIs confidence in it's response, which is a fairly reasonable substitution. They measure transitivity by estimating the probability of finding a preference cycle on any given three outcomes, to get values as low as a 1% chance for some models! </p>
+
+            <img src="/blogs/assets/UE_Im1.png" alt="Coherence" style="width: 100%; height: auto;">
+
+            <p>They show that model utilities interface with probabilities in the usual way: by picking the option with the most expected utility. This property increases with model capability, though the top models still aren't great at it in an absolute sense. They also show that models still roughly maximize utility if probabilities aren't explicitly given, meaning that a rough likelihood estimate is going on under the surface. </p>
+
+            <img src="/blogs/assets/UE_Im2.png" alt="Coherence" style="width: 50%; height: auto;">
+
+            <p>This question is posed somewhat early into the paper: "Are LLMs just parroting opinions, or do they have values?" Skepticism that this question is answered by the paper is warranted. At some points the paper seems to talk as if the measured utilities are "the" utilities of the model. Maybe I'm misreading. But asking a model to choose between one option and another doesn't indicate its "true" values, any more than asking it to impersonate an evil AI indicates its values are evil. What we are seeing in these experiments is the values of the \emph{default face} the model decides to show you when not otherwise prompted. I have no doubt it could demonstrate a wide range of values if asked, and I would expect the coherence of the displayed preferences to increase with capabilities, just like the coherence of the default preferences increased. This is relatively expected, since the ability to model coherent preferences is probably pretty important for predicting human text. It may be surprising that the model chooses to act coherent without prompt though. </p>
+
+            <p>They do find that the values of the default face seem to converge with capabilities, which is interesting. Further, they appear to be converging to some pretty unreasonable values. You may read the full paper for more details, but an example is having a 10x preference for lives in Nigeria over lives in the US. </p>
+
+            <h3>Closing thoughts/ideas.</h3>
+
+            <p>The convergence of the default values of capable models is interesting. I wonder if it is a result of similar fine-tuning, or if it is convergence to, say, the average utility function of the internet, weighted by text-amount. This is something that could be tested, and I'd like to see some research on it. This could also be a way of measuring how effective current utility-shaping practices are, and show us the precise impact these practices have. That is, assuming a base model's default face's values converge to the internet average. Otherwise the above doesn't make much sense. </p>
+
+            <p>I'm surprised they didn't play with temperature at all when gathering model responses. How the Thurstonian utility estimates of the models change with temperature seems like it could be enlightening. </p>
+
+            <p>They touched on the completeness (kind of) and transitivity properties of preference coherency, I'd be interested to see direct work on the two other VNM axioms, continuity and independence. </p>
+
+            <p>They showed that SFT can change the model's default face's values. I'd be interested to see them attempt something similar by simply prompting the model in various ways instead of fine-tuning. </p>
+                    
+          
+          
+          
+          
+        
+
+        </div>
+
+    </div>
+
+  </body>
+</html>
