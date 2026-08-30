@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#35104d" />
+<title>Kent Taylor 5K Planning Portal</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="auth" class="auth-screen">
+  <form id="loginForm" class="login-card">
+    <div class="brand-lockup login-brand"><span class="crown" aria-hidden="true">♛</span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027</small></div></div>
+    <p class="eyebrow">PRIVATE PLANNING PORTAL</p>
+    <h1>Welcome back.</h1>
+    <p class="login-copy">Sign in with your approved committee account.</p>
+    <label>Email</label><input id="loginEmail" type="email" autocomplete="email" required value="cstrynar@gmail.com" />
+    <label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="8" required />
+    <button class="button primary full" type="submit">Sign In</button>
+    <div id="loginMessage" class="form-message"></div>
+  </form>
+</div>
+
+<div id="app" class="app-shell hidden">
+  <aside class="sidebar">
+    <div class="brand-lockup"><span class="crown" aria-hidden="true">♛</span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027</small></div></div>
+    <nav id="sidebarNav" class="sidebar-nav"></nav>
+    <div class="sidebar-links">
+      <a href="https://taylor-5k-planning-portal.vercel.app/master.html" target="_blank" rel="noopener">Full Master Planning Doc ↗</a>
+      <a href="https://taylor-5k-planning-portal.vercel.app/marketing.html" target="_blank" rel="noopener">Marketing Library ↗</a>
+      <a href="https://taylor-5k-preview.vercel.app" target="_blank" rel="noopener">Public Website ↗</a>
+    </div>
+    <div class="profile-box">
+      <div class="avatar" id="profileInitials">CS</div>
+      <div class="profile-copy"><strong id="profileName">Chris</strong><small id="profileRole">Super Admin</small></div>
+      <button id="logoutBtn" class="icon-button" title="Sign out">↪</button>
+    </div>
+  </aside>
+
+  <main class="main-shell">
+    <header class="topbar">
+      <div class="mobile-brandbar">
+        <div class="mobile-brandcopy"><span class="crown">♛</span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027</small></div></div>
+        <div class="mobile-head-actions"><button class="mobile-bell" type="button">●<span>3</span></button><div class="mobile-avatar" id="mobileAvatar">CS</div></div>
+      </div>
+      <div class="desktop-heading">
+        <div class="welcome" id="welcomeText">Welcome back, Chris! <span>👋</span></div>
+        <div class="page-heading" id="pageHeading">Kent Taylor 5K Planning Portal · Fall 2027</div>
+        <div class="page-tagline" id="pageTagline">Build the race. Build the tradition.</div>
+      </div>
+      <div class="top-actions">
+        <button class="button ghost" type="button">▣ Fall 2027⌄</button>
+        <button class="button ghost" type="button" id="shareUpdate">↗ Share Update</button>
+        <button class="notification-button" type="button">●<span>3</span></button>
+        <button class="button ai-top" type="button" data-open-ai>✦ AI Assistant</button>
+      </div>
+    </header>
+
+    <section id="content" class="content"></section>
+  </main>
+
+  <button class="ai-fab" type="button" data-open-ai><span class="ai-orb">✦</span><span><strong>Ask Taylor 5K AI</strong><small>Your planning assistant</small></span><b>›</b></button>
+
+  <nav class="mobile-nav" id="mobileNav"></nav>
+</div>
+
+<div id="editModal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head"><div><p class="eyebrow">LIVE PORTAL RECORD</p><h2 id="editTitle">Edit</h2></div><button id="editClose" class="modal-close" type="button">×</button></div>
+    <form id="editForm"><div id="editFields" class="form-grid"></div><div class="modal-actions"><span id="editStatus"></span><button class="button ghost" id="editCancel" type="button">Cancel</button><button class="button primary" type="submit">Save Changes</button></div></form>
+  </div>
+</div>
+
+<aside id="aiPanel" class="ai-panel" aria-hidden="true">
+  <div class="ai-panel-head"><div><strong>Taylor 5K AI Assistant</strong><small>PORTAL UPDATES · WEBSITE EDITS · LIVE RESEARCH</small></div><button id="aiClose" type="button">×</button></div>
+  <div class="ai-panel-tools"><label><input id="webToggle" type="checkbox" checked /> Live web research</label><span id="aiRolePill">SUPER ADMIN AI</span></div>
+  <div id="aiMessages" class="ai-messages"><div class="message assistant">Hi — I can read the live Taylor 5K plan, prioritize work, answer questions, and propose portal or website updates. I’ll ask you to confirm before saving a change.</div></div>
+  <div class="ai-compose"><textarea id="aiInput" placeholder="Ask anything about the race…"></textarea><div class="ai-compose-row"><button id="micBtn" type="button">🎤 Talk</button><button id="voiceBtn" type="button">🔊 Voice on</button><span id="aiStatus">Ready</span><button id="aiSend" class="send" type="button">Send</button></div></div>
+</aside>
+
+<script src="app-data.js"></script><script src="app-pages.js"></script><script src="app-ai.js"></script>
+</body>
+</html>
