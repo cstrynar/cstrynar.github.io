@@ -1,0 +1,11 @@
+:root{--portal-version:"v2.4";--taylor-face:url('../taylor5k-assets/kent-taylor-5k-logo.svg')}
+/* Replace the placeholder crown with the approved circular Kent Taylor mark. */
+.crown{display:none!important}
+.brand-lockup::before,.mobile-brandcopy::before{content:"";display:block;flex:0 0 auto;width:42px;height:42px;border-radius:50%;background:var(--taylor-face) center/cover no-repeat;box-shadow:0 0 0 2px rgba(255,255,255,.16),0 7px 18px rgba(16,4,24,.2)}
+.login-brand::before{width:58px;height:58px;box-shadow:0 0 0 2px rgba(77,23,109,.12),0 10px 24px rgba(46,12,63,.16)}
+.brand-lockup.compact::before{width:38px;height:38px}
+.mobile-brandcopy::before{width:46px;height:46px;box-shadow:0 0 0 2px rgba(255,255,255,.18),0 8px 18px rgba(16,4,24,.22)}
+/* Persistent visible build identifier. */
+.brand-lockup small::after,.mobile-brandcopy small::after{content:" · " var(--portal-version);font-weight:800;color:#d8bd65;letter-spacing:.02em}
+.top-actions::before{content:"Portal " var(--portal-version);display:inline-flex;align-items:center;height:34px;padding:0 10px;border:1px solid var(--line);border-radius:999px;background:#fff;color:#6d6173;font-size:8px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+@media(max-width:820px){.top-actions::before{display:none}.brand-lockup::before{width:40px;height:40px}.mobile-brandcopy::before{width:44px;height:44px}}
