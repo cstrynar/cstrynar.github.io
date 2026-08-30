@@ -1,4 +1,4 @@
-:root{--portal-version:"v2.4.1";--taylor-face:url('../taylor5k-assets/kent-taylor-5k-logo.svg')}
+:root{--portal-version:"v2.5.0";--taylor-face:url('../taylor5k-assets/kent-taylor-5k-logo.svg')}
 /* Replace every placeholder crown with the approved circular Kent Taylor face mark. */
 .crown{display:none!important}
 .brand-lockup::before,.mobile-brandcopy::before{content:"";display:block;flex:0 0 auto;width:42px;height:42px;border-radius:50%;background:var(--taylor-face) center/cover no-repeat;box-shadow:0 0 0 2px rgba(255,255,255,.16),0 7px 18px rgba(16,4,24,.2)}
