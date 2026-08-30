@@ -10,7 +10,7 @@
 <body>
 <div id="auth" class="auth-screen">
   <form id="loginForm" class="login-card">
-    <div class="brand-lockup login-brand"><span class="crown taylor-logo" aria-hidden="true"></span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027 · <b class="portal-version">v2.5.0</b></small></div></div>
+    <div class="brand-lockup login-brand"><span class="crown taylor-logo" aria-hidden="true"></span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027 · <b class="portal-version">v2.5.1</b></small></div></div>
     <p class="eyebrow">PRIVATE PLANNING PORTAL</p>
     <h1>Welcome back.</h1>
     <p class="login-copy">Sign in with your approved committee account.</p>
@@ -22,7 +22,7 @@
 </div>
 <div id="app" class="app-shell hidden">
   <aside class="sidebar">
-    <div class="brand-lockup"><span class="crown taylor-logo" aria-hidden="true"></span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027 · <b class="portal-version">v2.5.0</b></small></div></div>
+    <div class="brand-lockup"><span class="crown taylor-logo" aria-hidden="true"></span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027 · <b class="portal-version">v2.5.1</b></small></div></div>
     <nav id="sidebarNav" class="sidebar-nav"></nav>
     <div class="sidebar-links">
       <a href="https://taylor-5k-planning-portal.vercel.app/master.html" target="_blank" rel="noopener">Full Master Planning Doc ↗</a>
@@ -38,7 +38,7 @@
   <main class="main-shell">
     <header class="topbar">
       <div class="mobile-brandbar">
-        <div class="mobile-brandcopy"><span class="crown taylor-logo" aria-hidden="true"></span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027 · <b class="portal-version">v2.5.0</b></small></div></div>
+        <div class="mobile-brandcopy"><span class="crown taylor-logo" aria-hidden="true"></span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027 · <b class="portal-version">v2.5.1</b></small></div></div>
         <div class="mobile-head-actions"><button class="mobile-bell" type="button">●<span>3</span></button><div class="mobile-avatar" id="mobileAvatar">CS</div></div>
       </div>
       <div class="desktop-heading">
@@ -68,7 +68,8 @@
   <div class="ai-panel-head"><div><strong>Taylor 5K AI Assistant</strong><small>CHAT · INTERACTIVE VOICE · FILES & PHOTOS · LIVE RESEARCH</small></div><button id="aiClose" type="button">×</button></div>
   <div class="ai-panel-tools"><label><input id="webToggle" type="checkbox" checked /> Live web research</label><span id="aiRolePill">SUPER ADMIN AI</span></div>
   <div id="aiMessages" class="ai-messages"><div class="message assistant">Hi — I can work like a normal project chat: ask questions, talk by voice, drop in photos or files, research current information, and propose portal or website updates. I’ll always ask before saving a change.</div></div>
-  <div class="ai-compose"><textarea id="aiInput" placeholder="Message Taylor 5K AI…"></textarea></div>
+  <!-- Bootstrap controls are required by app-5.js; app-chat.js replaces this composer immediately after startup. -->
+  <div class="ai-compose"><textarea id="aiInput" placeholder="Message Taylor 5K AI…"></textarea><div class="ai-compose-row"><button id="micBtn" type="button">🎤 Talk</button><button id="voiceBtn" type="button">🔊 Voice on</button><span id="aiStatus">Ready</span><button id="aiSend" class="send" type="button">Send</button></div></div>
 </aside>
 <script src="app-1.js"></script><script src="app-2.js"></script><script src="app-3.js"></script><script src="app-4.js"></script><script src="app-5.js"></script><script src="app-admin.js"></script><script src="app-admin-init.js"></script><script src="app-chat.js"></script>
 </body>
