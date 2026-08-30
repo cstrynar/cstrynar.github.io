@@ -1,0 +1,51 @@
+name: Publish Taylor 5K Preview
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-taylor5k-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download current preview and selected logo
+        run: |
+          mkdir -p taylor5k-preview
+          curl -L --fail 'https://taylor-5k-preview-5pamntt45-cstrynar-1265s-projects.vercel.app/?_vercel_share=etPbLbCfzELmQqi2qE34DiJdzjABI8Al' -o taylor5k-preview/index.html
+          curl -L --fail 'https://taylor-5k-preview-3c1hvm243-cstrynar-1265s-projects.vercel.app/logo.svg?_vercel_share=cA8uVJdnSXjcKDBcEiF5X5EkhB6mKooR' -o taylor5k-preview/logo.svg
+
+      - name: Apply selected Option 4 brand
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('taylor5k-preview/index.html')
+          h = p.read_text()
+          broken = 'https://images.gofundme.com/Jca39EL0flc2y7XFaIJ4nj5FUsU%3D/1200x900/https%3A//d2g8igdw686xgo.cloudfront.net/48501438_1591185762650102_r.jpeg'
+          replacement = 'https://cdn.sanity.io/images/n3gp1igb/production/0692ee3766d120095342218f09ad995bd3c8109c-793x442.png'
+          h = h.replace(broken, replacement)
+          h = h.replace('This review build intentionally uses lots of Kent imagery so the website feels personal from top to bottom.', 'A life measured in people, moments, laughter, competition and community.')
+          h = h.replace('.wallHead{margin-bottom:16px}.wall{grid-template-columns:1fr 1fr;grid-auto-rows:130px;gap:6px}.tile.wide{grid-column:span 2}.tile.tall{grid-row:span 2}', '.wallHead{margin-bottom:10px}.wallHead h2{margin-bottom:8px}.wallHead p{margin:0 0 6px}.wall{grid-template-columns:1fr 1fr;grid-auto-rows:130px;gap:6px}.tile.wide{grid-column:span 2}.tile.tall{grid-row:span 1;grid-column:span 2}')
+          css = '''\n.brand{display:flex!important;align-items:center!important;gap:9px!important}.brand-logo{width:50px;height:50px;object-fit:contain;flex:0 0 auto}.hero-logo-seal{position:absolute;right:8px;top:8px;width:128px;height:128px;z-index:6;filter:drop-shadow(0 14px 24px rgba(0,0,0,.25))}.hero-logo-seal img{width:100%;height:100%;object-fit:contain}.logo-lockup-note{display:flex;align-items:center;gap:10px;margin:14px 0 0;color:rgba(255,255,255,.75);font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.logo-lockup-note img{width:42px;height:42px}@media(max-width:560px){.brand-logo{width:42px;height:42px}.hero-logo-seal{width:88px;height:88px;right:6px;top:6px}.logo-lockup-note{font-size:7px}.logo-lockup-note img{width:34px;height:34px}}\n'''
+          h = h.replace('</style>', css + '</style>', 1)
+          h = h.replace('<a class="brand" href="#top">KENT TAYLOR <b>5K</b></a>', '<a class="brand" href="#top"><img class="brand-logo" alt="Kent Taylor 5K logo" src="logo.svg"><span>KENT TAYLOR <b>5K</b></span></a>')
+          h = h.replace('<div class="heroPhoto"><img', '<div class="heroPhoto"><div class="hero-logo-seal"><img alt="Kent Taylor 5K logo" src="logo.svg"></div><img', 1)
+          h = h.replace('<div class="buttons">', '<div class="logo-lockup-note"><img alt="Kent Taylor 5K logo" src="logo.svg"><span>Selected working logo • Carpe Diem • Seize the Day</span></div><div class="buttons">', 1)
+          h = h.replace('TAYLOR 5K WEBSITE PREVIEW • FALL 2027 • INFORMATION SUBJECT TO CHANGE', 'TAYLOR 5K WEBSITE PREVIEW • FALL 2027 • SELECTED LOGO APPLIED')
+          p.write_text(h)
+          PY
+
+      - name: Commit published preview
+        run: |
+          git config user.name 'Taylor 5K Preview Bot'
+          git config user.email 'actions@github.com'
+          git add taylor5k-preview/index.html taylor5k-preview/logo.svg
+          git diff --cached --quiet && exit 0
+          git commit -m 'Publish Taylor 5K preview with selected logo'
+          git push
