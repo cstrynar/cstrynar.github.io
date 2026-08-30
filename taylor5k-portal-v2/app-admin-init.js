@@ -6,6 +6,20 @@ canEdit = function(entity){
   return baseCanEditForAdmin(entity);
 };
 
+// The wrapped boot calls installShellControls through both setIdentity and boot.
+// Bind the shell once, then only refresh the role/menu contents on later calls.
+let adminShellInstalled = !!document.querySelector('#menuDrawer');
+const baseInstallShellControls = installShellControls;
+installShellControls = function(){
+  if(adminShellInstalled){
+    installRoleButtons();
+    renderHamburger();
+    return;
+  }
+  adminShellInstalled = true;
+  baseInstallShellControls();
+};
+
 // Catch-up initializer: app-5 can finish its demo boot before app-admin.js loads.
 // If that happened, install the role-aware shell controls now. In authenticated
 // mode the wrapped boot in app-admin.js handles this normally.
