@@ -1,6 +1,6 @@
 const TAYLOR_MASTER_DOC_URL=new URL('master.html',location.href).href.split('?')[0].split('#')[0];
 const OLD_MASTER_DOC='https://taylor-5k-planning-portal.vercel.app/master.html';
-const MASTER_DOC_BUILD='v3.2.2';
+const MASTER_DOC_BUILD='v3.2.3';
 function cleanMasterUrl(v){if(!v)return'';try{return new URL(String(v),location.href).href.split('?')[0].split('#')[0]}catch{return String(v)}}
 function isOldMasterTarget(v){return cleanMasterUrl(v)===OLD_MASTER_DOC}
 function isCurrentMasterTarget(v){return cleanMasterUrl(v)===TAYLOR_MASTER_DOC_URL}
@@ -27,8 +27,6 @@ document.addEventListener('click',e=>{
   const el=e.target.closest?.('a[href],[data-external]');if(!el)return;
   const target=el.matches('a[href]')?el.getAttribute('href'):el.dataset.external;
   if(!isAnyMasterTarget(target))return;
-  // The live portal can have a newer in-memory Supabase session than the copy
-  // in localStorage. Refresh the shared copy immediately before opening Master Doc.
   syncLivePortalSession();
   e.preventDefault();
   e.stopImmediatePropagation();
