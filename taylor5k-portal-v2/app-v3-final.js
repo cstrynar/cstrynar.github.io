@@ -1,4 +1,4 @@
-const TAYLOR_CHAT_V3_URL='https://xlaawvuyfbyefkinsrjs.supabase.co/functions/v1/taylor5k-chat-v3';
+const TAYLOR_CHAT_V3_URL='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-chat-v3';
 let rtLastAssistantTranscript='',rtHandledCalls=new Set();
 
 // Upgrade the existing ChatGPT-style composer to the v3 GPT-5.6 endpoint.
