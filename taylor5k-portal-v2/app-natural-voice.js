@@ -1,4 +1,4 @@
-const TAYLOR_NATURAL_TTS_URL='https://xlaawvuyfbyefkinsrjs.supabase.co/functions/v1/taylor5k-tts';
+const TAYLOR_NATURAL_TTS_URL='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-tts';
 let naturalVoiceAudio=null,naturalVoiceUrl=null,naturalVoiceGeneration=0;
 
 function cleanupNaturalVoice(){
