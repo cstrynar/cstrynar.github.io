@@ -1,5 +1,5 @@
-const TAYLOR_AGENT_V31_URL='https://xlaawvuyfbyefkinsrjs.supabase.co/functions/v1/taylor5k-agent-v31';
-const TAYLOR_TOOLS_V31_URL='https://xlaawvuyfbyefkinsrjs.supabase.co/functions/v1/taylor5k-tools-v31';
+const TAYLOR_AGENT_V31_URL='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-agent-v31';
+const TAYLOR_TOOLS_V31_URL='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-tools-v31';
 
 // Allow confirmation-gated Marketing Library metadata writes.
 aiFieldAllow.marketing_assets=['title','asset_type','status','channel','campaign','audience','description','copy_text','brand_notes','tags','storage_path','original_filename','mime_type','file_size','external_url'];
