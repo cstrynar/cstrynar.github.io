@@ -1,6 +1,6 @@
 const BASE='https://vofnxwgjqxgahjiobtqw.supabase.co';
 const KEY='sb_publishable_oEUGCcdpWX94DD7wOZv5Pw_3d8O6Bog';
-const AI_URL='https://xlaawvuyfbyefkinsrjs.supabase.co/functions/v1/taylor5k-ai';
+const AI_URL='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-ai';
 const AI_KEY='sb_publishable_lwsk4TTaXHzBeB6GEMlwGg_4kdhDWA3';
 const SESSION_KEY='t5k_session';
 const CURRENT_PORTAL='https://taylor-5k-planning-portal.vercel.app';
