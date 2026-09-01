@@ -1,6 +1,6 @@
 const TAYLOR_DRIVE_GATEWAY='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-google-drive';
-const TAYLOR_DRIVE_CHAT_V32='https://xlaawvuyfbyefkinsrjs.supabase.co/functions/v1/taylor5k-drive-chat-v32';
-const TAYLOR_DRIVE_TOOLS_V32='https://xlaawvuyfbyefkinsrjs.supabase.co/functions/v1/taylor5k-drive-tools-v32';
+const TAYLOR_DRIVE_CHAT_V32='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-drive-chat-v32';
+const TAYLOR_DRIVE_TOOLS_V32='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-drive-tools-v32';
 const TAYLOR_DRIVE_ROOT_ID='1oj9N5TK5cRrOhA65QAgF5LMrjsx460Yp';
 const TAYLOR_DRIVE_ROOT_URL='https://drive.google.com/drive/folders/'+TAYLOR_DRIVE_ROOT_ID;
 let driveIntegrationState={client_configured:false,connected:false,account_email:null,root_folder_id:TAYLOR_DRIVE_ROOT_ID,root_folder_name:'Kent Taylor 5K',redirect_uri:'https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-google-drive/callback'};
