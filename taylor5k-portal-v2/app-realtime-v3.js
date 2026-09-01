@@ -1,4 +1,4 @@
-const TAYLOR_REALTIME_TOKEN_URL='https://xlaawvuyfbyefkinsrjs.supabase.co/functions/v1/taylor5k-realtime-token';
+const TAYLOR_REALTIME_TOKEN_URL='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-realtime-token';
 let rtPc=null,rtDc=null,rtStream=null,rtAudio=null,rtActive=false,rtStarting=false,rtAssistantText='',rtLastUserTranscript='';
 
 function compactRealtimeContext(){
