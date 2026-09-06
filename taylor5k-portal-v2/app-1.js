@@ -1,7 +1,7 @@
 const BASE='https://vofnxwgjqxgahjiobtqw.supabase.co';
 const KEY='sb_publishable_oEUGCcdpWX94DD7wOZv5Pw_3d8O6Bog';
 const AI_URL='https://vofnxwgjqxgahjiobtqw.supabase.co/functions/v1/taylor5k-ai';
-const AI_KEY='sb_publishable_lwsk4TTaXHzBeB6GEMlwGg_4kdhDWA3';
+const AI_KEY=KEY;
 const SESSION_KEY='t5k_session';
 const CURRENT_PORTAL='https://taylor-5k-planning-portal.vercel.app';
 let session=null, me=null, data={}, currentPage='dashboard', editing=null, voiceReplies=true, recognition=null, aiBusy=false;
