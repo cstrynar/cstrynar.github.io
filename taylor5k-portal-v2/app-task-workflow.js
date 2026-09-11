@@ -1,9 +1,9 @@
-/* Taylor 5K v3.3.1: complete JSON context and confirmation-gated task creation/updates.
+/* Taylor 5K v3.3.2: complete JSON context and confirmation-gated task creation/updates.
  * Extends v3.3.0 without replacing its admin dropdown, invitations, or other project tools.
  */
 (function(global){
  'use strict';
- const VERSION='3.3.1',has=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k);
+ const VERSION='3.3.2',has=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k);
  const array=v=>Array.isArray(v)?v:[],norm=v=>String(v??'').normalize('NFKC').trim().toLowerCase().replace(/\s+/g,' ');
  const clip=(v,n)=>typeof v==='string'?v.slice(0,n):'';
  const eligible=rows=>array(rows).filter(m=>m&&m.active===true&&['admin','super_admin'].includes(m.role));
@@ -79,6 +79,7 @@
  global.TaylorTaskWorkflowUtils=utils;
  if(typeof module!=='undefined'&&module.exports)module.exports=utils;
  if(!global.document)return;
+ global.TaylorPortalVersion='v'+VERSION;
  const editor=()=>me?.active!==false&&['admin','super_admin','editor'].includes(me?.role);
  const nameOf=m=>m?.display_name||m?.email||'Unassigned';
  let pending=null,proposalSeq=0,voice={seq:0,at:0,text:''},lastVoiceItem=null,savingEditor=false,opening=0;
@@ -177,7 +178,8 @@
   try{
    if(fields.owner_member_id&&fields.owner_member_id===state.row?.owner_member_id&&!(await roster()).some(m=>m.id===fields.owner_member_id))delete fields.owner_member_id;
    const d=await draft({entity_type:'tasks',operation:state.id?'update':'create',record_id:state.id,fields});
-   if(state.id&&state.row?.updated_at!==d.expected)throw error('TASK_CHANGED','Someone changed this task while it was open. Close and reopen it before saving.');
+   // Demo seed records omit timestamps. Compare the same normalized version used by draft.
+   if(state.id&&(state.row?.updated_at||null)!==d.expected)throw error('TASK_CHANGED','Someone changed this task while it was open. Close and reopen it before saving.');
    await saveDraft(d);saved=true;if(!DEMO)await loadData();savingEditor=false;closeEditor();renderPage();
   }catch(e){status.textContent=saved?'Saved, but refresh failed. Reload the portal before editing again.':e.message;}
   finally{savingEditor=false;btn.disabled=false;}
@@ -216,6 +218,6 @@
   }catch(e){result={error:e.message||'Task tool failed.',code:e.code||'TASK_TOOL_ERROR',saved:false};}
   if(rtDc?.readyState==='open'){rtDc.send(JSON.stringify({type:'conversation.item.create',item:{type:'function_call_output',call_id:item.call_id,output:outputJSON(result)}}));rtDc.send(JSON.stringify({type:'response.create'}));}
  };
- function stamp(){document.querySelectorAll('.portal-version').forEach(e=>e.textContent='v'+VERSION);document.querySelectorAll('button,span,a').forEach(e=>{if(e.childElementCount===0&&/^PORTAL V\d+\.\d+\.\d+$/i.test(e.textContent.trim()))e.textContent='PORTAL V'+VERSION;});}
+ function stamp(){document.documentElement.style.setProperty('--portal-version','"v'+VERSION+'"');document.querySelectorAll('.portal-version').forEach(e=>e.textContent='v'+VERSION);document.querySelectorAll('button,span,a').forEach(e=>{if(e.childElementCount===0&&/^PORTAL V\d+\.\d+\.\d+$/i.test(e.textContent.trim()))e.textContent='PORTAL V'+VERSION;});}
  const oldRender=renderPage;renderPage=function(){const r=oldRender();stamp();return r;};queueMicrotask(stamp);
 })(globalThis);
