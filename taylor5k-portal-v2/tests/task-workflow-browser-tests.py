@@ -6,12 +6,16 @@ results=[]
 async def main():
  async with async_playwright() as p:
   browser=await p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox'])
-  async def setup():
+  async def setup(demo=False):
    page=await browser.new_page();await page.set_content(HTML)
-   await page.add_script_tag(content=(ROOT/'tests/task-workflow-browser-fixture.js').read_text());await page.evaluate('loadData()')
+   fixture=(ROOT/'tests/task-workflow-browser-fixture.js').read_text()
+   if demo:
+    assert 'DEMO=false' in fixture
+    fixture=fixture.replace('DEMO=false','DEMO=true')
+   await page.add_script_tag(content=fixture);await page.evaluate('loadData()')
    await page.add_script_tag(content=(ROOT/'app-task-workflow.js').read_text());await page.evaluate('renderPage()');return page
-  async def run(name,fn):
-   page=await setup()
+  async def run(name,fn,demo=False):
+   page=await setup(demo)
    try:await fn(page);results.append({'test':name,'passed':True})
    finally:await page.close()
   async def dropdown(page):
@@ -82,7 +86,8 @@ async def main():
    await page.evaluate("showProposal({entity_type:'chapters',operation:'update',fields:{body:'x'}});executeAIAction({entity_type:'site_edits'});runRealtimeV31Tool({name:'read_google_drive_file',call_id:'other',arguments:'{}'})")
    delegates=await page.evaluate('delegated');assert 'other-proposal:chapters' in delegates and 'other-execute:site_edits' in delegates and 'tool:read_google_drive_file' in delegates
    names=await page.evaluate('realtimeV31Tools().map(t=>t.name)');assert all(n in names for n in ['inspect_public_site','read_google_drive_file','search_marketing_library','prepare_task_change'])
-   assert await page.locator('#addAdminSentinel').count()==1;assert await page.locator('.portal-version').text_content()=='v3.3.1'
+   version=await page.evaluate('TaylorTaskWorkflowUtils.VERSION')
+   assert await page.locator('#addAdminSentinel').count()==1;assert await page.locator('.portal-version').text_content()=='v'+version
   await run('other project duties, Add Admin control and version display remain available',preserve)
   async def blocked(page):
    await page.evaluate("database.tasks[0].status='Blocked';openEditor('tasks','task-one')")
@@ -97,6 +102,24 @@ async def main():
    await page.evaluate("runRealtimeV31Tool({name:'confirm_task_assignment',call_id:'assign2',arguments:'{}'})")
    assert await page.evaluate('database.tasks[0].owner_member_id')=='admin-two'
   await run('existing voice-assignment tools remain compatible and confirmation-gated',legacy_voice_assignment)
+  async def demo_seed_assignment(page):
+   await page.evaluate("delete data.tasks[0].updated_at;openEditor('tasks','task-one')")
+   await page.locator('#taskOwnerMember').select_option('admin-two')
+   await page.locator('#editForm button[type=submit]').click()
+   await page.wait_for_function("data.tasks[0].owner_member_id==='admin-two'")
+   await page.evaluate("openEditor('tasks','task-one')")
+   assert await page.locator('#taskOwnerMember').input_value()=='admin-two'
+   assert await page.evaluate('calls.length')==0
+  await run('demo seed without a timestamp saves and reopens assigned without network writes',demo_seed_assignment,True)
+  async def version_observer(page):
+   source=(ROOT/'app-master-doc-fix.js').read_text()
+   function='function applyMasterBuild'+source.split('function applyMasterBuild',1)[1].split('function fixMasterDocLinks',1)[0]
+   await page.add_script_tag(content="const MASTER_DOC_BUILD='v3.2.3';"+function)
+   await page.evaluate('applyMasterBuild(document)')
+   version=await page.evaluate('TaylorTaskWorkflowUtils.VERSION')
+   assert await page.locator('.portal-version').text_content()=='v'+version
+   assert await page.evaluate("document.documentElement.style.getPropertyValue('--portal-version')")=='"v'+version+'"'
+  await run('master document observer preserves the active version in CSS and text badges',version_observer)
   await browser.close()
  print(json.dumps({'passed':len(results),'tests':results},indent=2))
  (ROOT/'tests/browser-results.json').write_text(json.dumps(results,indent=2))
