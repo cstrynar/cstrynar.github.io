@@ -15,8 +15,9 @@ function syncLivePortalSession(){
   }catch{return false}
 }
 function applyMasterBuild(root=document){
-  try{document.documentElement.style.setProperty('--portal-version','"'+MASTER_DOC_BUILD+'"')}catch{}
-  root.querySelectorAll?.('.portal-version').forEach(el=>el.textContent=MASTER_DOC_BUILD);
+  const build=globalThis.TaylorPortalVersion||MASTER_DOC_BUILD;
+  try{document.documentElement.style.setProperty('--portal-version','"'+build+'"')}catch{}
+  root.querySelectorAll?.('.portal-version').forEach(el=>el.textContent=build);
 }
 function fixMasterDocLinks(root=document){
   root.querySelectorAll?.('a[href]').forEach(a=>{if(isOldMasterTarget(a.getAttribute('href')))a.setAttribute('href',TAYLOR_MASTER_DOC_URL)});
