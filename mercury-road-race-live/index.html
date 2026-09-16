@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#081a33" />
+  <title>Mercury Live Results — Road Race Staging</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+:root{
+  --ink:#0b1420;
+  --muted:#667085;
+  --line:#d9e0e8;
+  --soft:#f4f7fb;
+  --navy:#081a33;
+  --blue:#0f5bd8;
+  --cyan:#31b9ff;
+  --lime:#b7f240;
+  --white:#fff;
+  --shadow:0 10px 30px rgba(8,26,51,.08);
+}
+*{box-sizing:border-box}
+html{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:#fff}
+body{margin:0;min-height:100vh}
+.shell{width:min(1180px,calc(100% - 32px));margin-inline:auto}
+.site-header{background:var(--navy);color:white;border-bottom:1px solid rgba(255,255,255,.1)}
+.header-inner{height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;color:white;text-decoration:none}
+.mark{width:42px;height:42px;color:white;display:grid;place-items:center}
+.mark svg{width:100%;height:100%}.mark .bolt{fill:var(--lime)}
+.brand-copy{display:flex;flex-direction:column;line-height:1}
+.brand-name{font-weight:900;letter-spacing:.03em;font-size:18px}
+.brand-sub{font-size:10px;letter-spacing:.16em;color:#bcd1ee;margin-top:6px}
+.version{font-size:12px;color:#a9bbd3}
+.hero{background:linear-gradient(180deg,#0b2141 0%,#0d2a52 100%);color:#fff;padding:42px 0 32px}
+.hero-topline{display:flex;align-items:flex-start;justify-content:space-between;gap:28px}
+.eyebrow{margin:0 0 8px;color:var(--cyan);font-size:12px;font-weight:900;letter-spacing:.16em}
+h1{font-size:clamp(30px,4vw,48px);line-height:1.04;margin:0;letter-spacing:-.035em}
+.event-meta{color:#cad6e6;margin:13px 0 0;font-size:15px}
+.live-card{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.08);padding:10px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);white-space:nowrap}
+.live-pill{display:inline-flex;align-items:center;gap:7px;background:#f04438;color:#fff;font-weight:900;font-size:12px;letter-spacing:.06em;padding:8px 11px;border-radius:999px}
+.pulse{width:7px;height:7px;border-radius:50%;background:white;box-shadow:0 0 0 0 rgba(255,255,255,.65);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.updated{font-size:12px;color:#d3dfed}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}
+.stat{background:white;color:var(--ink);padding:17px 18px;border-radius:14px;min-height:84px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:center}
+.stat-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.stat strong{font-size:26px;letter-spacing:-.03em}
+.leader-stat{background:var(--lime)}
+.results-section{padding:30px 0 56px}
+.toolbar{display:grid;grid-template-columns:minmax(280px,1fr) 180px 190px;gap:10px}
+.search-wrap{height:48px;display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:white}
+.search-wrap:focus-within{outline:3px solid rgba(15,91,216,.12);border-color:#7eabea}
+.search-wrap svg{width:18px;height:18px;fill:none;stroke:#76859b;stroke-width:2;stroke-linecap:round}
+.search-wrap input{border:0;outline:0;width:100%;font-size:15px;background:transparent;color:var(--ink)}
+select{height:48px;border:1px solid var(--line);border-radius:12px;background:white;padding:0 36px 0 13px;color:var(--ink);font-size:14px}
+.results-headline{display:flex;align-items:end;justify-content:space-between;margin:26px 0 12px;gap:16px}
+.results-headline h2{margin:0;font-size:23px;letter-spacing:-.025em}
+.results-headline p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.demo-status{font-size:12px;color:#475467;background:var(--soft);border-radius:999px;padding:8px 11px;display:flex;align-items:center;gap:6px}
+.demo-dot{width:7px;height:7px;background:#12b76a;border-radius:50%}
+.table-wrap{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:white;box-shadow:0 4px 18px rgba(8,26,51,.04)}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--soft)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#637083;text-align:left;padding:12px 14px}
+td{padding:15px 14px;border-top:1px solid var(--line);font-size:14px}
+tbody tr{cursor:pointer;transition:background .15s}
+tbody tr:hover{background:#f8fbff}
+td:first-child{font-weight:900;font-size:17px}
+.name-cell{font-weight:800}
+.time-cell{font-variant-numeric:tabular-nums;font-weight:700}
+.mobile-results{display:none}
+.notice{display:flex;gap:12px;background:#f8fbff;border:1px solid #cfe2ff;border-radius:14px;padding:16px;margin-top:18px}
+.notice-icon{width:24px;height:24px;min-width:24px;background:#dbeafe;color:#145ac2;border-radius:50%;display:grid;place-items:center;font-weight:900}
+.notice strong{font-size:13px}.notice p{margin:4px 0 0;color:var(--muted);font-size:12px}
+.empty{text-align:center;padding:48px 16px;color:var(--muted)}
+.empty strong,.empty span{display:block}.empty strong{color:var(--ink);margin-bottom:5px}
+footer{border-top:1px solid var(--line);background:#fbfcfe;color:#667085}
+.footer-inner{min-height:76px;display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:20px}
+dialog{width:min(540px,calc(100% - 28px));border:0;border-radius:18px;padding:24px;box-shadow:0 30px 90px rgba(8,26,51,.28)}
+dialog::backdrop{background:rgba(5,15,30,.56);backdrop-filter:blur(3px)}
+.dialog-close{position:absolute;right:14px;top:12px;border:0;background:#eef2f6;border-radius:50%;width:34px;height:34px;font-size:23px;cursor:pointer}
+dialog h3{font-size:28px;margin:0 0 20px}
+.dialog-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.detail{background:var(--soft);border-radius:12px;padding:12px}
+.detail span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.detail strong{font-size:17px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:760px){
+  .shell{width:min(100% - 22px,1180px)}
+  .header-inner{height:66px}.version{display:none}.brand-name{font-size:16px}.brand-sub{font-size:9px}
+  .hero{padding:28px 0 26px}
+  .hero-topline{display:block}
+  .event-meta{font-size:13px;line-height:1.5}
+  .live-card{display:inline-flex;margin-top:18px}
+  .summary-grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-top:20px}
+  .stat{min-height:78px;padding:14px}.stat strong{font-size:23px}
+  .results-section{padding-top:20px}
+  .toolbar{grid-template-columns:1fr 1fr}.search-wrap{grid-column:1/-1}
+  select{min-width:0;width:100%}
+  .results-headline{align-items:start;margin-top:22px}
+  .demo-status{display:none}
+  .table-wrap{display:none}.mobile-results{display:grid;gap:9px}
+  .runner-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:white;box-shadow:0 4px 16px rgba(8,26,51,.035)}
+  .runner-card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .place{font-size:20px;font-weight:950}.runner-name{font-size:17px;font-weight:900;margin-top:2px}
+  .bib{font-size:12px;color:var(--muted);margin-top:3px}
+  .chip-big{text-align:right}.chip-big span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block}.chip-big strong{font-size:19px;font-variant-numeric:tabular-nums}
+  .runner-meta{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);margin-top:12px;padding-top:10px;gap:8px}
+  .runner-meta span{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.runner-meta strong{display:block;font-size:13px;margin-top:2px}
+  .footer-inner{display:block;padding:18px 0}.footer-inner span{display:block;margin:4px 0}
+}
+
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#" aria-label="Mercury Timing Systems">
+        <div class="mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <path d="M7 44c13-1 20-8 27-23 3 8 10 15 23 17-8 12-20 18-36 18H9Z" fill="currentColor"/>
+            <path d="M36 12 25 31h11l-6 20 21-28H39l7-11Z" class="bolt"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <span class="brand-name">MERCURY TIMING</span>
+          <span class="brand-sub">ROAD RACE LIVE RESULTS</span>
+        </div>
+      </a>
+      <div class="version">Road Race Live • staging</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell">
+        <div class="hero-topline">
+          <div>
+            <p class="eyebrow">LIVE RESULTS</p>
+            <h1 id="eventName">Mercury Bridge Test 5K</h1>
+            <p class="event-meta" id="eventMeta">Bridgewater, MA • October 14, 2026 • 12:00 PM EDT</p>
+          </div>
+          <div class="live-card">
+            <span class="live-pill"><span class="pulse"></span> LIVE</span>
+            <span class="updated">Updated <strong id="secondsAgo">0</strong>s ago</span>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <article class="stat"><span class="stat-label">Finishers</span><strong id="finishers">0</strong></article>
+          <article class="stat"><span class="stat-label">Male</span><strong id="maleCount">0</strong></article>
+          <article class="stat"><span class="stat-label">Female</span><strong id="femaleCount">0</strong></article>
+          <article class="stat leader-stat"><span class="stat-label">Leader</span><strong id="leaderTime">—</strong></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="results-section shell">
+      <div class="toolbar">
+        <label class="search-wrap">
+          <span class="sr-only">Search results</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+          <input id="search" type="search" placeholder="Search runner or bib" autocomplete="off" />
+        </label>
+        <select id="sexFilter" aria-label="Filter by sex">
+          <option value="">All</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+        <select id="ageFilter" aria-label="Filter by age group"><option value="">All age groups</option></select>
+      </div>
+
+      <div class="results-headline">
+        <div>
+          <h2>5K Leaderboard</h2>
+          <p id="shownCount">Showing 3 finishers</p>
+        </div>
+        <div class="demo-status" title="Prototype behavior only">
+          <span class="demo-dot"></span>
+          Mercury feed connecting…
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Overall</th>
+              <th>Bib</th>
+              <th>Name</th>
+              <th>Sex</th>
+              <th>Age Group</th>
+              <th>Gun</th>
+              <th>Chip</th>
+              <th>Pace</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+
+      <div id="mobileResults" class="mobile-results"></div>
+
+      <div class="empty" id="emptyState" hidden>
+        <strong>No matching finishers</strong>
+        <span>Try clearing a filter or searching another name or bib.</span>
+      </div>
+
+      <div class="notice">
+        <div class="notice-icon">i</div>
+        <div>
+          <strong>Results are preliminary while the race is in progress.</strong>
+          <p>Times, places, and divisions can change as Mercury Timing reviews live scoring data.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <span>Powered by Mercury Timing Systems</span>
+      <span id="lastRevision">Feed revision 1</span>
+    </div>
+  </footer>
+
+  <dialog id="runnerDialog">
+    <button class="dialog-close" id="closeDialog" aria-label="Close">×</button>
+    <p class="eyebrow">RUNNER DETAILS</p>
+    <h3 id="dialogName"></h3>
+    <div id="dialogGrid" class="dialog-grid"></div>
+  </dialog>
+
+  <script>
+
+const SUPABASE_URL = 'https://wajusbsyouyufpccixol.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYXNlIiwicmVmIjoid2FqdXNic3lvdXl1ZnBjY2l4b2wiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc4OTQwNjQ3NCwiZXhwIjoyMTA0OTgyNDc0fQ.1Er4HE3JEL6W4WuphE8r6Qg8ul-wijfGppVxDO3bXA8';
+const EVENT_SLUG = 'mercury-bridge-test-5k';
+
+const fallback = {
+  schemaVersion: 1,
+  revision: 0,
+  updatedAt: null,
+  status: "setup",
+  event: { name:"Mercury Bridge Test 5K", location:"Bridgewater, MA", date:"October 14, 2026", startTime:"12:00 PM EDT", distance:"5K" },
+  results: []
+};
+
+let snapshot = structuredClone(fallback);
+let lastServerTimestamp = null;
+let lastFetchOk = false;
+
+const $ = s => document.querySelector(s);
+const body = $("#resultsBody");
+const mobile = $("#mobileResults");
+const search = $("#search");
+const sexFilter = $("#sexFilter");
+const ageFilter = $("#ageFilter");
+const empty = $("#emptyState");
+
+async function loadSnapshot() {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/live-results?slug=${encodeURIComponent(EVENT_SLUG)}`, {
+      method: "GET",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`
+      },
+      cache: "no-store"
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const next = await r.json();
+    if (!next) throw new Error("Event not found");
+    lastFetchOk = true;
+    const currentRevision = Number(snapshot.revision || 0);
+    const nextRevision = Number(next.revision || 0);
+    snapshot = nextRevision >= currentRevision ? next : snapshot;
+    lastServerTimestamp = snapshot.updatedAt ? new Date(snapshot.updatedAt).getTime() : Date.now();
+    render();
+  } catch (e) {
+    lastFetchOk = false;
+    renderConnectionState();
+    console.warn("Mercury live results poll failed", e);
+  }
+}
+
+function nameOf(r) { return `${r.firstName} ${r.lastName}`; }
+
+function filtered() {
+  const q = search.value.trim().toLowerCase();
+  return snapshot.results.filter(r => {
+    const hay = `${r.bib} ${nameOf(r)}`.toLowerCase();
+    return (!q || hay.includes(q))
+      && (!sexFilter.value || r.sex === sexFilter.value)
+      && (!ageFilter.value || r.ageGroup === ageFilter.value);
+  });
+}
+
+function renderConnectionState() {
+  const status = document.querySelector(".demo-status");
+  if (status) {
+    status.innerHTML = `<span class="demo-dot" style="background:${lastFetchOk ? "#12b76a" : "#f79009"}"></span>${lastFetchOk ? "Mercury feed connected" : "Reconnecting…" }`;
+  }
+}
+
+function render() {
+  $("#eventName").textContent = snapshot.event?.name || "Mercury Live Results";
+  $("#eventMeta").textContent = [snapshot.event?.location, snapshot.event?.date, snapshot.event?.startTime].filter(Boolean).join(" • ");
+  $("#finishers").textContent = snapshot.results.length;
+  $("#maleCount").textContent = snapshot.results.filter(r=>r.sex==="Male").length;
+  $("#femaleCount").textContent = snapshot.results.filter(r=>r.sex==="Female").length;
+  $("#leaderTime").textContent = snapshot.results[0]?.gunTime ?? "—";
+  $("#lastRevision").textContent = `Feed revision ${snapshot.revision || 0}`;
+
+  const livePill = document.querySelector(".live-pill");
+  if (livePill) {
+    const label = snapshot.status === "official" ? "OFFICIAL" : snapshot.status === "finished" ? "FINISHED" : "LIVE";
+    livePill.lastChild.textContent = ` ${label}`;
+  }
+
+  const ages = [...new Set(snapshot.results.map(r=>r.ageGroup).filter(Boolean))].sort();
+  const current = ageFilter.value;
+  ageFilter.innerHTML = `<option value="">All age groups</option>` + ages.map(a=>`<option ${a===current?"selected":""}>${a}</option>`).join("");
+
+  const rows = filtered();
+  $("#shownCount").textContent = `Showing ${rows.length} of ${snapshot.results.length} finishers`;
+  empty.hidden = rows.length !== 0;
+
+  body.innerHTML = rows.map(r => `
+    <tr data-bib="${r.bib}">
+      <td>${r.overall ?? ""}</td>
+      <td>${r.bib ?? ""}</td>
+      <td class="name-cell">${nameOf(r)}</td>
+      <td>${r.sex ?? ""}</td>
+      <td>${r.ageGroup ?? ""}</td>
+      <td class="time-cell">${r.gunTime ?? ""}</td>
+      <td class="time-cell">${r.chipTime ?? ""}</td>
+      <td class="time-cell">${r.pace ?? ""}</td>
+    </tr>`).join("");
+
+  mobile.innerHTML = rows.map(r => `
+    <article class="runner-card" data-bib="${r.bib}" tabindex="0">
+      <div class="runner-card-top">
+        <div>
+          <div class="place">#${r.overall ?? ""}</div>
+          <div class="runner-name">${nameOf(r)}</div>
+          <div class="bib">Bib ${r.bib ?? ""}</div>
+        </div>
+        <div class="chip-big"><span>Chip</span><strong>${r.chipTime ?? ""}</strong></div>
+      </div>
+      <div class="runner-meta">
+        <div><span>Sex</span><strong>${r.sex ?? ""}</strong></div>
+        <div><span>Age Group</span><strong>${r.ageGroup ?? ""}</strong></div>
+        <div><span>Pace</span><strong>${r.pace ? r.pace + "/mi" : ""}</strong></div>
+      </div>
+    </article>`).join("");
+
+  document.querySelectorAll("[data-bib]").forEach(el => {
+    el.addEventListener("click", () => showRunner(el.dataset.bib));
+    el.addEventListener("keydown", e => { if(e.key==="Enter") showRunner(el.dataset.bib); });
+  });
+
+  renderConnectionState();
+}
+
+function showRunner(bib) {
+  const r = snapshot.results.find(x=>String(x.bib)===String(bib)); if(!r) return;
+  $("#dialogName").textContent = nameOf(r);
+  $("#dialogGrid").innerHTML = [
+    ["Overall", r.overall ? `#${r.overall}` : "—"],["Bib",r.bib ?? "—"],["Sex",r.sex ?? "—"],["Age Group",r.ageGroup ?? "—"],
+    ["Gun Time",r.gunTime ?? "—"],["Chip Time",r.chipTime ?? "—"],["Pace",r.pace ? `${r.pace}/mi` : "—"],["Status","Finished"]
+  ].map(([k,v])=>`<div class="detail"><span>${k}</span><strong>${v}</strong></div>`).join("");
+  $("#runnerDialog").showModal();
+}
+
+$("#closeDialog").addEventListener("click",()=>$("#runnerDialog").close());
+[search,sexFilter,ageFilter].forEach(el=>el.addEventListener("input",render));
+
+setInterval(()=>{
+  const base = lastServerTimestamp || Date.now();
+  $("#secondsAgo").textContent = Math.max(0, Math.floor((Date.now()-base)/1000));
+},1000);
+
+setInterval(loadSnapshot,3000);
+render();
+loadSnapshot();
+
+</script>
+</body>
+</html>
