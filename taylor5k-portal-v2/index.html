@@ -1,78 +1,39 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#35104d" />
-<meta name="portal-build" content="3.3.2-task-assignee-20260921" />
-<title>Kent Taylor 5K Planning Portal</title>
-<link rel="stylesheet" href="styles-core.css"/><link rel="stylesheet" href="styles-pages.css"/><link rel="stylesheet" href="styles-responsive.css"/><link rel="stylesheet" href="styles-polish.css"/><link rel="stylesheet" href="styles-admin.css"/><link rel="stylesheet" href="styles-brand.css"/><link rel="stylesheet" href="styles-chat.css"/><link rel="stylesheet" href="styles-v31.css"/><link rel="stylesheet" href="styles-v31-github.css"/><link rel="stylesheet" href="styles-v32-drive.css"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#35104d">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, follow">
+  <title>Kent Taylor Planning Portal — New Address</title>
+  <link rel="canonical" href="https://taylor-5k-planning-portal.vercel.app/">
+  <script>
+    // Fixed destination: do not forward old version parameters, fragments,
+    // passwords, tokens, or browser storage to the new origin.
+    window.location.replace("https://taylor-5k-planning-portal.vercel.app/");
+  </script>
+  <meta http-equiv="refresh" content="0; url=https://taylor-5k-planning-portal.vercel.app/">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #35104d; color: #25132e; font-family: Arial, sans-serif; }
+    main { width: min(100%, 540px); padding: 32px; border-radius: 20px; background: #fff; border-top: 5px solid #e5b92b; }
+    .eyebrow { margin: 0 0 12px; color: #612080; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: 0 0 16px; color: #35104d; font-family: Georgia, serif; font-size: clamp(28px, 7vw, 38px); line-height: 1.15; }
+    p { line-height: 1.6; }
+    a { display: inline-block; margin-top: 8px; padding: 12px 18px; border-radius: 10px; background: #612080; color: #fff; font-weight: 700; text-decoration: none; }
+    a:focus-visible { outline: 3px solid #e5b92b; outline-offset: 4px; }
+    .note { margin-bottom: 0; color: #62556a; font-size: 14px; }
+  </style>
 </head>
 <body>
-<div id="auth" class="auth-screen">
-  <form id="loginForm" class="login-card">
-    <div class="brand-lockup login-brand"><span class="crown taylor-logo" aria-hidden="true"></span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027 · <b class="portal-version">v3.3.2</b></small></div></div>
-    <p class="eyebrow">PRIVATE PLANNING PORTAL</p>
-    <h1>Welcome back.</h1>
-    <p class="login-copy">Sign in with your approved committee account.</p>
-    <label>Email</label><input id="loginEmail" type="email" autocomplete="email" required value="cstrynar@gmail.com" />
-    <label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="8" required />
-    <button class="button primary full" type="submit">Sign In</button>
-    <div id="loginMessage" class="form-message"></div>
-  </form>
-</div>
-<div id="app" class="app-shell hidden">
-  <aside class="sidebar">
-    <div class="brand-lockup"><span class="crown taylor-logo" aria-hidden="true"></span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027 · <b class="portal-version">v3.3.2</b></small></div></div>
-    <nav id="sidebarNav" class="sidebar-nav"></nav>
-    <div class="sidebar-links">
-      <a href="./master.html" target="_blank" rel="noopener">Full Master Planning Doc ↗</a>
-      <a id="kt5kDriveShortcut" href="https://drive.google.com/drive/folders/1oj9N5TK5cRrOhA65QAgF5LMrjsx460Yp" target="_blank" rel="noopener noreferrer" title="Open the Kent Taylor 5K Google Drive folder in a new tab. Google Drive permissions apply.">KT5K Google Drive ↗</a>
-      <a href="https://taylor-5k-planning-portal.vercel.app/marketing.html" target="_blank" rel="noopener">Marketing Library ↗</a>
-      <a href="https://taylor-5k-preview.vercel.app" target="_blank" rel="noopener">Public Website ↗</a>
-    </div>
-    <div class="profile-box">
-      <div class="avatar" id="profileInitials">CS</div>
-      <div class="profile-copy"><strong id="profileName">Chris</strong><small id="profileRole">Super Admin</small></div>
-      <button id="logoutBtn" class="icon-button" title="Sign out">↪</button>
-    </div>
-  </aside>
-  <main class="main-shell">
-    <header class="topbar">
-      <div class="mobile-brandbar">
-        <div class="mobile-brandcopy"><span class="crown taylor-logo" aria-hidden="true"></span><div><strong>Kent Taylor <em>5K</em></strong><small>Planning Portal · Fall 2027 · <b class="portal-version">v3.3.2</b></small></div></div>
-        <div class="mobile-head-actions"><button class="mobile-bell" type="button">●<span>3</span></button><div class="mobile-avatar" id="mobileAvatar">CS</div></div>
-      </div>
-      <div class="desktop-heading">
-        <div class="welcome" id="welcomeText">Welcome back, Chris! <span>👋</span></div>
-        <div class="page-heading" id="pageHeading">Kent Taylor 5K Planning Portal · Fall 2027</div>
-        <div class="page-tagline" id="pageTagline">Build the race. Build the tradition.</div>
-      </div>
-      <div class="top-actions">
-        <button class="button ghost" type="button">▣ Fall 2027⌄</button>
-        <button class="button ghost" type="button" id="shareUpdate">↗ Share Update</button>
-        <button class="notification-button" type="button">●<span>3</span></button>
-        <button class="button ai-top" type="button" data-open-ai>✦ AI Assistant</button>
-      </div>
-    </header>
-    <section id="content" class="content"></section>
+  <main>
+    <p class="eyebrow">Kent Taylor · 5K &amp; Invitational</p>
+    <h1>One team. Two events.</h1>
+    <p>The planning portal has moved. You are being redirected to the updated site with both event tabs.</p>
+    <p>If this page stays open, use the button below.</p>
+    <a href="https://taylor-5k-planning-portal.vercel.app/" rel="noreferrer">Open the planning portal</a>
+    <p class="note">Use your existing committee email and password. You may need to sign in at the updated address. No new account is required.</p>
   </main>
-  <button class="ai-fab" type="button" data-open-ai><span class="ai-orb">✦</span><span><strong>Ask Taylor 5K AI</strong><small>GPT Realtime + live project/Drive access</small></span><b>›</b></button>
-  <nav class="mobile-nav" id="mobileNav"></nav>
-</div>
-<div id="editModal" class="modal" aria-hidden="true">
-  <div class="modal-card">
-    <div class="modal-head"><div><p class="eyebrow">LIVE PORTAL RECORD</p><h2 id="editTitle">Edit</h2></div><button id="editClose" class="modal-close" type="button">×</button></div>
-    <form id="editForm"><div id="editFields" class="form-grid"></div><div class="modal-actions"><span id="editStatus"></span><button class="button ghost" id="editCancel" type="button">Cancel</button><button class="button primary" type="submit">Save Changes</button></div></form>
-  </div>
-</div>
-<aside id="aiPanel" class="ai-panel" aria-hidden="true">
-  <div class="ai-panel-head"><div><strong>Taylor 5K AI Assistant</strong><small>GPT-5.6 · REALTIME VOICE · LIVE PROJECT ACCESS · GOOGLE DRIVE · FILES & PHOTOS</small></div><button id="aiClose" type="button">×</button></div>
-  <div class="ai-panel-tools"><label><input id="webToggle" type="checkbox" checked /> Live web research</label><span id="aiRolePill">SUPER ADMIN AI</span></div>
-  <div id="aiMessages" class="ai-messages"><div class="message assistant">Hi — I can open the live Taylor 5K portal, inspect the public website and portal code, search project files and the Marketing Library, use the authorized Kent Taylor 5K Google Drive tree, and propose approved changes. Type, drop in a file/photo, or tap Voice.</div></div>
-  <!-- Bootstrap controls are required by app-5.js; app-chat.js replaces this composer immediately after startup. -->
-  <div class="ai-compose"><textarea id="aiInput" placeholder="Message Taylor 5K AI…"></textarea><div class="ai-compose-row"><button id="micBtn" type="button">🎤 Talk</button><button id="voiceBtn" type="button">🔊 Voice on</button><span id="aiStatus">Ready</span><button id="aiSend" class="send" type="button">Send</button></div></div>
-</aside>
-<script src="app-1.js?v=3.2.4"></script><script src="app-2.js"></script><script src="app-3.js"></script><script src="app-4.js?v=3.3.2-task-assignee-20260921"></script><script src="app-5.js"></script><script src="app-admin.js?v=3.2.5"></script><script src="app-admin-init.js"></script><script src="app-chat.js"></script><script src="app-realtime-v3.js"></script><script src="app-v3-final.js"></script><script src="app-v31.js"></script><script src="app-v31-github.js"></script><script src="app-v31-github-read.js"></script><script src="app-v32-drive.js"></script><script src="app-master-doc-fix.js?v=3.3.2"></script><script src="app-task-admin.js?v=3.3.0-task-assignee-20260921"></script><script src="app-task-workflow.js?v=3.3.2-task-assignee-20260921"></script>
 </body>
 </html>
