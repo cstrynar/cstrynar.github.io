@@ -48,7 +48,7 @@ h1{font-size:clamp(30px,4vw,48px);line-height:1.04;margin:0;letter-spacing:-.035
 .stat strong{font-size:26px;letter-spacing:-.03em}
 .leader-stat{background:var(--lime)}
 .results-section{padding:30px 0 56px}
-.toolbar{display:grid;grid-template-columns:minmax(280px,1fr) 170px 190px 210px;gap:10px}
+.toolbar{display:grid;grid-template-columns:minmax(280px,1fr) 160px 190px 220px;gap:10px}
 .search-wrap{height:48px;display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:white}
 .search-wrap:focus-within{outline:3px solid rgba(15,91,216,.12);border-color:#7eabea}
 .search-wrap svg{width:18px;height:18px;fill:none;stroke:#76859b;stroke-width:2;stroke-linecap:round}
@@ -168,13 +168,14 @@ dialog h3{font-size:28px;margin:0 0 20px}
           <option value="Male">Male</option>
           <option value="Female">Female</option>
         </select>
-        <select id="ageFilter" aria-label="Filter by age group"><option value="">All age groups</option></select>\n        <select id="categoryFilter" aria-label="Filter by category"><option value="">All categories</option></select>
+        <select id="ageFilter" aria-label="Filter by age group"><option value="">All age groups</option></select>
+        <select id="categoryFilter" aria-label="Filter by category"><option value="">All categories</option></select>
       </div>
 
       <div class="results-headline">
         <div>
           <h2>5K Leaderboard</h2>
-          <p id="shownCount">Showing 3 finishers</p>
+          <p id="shownCount">Loading results…</p>
         </div>
         <div class="demo-status" title="Prototype behavior only">
           <span class="demo-dot"></span>
@@ -191,6 +192,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
               <th>Name</th>
               <th>Sex</th>
               <th>Age Group</th>
+              <th>Category</th>
               <th>Gun</th>
               <th>Chip</th>
               <th>Pace</th>
@@ -242,7 +244,7 @@ const fallback = {
   revision: 0,
   updatedAt: null,
   status: "setup",
-  event: { name:"Mercury Bridge Test 5K", location:"Bridgewater, MA", date:"October 14, 2026", startTime:"12:00 PM EDT", distance:"5K" },
+  event: { name:"Mercury Road Race Live", location:null, date:null, startTime:null, distance:"5K" },
   results: []
 };
 
@@ -255,7 +257,8 @@ const body = $("#resultsBody");
 const mobile = $("#mobileResults");
 const search = $("#search");
 const sexFilter = $("#sexFilter");
-const ageFilter = $("#ageFilter");\nconst categoryFilter = $("#categoryFilter");
+const ageFilter = $("#ageFilter");
+const categoryFilter = $("#categoryFilter");
 const empty = $("#emptyState");
 
 async function loadSnapshot() {
@@ -292,7 +295,8 @@ function filtered() {
     const hay = `${r.bib} ${nameOf(r)}`.toLowerCase();
     return (!q || hay.includes(q))
       && (!sexFilter.value || r.sex === sexFilter.value)
-      && (!ageFilter.value || r.ageGroup === ageFilter.value)\n      && (!categoryFilter.value || r.category === categoryFilter.value);
+      && (!ageFilter.value || r.ageGroup === ageFilter.value)
+      && (!categoryFilter.value || r.category === categoryFilter.value);
   });
 }
 
@@ -320,7 +324,12 @@ function render() {
 
   const ages = [...new Set(snapshot.results.map(r=>r.ageGroup).filter(Boolean))].sort();
   const current = ageFilter.value;
-  ageFilter.innerHTML = `<option value="">All age groups</option>` + ages.map(a=>`<option ${a===current?"selected":""}>${a}</option>`).join("");\n\n  const categories = [...new Set(snapshot.results.map(r=>r.category).filter(Boolean))].sort();\n  const currentCategory = categoryFilter.value;\n  categoryFilter.innerHTML = `<option value="">All categories</option>` + categories.map(c=>`<option ${c===currentCategory?"selected":""}>${c}</option>`).join("");\n  categoryFilter.disabled = categories.length === 0;
+  ageFilter.innerHTML = `<option value="">All age groups</option>` + ages.map(a=>`<option ${a===current?"selected":""}>${a}</option>`).join("");
+
+  const categories = [...new Set(snapshot.results.map(r=>r.category).filter(Boolean))].sort();
+  const currentCategory = categoryFilter.value;
+  categoryFilter.innerHTML = `<option value="">All categories</option>` + categories.map(c=>`<option ${c===currentCategory?"selected":""}>${c}</option>`).join("");
+  categoryFilter.disabled = categories.length === 0;
 
   const rows = filtered();
   $("#shownCount").textContent = `Showing ${rows.length} of ${snapshot.results.length} finishers`;
@@ -333,6 +342,7 @@ function render() {
       <td class="name-cell">${nameOf(r)}</td>
       <td>${r.sex ?? ""}</td>
       <td>${r.ageGroup ?? ""}</td>
+      <td>${r.category ?? ""}</td>
       <td class="time-cell">${r.gunTime ?? ""}</td>
       <td class="time-cell">${r.chipTime ?? ""}</td>
       <td class="time-cell">${r.pace ?? ""}</td>
@@ -351,6 +361,7 @@ function render() {
       <div class="runner-meta">
         <div><span>Sex</span><strong>${r.sex ?? ""}</strong></div>
         <div><span>Age Group</span><strong>${r.ageGroup ?? ""}</strong></div>
+        <div><span>Category</span><strong>${r.category ?? ""}</strong></div>
         <div><span>Pace</span><strong>${r.pace ? r.pace + "/mi" : ""}</strong></div>
       </div>
     </article>`).join("");
