@@ -48,7 +48,7 @@ h1{font-size:clamp(30px,4vw,48px);line-height:1.04;margin:0;letter-spacing:-.035
 .stat strong{font-size:26px;letter-spacing:-.03em}
 .leader-stat{background:var(--lime)}
 .results-section{padding:30px 0 56px}
-.toolbar{display:grid;grid-template-columns:minmax(280px,1fr) 180px 190px;gap:10px}
+.toolbar{display:grid;grid-template-columns:minmax(280px,1fr) 170px 190px 210px;gap:10px}
 .search-wrap{height:48px;display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:white}
 .search-wrap:focus-within{outline:3px solid rgba(15,91,216,.12);border-color:#7eabea}
 .search-wrap svg{width:18px;height:18px;fill:none;stroke:#76859b;stroke-width:2;stroke-linecap:round}
@@ -128,7 +128,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
           <span class="brand-sub">ROAD RACE LIVE RESULTS</span>
         </div>
       </a>
-      <div class="version">Road Race Live • staging</div>
+      <div class="version">Road Race Live • category staging</div>
     </div>
   </header>
 
@@ -168,7 +168,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
           <option value="Male">Male</option>
           <option value="Female">Female</option>
         </select>
-        <select id="ageFilter" aria-label="Filter by age group"><option value="">All age groups</option></select>
+        <select id="ageFilter" aria-label="Filter by age group"><option value="">All age groups</option></select>\n        <select id="categoryFilter" aria-label="Filter by category"><option value="">All categories</option></select>
       </div>
 
       <div class="results-headline">
@@ -235,7 +235,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
 
 const SUPABASE_URL = 'https://wajusbsyouyufpccixol.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYXNlIiwicmVmIjoid2FqdXNic3lvdXl1ZnBjY2l4b2wiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc4OTQwNjQ3NCwiZXhwIjoyMTA0OTgyNDc0fQ.1Er4HE3JEL6W4WuphE8r6Qg8ul-wijfGppVxDO3bXA8';
-const EVENT_SLUG = 'mercury-bridge-test-5k';
+const EVENT_SLUG = new URL(location.href).searchParams.get('event') || 'mercury-multicategory-test';
 
 const fallback = {
   schemaVersion: 1,
@@ -255,7 +255,7 @@ const body = $("#resultsBody");
 const mobile = $("#mobileResults");
 const search = $("#search");
 const sexFilter = $("#sexFilter");
-const ageFilter = $("#ageFilter");
+const ageFilter = $("#ageFilter");\nconst categoryFilter = $("#categoryFilter");
 const empty = $("#emptyState");
 
 async function loadSnapshot() {
@@ -292,7 +292,7 @@ function filtered() {
     const hay = `${r.bib} ${nameOf(r)}`.toLowerCase();
     return (!q || hay.includes(q))
       && (!sexFilter.value || r.sex === sexFilter.value)
-      && (!ageFilter.value || r.ageGroup === ageFilter.value);
+      && (!ageFilter.value || r.ageGroup === ageFilter.value)\n      && (!categoryFilter.value || r.category === categoryFilter.value);
   });
 }
 
@@ -320,7 +320,7 @@ function render() {
 
   const ages = [...new Set(snapshot.results.map(r=>r.ageGroup).filter(Boolean))].sort();
   const current = ageFilter.value;
-  ageFilter.innerHTML = `<option value="">All age groups</option>` + ages.map(a=>`<option ${a===current?"selected":""}>${a}</option>`).join("");
+  ageFilter.innerHTML = `<option value="">All age groups</option>` + ages.map(a=>`<option ${a===current?"selected":""}>${a}</option>`).join("");\n\n  const categories = [...new Set(snapshot.results.map(r=>r.category).filter(Boolean))].sort();\n  const currentCategory = categoryFilter.value;\n  categoryFilter.innerHTML = `<option value="">All categories</option>` + categories.map(c=>`<option ${c===currentCategory?"selected":""}>${c}</option>`).join("");\n  categoryFilter.disabled = categories.length === 0;
 
   const rows = filtered();
   $("#shownCount").textContent = `Showing ${rows.length} of ${snapshot.results.length} finishers`;
@@ -367,14 +367,14 @@ function showRunner(bib) {
   const r = snapshot.results.find(x=>String(x.bib)===String(bib)); if(!r) return;
   $("#dialogName").textContent = nameOf(r);
   $("#dialogGrid").innerHTML = [
-    ["Overall", r.overall ? `#${r.overall}` : "—"],["Bib",r.bib ?? "—"],["Sex",r.sex ?? "—"],["Age Group",r.ageGroup ?? "—"],
+    ["Overall", r.overall ? `#${r.overall}` : "—"],["Bib",r.bib ?? "—"],["Sex",r.sex ?? "—"],["Age Group",r.ageGroup ?? "—"],["Category",r.category ?? "—"],
     ["Gun Time",r.gunTime ?? "—"],["Chip Time",r.chipTime ?? "—"],["Pace",r.pace ? `${r.pace}/mi` : "—"],["Status","Finished"]
   ].map(([k,v])=>`<div class="detail"><span>${k}</span><strong>${v}</strong></div>`).join("");
   $("#runnerDialog").showModal();
 }
 
 $("#closeDialog").addEventListener("click",()=>$("#runnerDialog").close());
-[search,sexFilter,ageFilter].forEach(el=>el.addEventListener("input",render));
+[search,sexFilter,ageFilter,categoryFilter].forEach(el=>el.addEventListener("input",render));
 
 setInterval(()=>{
   const base = lastServerTimestamp || Date.now();
