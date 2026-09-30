@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171719">
+<title>Mercury Live Admin</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{--accent:#b30f2b;--ink:#171719;--muted:#6d717a;--line:#dedfe4;--soft:#f5f6f8;--bg:#eef0f3;--ok:#18794e;--warn:#9a6700;--bad:#b42318}
+*{box-sizing:border-box}html{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+body{margin:0}.shell{width:min(1180px,calc(100% - 28px));margin:auto}
+header{background:#171719;border-bottom:4px solid var(--accent);color:#fff}.head{min-height:82px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{height:62px;max-width:55vw;object-fit:contain}.product{text-align:right}.product b{display:block;text-transform:uppercase;letter-spacing:.08em}.product span{font-size:11px;color:#cfd0d4}
+main{padding:22px 0 48px}.card{background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:0 5px 18px rgba(20,20,25,.05);padding:20px;margin-bottom:15px}
+h1{font-size:28px;margin:0 0 4px}h2{font-size:19px;margin:0 0 14px}h3{font-size:15px;margin:18px 0 10px}.sub{color:var(--muted);font-size:12px;margin:0}
+.login{width:min(430px,calc(100% - 28px));margin:70px auto}.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+label{display:block;font-size:11px;font-weight:800;color:#5e626b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 11px;color:var(--ink);font:inherit}
+input,select{height:44px}textarea{min-height:110px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:#eceef2;color:#24262a}.danger{background:#fee4e2;color:#b42318}.small{padding:7px 10px;font-size:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.status{font-size:12px;padding:8px 10px;border-radius:9px;background:var(--soft);color:#4a4e56}.status.ok{color:var(--ok);background:#ecfdf3}.status.bad{color:var(--bad);background:#fff1f0}
+.switchline{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fafbfc}.switchline input{width:auto;height:auto}.switchline label{margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)}
+.scoring{border:2px solid #ecd0d6;background:#fffafb}.hint{font-size:11px;color:var(--muted);line-height:1.45}.sep{height:1px;background:var(--line);margin:18px 0}
+.topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
+.table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
+@media(max-width:720px){.row,.row3{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
+</style>
+</head>
+<body>
+<header><div class="shell head"><img class="logo" src="https://mercurytiming.com/mercury-logo.png" alt="Mercury Timing Systems"><div class="product"><b>Road Race Live Admin</b><span>Event setup + scoring controls</span></div></div></header>
+
+<div id="loginView" class="login card">
+  <h1>Mercury Live Admin</h1>
+  <p class="sub">Sign in with the Mercury admin password.</p>
+  <div style="height:16px"></div>
+  <label for="password">Admin password</label>
+  <input id="password" type="password" autocomplete="current-password">
+  <div style="height:12px"></div>
+  <div class="actions"><button class="primary" id="loginBtn">Sign in</button><span id="loginStatus" class="status hidden"></span></div>
+</div>
+
+<main id="appView" class="shell hidden">
+  <div class="topbar">
+    <div class="grow"><label for="eventSelect">Event</label><select id="eventSelect"></select></div>
+    <div class="actions"><button class="secondary" id="refreshBtn">Refresh</button><button class="secondary" id="logoutBtn">Log out</button></div>
+  </div>
+
+  <section class="card">
+    <h2>Event Setup</h2>
+    <div class="row">
+      <div><label>Name</label><input id="eventName"></div>
+      <div><label>Location</label><input id="eventLocation"></div>
+      <div><label>Date</label><input id="eventDate" type="date"></div>
+      <div><label>Start time label</label><input id="eventStart"></div>
+      <div><label>Distance label</label><input id="eventDistance"></div>
+      <div><label>Status</label><select id="eventStatus"><option>setup</option><option>shadow</option><option>live</option><option>final</option><option>finished</option><option>official</option><option>archived</option></select></div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="switchline"><input id="eventPublic" type="checkbox"><label for="eventPublic">Public event — appears in Road Race Live event list</label></div>
+  </section>
+
+  <section class="card">
+    <h2>Results Display</h2>
+    <div class="row3">
+      <div class="switchline"><input id="showOverall" type="checkbox"><label for="showOverall">Overall place</label></div>
+      <div class="switchline"><input id="showBib" type="checkbox"><label for="showBib">Bib</label></div>
+      <div class="switchline"><input id="showName" type="checkbox"><label for="showName">Name</label></div>
+      <div class="switchline"><input id="showGender" type="checkbox"><label for="showGender">Gender</label></div>
+      <div class="switchline"><input id="showAge" type="checkbox"><label for="showAge">Age</label></div>
+      <div class="switchline"><input id="showAgeGroup" type="checkbox"><label for="showAgeGroup">Age group</label></div>
+      <div class="switchline"><input id="showTeam" type="checkbox"><label for="showTeam">Team / club</label></div>
+      <div class="switchline"><input id="showGun" type="checkbox"><label for="showGun">Gun time</label></div>
+      <div class="switchline"><input id="showChip" type="checkbox"><label for="showChip">Chip time</label></div>
+      <div class="switchline"><input id="showPace" type="checkbox"><label for="showPace">Pace</label></div>
+      <div class="switchline"><input id="showRecent" type="checkbox"><label for="showRecent">Recent Finishers tab</label></div>
+      <div><label>Recent default count</label><select id="recentCount"><option>5</option><option>10</option><option>15</option><option>20</option></select></div>
+    </div>
+  </section>
+
+  <section class="card scoring">
+    <h2>Team Scoring</h2>
+    <p class="sub">Derived from each athlete's MYLAPS Team field. Raw race results are never changed by scoring.</p>
+    <div style="height:12px"></div>
+    <div class="switchline"><input id="scoreEnabled" type="checkbox"><label for="scoreEnabled"><b>Enable team scoring for this event</b></label></div>
+    <div id="scoringOptions">
+      <div style="height:14px"></div>
+      <div class="row">
+        <div><label>Scorers per team</label><input id="scorersPerTeam" type="number" min="1" max="20"></div>
+        <div><label>Displacers per team</label><input id="displacersPerTeam" type="number" min="0" max="20"></div>
+        <div><label>Unattached / no-team athletes</label><select id="unattachedMode"><option value="skip_compress">Skip and compress scoring places (standard)</option><option value="count_in_sequence">Keep in scoring sequence</option></select></div>
+        <div><label>Scoring divisions</label><select id="divisionMode"><option value="all">All athletes together</option><option value="gender">Separate by gender</option><option value="category">Separate by race / category</option><option value="gender_category">Separate by gender + race / category</option></select></div>
+        <div><label>Tie-breaker</label><select id="tiebreaker"><option value="ncaa_head_to_head">NCAA-style head-to-head scorers</option><option value="nfhs_next_runner">NFHS-style next runner</option><option value="aggregate_time">Aggregate scorer time</option></select></div>
+      </div>
+      <p class="hint">The Team Scores tab stays hidden until the first team in a scoring division has all required scorers finished. Once active, incomplete teams are listed without rank, score, total time, or average time.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Branding & Awards</h2>
+    <div class="row">
+      <div><label>Accent color</label><input id="accentColor" type="color"></div>
+      <div><label>Timezone</label><input id="timezone"></div>
+    </div>
+    <div style="height:12px"></div>
+    <label>Awards JSON</label><textarea id="awardsJson"></textarea>
+    <div class="sep"></div>
+    <label>Event logo</label>
+    <div class="actions"><input id="logoFile" type="file" accept=".png,.jpg,.jpeg,.webp,.svg,image/*"><button class="secondary" id="uploadLogoBtn">Upload / replace logo</button><button class="danger small" id="removeLogoBtn">Remove logo</button></div>
+  </section>
+
+  <section class="card">
+    <div class="actions"><button class="primary" id="saveBtn">Save event settings</button><span id="saveStatus" class="status hidden"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>Timing Computers</h2>
+    <div class="actions"><input id="clientName" placeholder="New timing computer name" style="max-width:360px"><button class="secondary" id="createClientBtn">Create credential</button></div>
+    <p class="hint">A newly created Bridge credential is shown once. Store it on the intended timing computer.</p>
+    <div id="newKey" class="status hidden" style="word-break:break-all"></div>
+    <div style="height:10px"></div>
+    <table class="table"><thead><tr><th>Name</th><th>Status</th><th>Last used</th><th></th></tr></thead><tbody id="clientsBody"></tbody></table>
+  </section>
+
+  <section class="card">
+    <h2>Activity Log</h2>
+    <div class="actions"><button class="secondary" id="activityBtn">Refresh activity</button></div>
+    <div style="height:10px"></div>
+    <table class="table"><thead><tr><th>When</th><th>Action</th><th>Detail</th></tr></thead><tbody id="activityBody"></tbody></table>
+  </section>
+
+  <section class="card">
+    <h2>Admin Security</h2>
+    <div class="row"><div><label>Current password</label><input id="currentPassword" type="password"></div><div><label>New password (12+ characters)</label><input id="newPassword" type="password"></div></div>
+    <div style="height:10px"></div><button class="secondary" id="changePasswordBtn">Change admin password</button>
+  </section>
+  <div class="footer">Mercury Road Race Live Admin • R8 scoring controls</div>
+</main>
+
+<script>
+const API='https://wajusbsyouyufpccixol.supabase.co/functions/v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+let token=localStorage.getItem('mercuryAdminSession')||'';
+let currentSlug='';
+let loaded=null;
+
+function authHeaders(json=true){const h={Authorization:'Bearer '+token};if(json)h['Content-Type']='application/json';return h}
+function status(el,msg,ok=true){el.textContent=msg;el.className='status '+(ok?'ok':'bad')}
+function hideStatus(el){el.className='status hidden'}
+async function req(url,opt={}){const r=await fetch(url,{cache:'no-store',...opt});let j={};try{j=await r.json()}catch{}if(!r.ok){if(r.status===401){localStorage.removeItem('mercuryAdminSession');token='';showLogin()}throw new Error(j.error||('HTTP '+r.status))}return j}
+function showLogin(){$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
+function showApp(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden')}
+function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
+
+async function login(){
+  const st=$('#loginStatus');hideStatus(st);
+  try{
+    const j=await req(API+'/admin-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',password:$('#password').value})});
+    token=j.token;localStorage.setItem('mercuryAdminSession',token);$('#password').value='';showApp();await loadEvents();
+  }catch(e){status(st,'Sign-in failed: '+e.message,false)}
+}
+
+async function logout(){
+  try{await fetch(API+'/admin-auth',{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'logout'})})}catch{}
+  localStorage.removeItem('mercuryAdminSession');token='';showLogin()
+}
+
+async function loadEvents(){
+  const j=await req(API+'/admin-event-settings?action=events',{headers:authHeaders(false)});
+  const events=Array.isArray(j.events)?j.events:[];
+  const previous=currentSlug;
+  $('#eventSelect').innerHTML=events.map(e=>'<option value="'+esc(e.slug)+'">'+esc(e.name+' — '+(e.event_date||'No date'))+'</option>').join('');
+  currentSlug=events.some(e=>e.slug===previous)?previous:(events[0]?.slug||'');
+  $('#eventSelect').value=currentSlug;
+  if(currentSlug)await loadEvent();
+  await loadClients();
+}
+
+async function loadEvent(){
+  currentSlug=$('#eventSelect').value;
+  if(!currentSlug)return;
+  const j=await req(API+'/admin-event-settings?slug='+encodeURIComponent(currentSlug),{headers:authHeaders(false)});
+  loaded=j;const e=j.event||{},s=j.settings||{},ts=s.team_scoring||{};
+  $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
+  $('#eventStart').value=e.start_time_label||'';$('#eventDistance').value=e.distance_label||'';$('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
+  $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
+  $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showTeam').checked=s.show_team===true;
+  $('#showGun').checked=s.show_gun_time!==false;$('#showChip').checked=s.show_chip_time!==false;$('#showPace').checked=s.show_pace!==false;$('#showRecent').checked=s.show_recent_finishers!==false;
+  $('#recentCount').value=String(s.recent_finishers_default_count||10);$('#accentColor').value=s.accent_color||'#b30f2b';$('#timezone').value=s.timezone||'America/New_York';
+  $('#awardsJson').value=JSON.stringify(s.awards||{overall_places:3,remove_overall_from_age_groups:true,age_groups:[],special_divisions:[]},null,2);
+  $('#scoreEnabled').checked=ts.enabled===true;$('#scorersPerTeam').value=String(ts.scorers_per_team||5);$('#displacersPerTeam').value=String(ts.displacers_per_team??2);
+  $('#unattachedMode').value=ts.unattached_mode||'skip_compress';$('#divisionMode').value=ts.division_mode||'all';$('#tiebreaker').value=ts.tiebreaker||'ncaa_head_to_head';toggleScoring();
+  hideStatus($('#saveStatus'));
+  await loadActivity();
+}
+
+async function save(){
+  const st=$('#saveStatus');hideStatus(st);let awards;
+  try{awards=JSON.parse($('#awardsJson').value)}catch{status(st,'Awards JSON is not valid.',false);return}
+  const body={
+    event:{name:$('#eventName').value,location:$('#eventLocation').value,event_date:$('#eventDate').value,start_time_label:$('#eventStart').value,distance_label:$('#eventDistance').value,status:$('#eventStatus').value,is_public:$('#eventPublic').checked},
+    settings:{
+      timezone:$('#timezone').value,accent_color:$('#accentColor').value,show_overall_place:$('#showOverall').checked,show_bib:$('#showBib').checked,show_name:$('#showName').checked,
+      show_gender:$('#showGender').checked,show_age:$('#showAge').checked,show_age_group:$('#showAgeGroup').checked,show_team:$('#showTeam').checked,show_gun_time:$('#showGun').checked,
+      show_chip_time:$('#showChip').checked,show_pace:$('#showPace').checked,show_recent_finishers:$('#showRecent').checked,recent_finishers_default_count:Number($('#recentCount').value),awards,
+      team_scoring:{enabled:$('#scoreEnabled').checked,scorers_per_team:Number($('#scorersPerTeam').value),displacers_per_team:Number($('#displacersPerTeam').value),unattached_mode:$('#unattachedMode').value,division_mode:$('#divisionMode').value,tiebreaker:$('#tiebreaker').value}
+    }
+  };
+  try{await req(API+'/admin-event-settings?slug='+encodeURIComponent(currentSlug),{method:'PUT',headers:authHeaders(),body:JSON.stringify(body)});status(st,'Saved.');await loadEvent()}catch(e){status(st,'Save failed: '+e.message,false)}
+}
+
+async function uploadLogo(){
+  const file=$('#logoFile').files[0];if(!file)return;
+  const f=new FormData();f.append('file',file);f.append('alt',$('#eventName').value+' logo');
+  await req(API+'/admin-event-settings?action=logo&slug='+encodeURIComponent(currentSlug),{method:'POST',headers:{Authorization:'Bearer '+token},body:f});
+  status($('#saveStatus'),'Logo uploaded.');await loadEvent()
+}
+async function removeLogo(){if(!confirm('Remove this event logo?'))return;await req(API+'/admin-event-settings?action=logo&slug='+encodeURIComponent(currentSlug),{method:'DELETE',headers:authHeaders(false)});status($('#saveStatus'),'Logo removed.');await loadEvent()}
+
+async function loadClients(){
+  try{
+    const j=await req(API+'/admin-event-settings?action=bridge-clients',{headers:authHeaders(false)});
+    $('#clientsBody').innerHTML=(j.clients||[]).map(c=>'<tr><td>'+esc(c.name)+'</td><td><span class="pill">'+(c.active?'Active':'Disabled')+'</span></td><td>'+esc(c.last_used_at||'Never')+'</td><td><button class="small secondary" data-client="'+esc(c.id)+'" data-active="'+(!c.active)+'">'+(c.active?'Disable':'Enable')+'</button></td></tr>').join('');
+    document.querySelectorAll('[data-client]').forEach(b=>b.onclick=()=>setClient(b.dataset.client,b.dataset.active==='true'));
+  }catch(e){$('#clientsBody').innerHTML='<tr><td colspan="4">Unable to load timing computers.</td></tr>'}
+}
+async function createClient(){
+  const name=$('#clientName').value.trim();if(!name)return;
+  const j=await req(API+'/admin-event-settings?action=bridge-clients',{method:'POST',headers:authHeaders(),body:JSON.stringify({name})});
+  $('#newKey').className='status ok';$('#newKey').textContent='New credential — copy now: '+j.bridgeKey;$('#clientName').value='';await loadClients()
+}
+async function setClient(id,active){await req(API+'/admin-event-settings?action=bridge-clients',{method:'PUT',headers:authHeaders(),body:JSON.stringify({id,active})});await loadClients()}
+
+async function loadActivity(){
+  if(!currentSlug)return;
+  try{
+    const j=await req(API+'/admin-activity?slug='+encodeURIComponent(currentSlug),{headers:authHeaders(false)});
+    $('#activityBody').innerHTML=(j.activity||[]).map(a=>'<tr><td>'+esc(a.created_at)+'</td><td>'+esc(a.action)+'</td><td><code>'+esc(JSON.stringify(a.detail||{}))+'</code></td></tr>').join('');
+  }catch(e){$('#activityBody').innerHTML='<tr><td colspan="3">Unable to load activity.</td></tr>'}
+}
+
+async function changePassword(){
+  try{
+    const j=await req(API+'/admin-auth',{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'change-password',currentPassword:$('#currentPassword').value,newPassword:$('#newPassword').value})});
+    alert('Password changed. Please sign in again.');localStorage.removeItem('mercuryAdminSession');token='';showLogin()
+  }catch(e){alert('Password change failed: '+e.message)}
+}
+
+$('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
+$('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=loadEvent;$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
+$('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
+
+if(token){showApp();loadEvents().catch(()=>showLogin())}else showLogin();
+</script>
+</body>
+</html>
