@@ -27,6 +27,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
 @media(max-width:720px){.row,.row3{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
+<link rel="stylesheet" href="../assets/admin-tools.css">
 </head>
 <body>
 <header><div class="shell head"><img class="logo" src="https://mercurytiming.com/mercury-logo.png" alt="Mercury Timing Systems"><div class="product"><b>Road Race Live Admin</b><span>Event setup + scoring controls</span></div></div></header>
@@ -47,6 +48,14 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div class="actions"><button class="secondary" id="refreshBtn">Refresh</button><button class="secondary" id="logoutBtn">Log out</button></div>
   </div>
 
+  <nav class="tool-nav" aria-label="Admin views">
+    <button type="button" data-panel="settingsPanel" aria-pressed="true">Event settings</button>
+    <button type="button" data-panel="sharePanel" aria-pressed="false">QR &amp; share</button>
+    <button type="button" data-panel="sponsorPanel" aria-pressed="false">Sponsors</button>
+    <button type="button" data-panel="supportPanel" aria-pressed="false">Support</button>
+  </nav>
+  <p id="adminEventState" class="status" role="status" hidden></p>
+  <div id="settingsPanel" class="admin-panel">
   <section class="card">
     <h2>Event Setup</h2>
     <div class="row">
@@ -135,6 +144,56 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div class="row"><div><label>Current password</label><input id="currentPassword" type="password"></div><div><label>New password (12+ characters)</label><input id="newPassword" type="password"></div></div>
     <div style="height:10px"></div><button class="secondary" id="changePasswordBtn">Change admin password</button>
   </section>
+  </div>
+  <section id="sharePanel" class="admin-panel" hidden>
+    <h1>QR &amp; share</h1><p class="sub">One event link for spectators and signs.</p>
+    <div id="shareState" class="status" role="status" aria-live="polite">Choose an event to verify its public link.</div>
+    <div class="card share-grid">
+      <div class="share-details"><h2 id="shareName">No verified public event</h2><p id="shareMeta" class="sub"></p>
+        <label for="shareLink">Public event link</label><textarea id="shareLink" readonly rows="2" spellcheck="false"></textarea>
+        <div class="actions"><button type="button" class="primary" id="copyEventLink" disabled>Copy link</button><button type="button" class="secondary" id="shareEventLink" disabled>Share...</button></div>
+        <p id="shareFeedback" class="hint" role="status" aria-live="polite"></p>
+      </div>
+      <div class="qr-side"><div id="eventQr" aria-label="Event QR code"></div></div>
+      <button type="button" class="secondary" id="previewSign" disabled>Preview printable sign</button>
+    </div><button type="button" class="secondary" id="verifyEventLink">Check public link again</button>
+  </section>
+  <section id="sponsorPanel" class="admin-panel" hidden>
+    <h1>Branding &amp; sponsors</h1><p class="sub">Local draft preview. Sponsor changes are not saved or published.</p>
+    <div class="sponsor-grid">
+      <section class="card"><h2>Sponsor placement</h2>
+        <label for="sponsorName">Sponsor name</label><input id="sponsorName" maxlength="100">
+        <label for="sponsorWebsite">Website (optional)</label><input id="sponsorWebsite" type="url" placeholder="https://" maxlength="2048" aria-describedby="sponsorError">
+        <label for="sponsorLogo">Logo (optional PNG, JPEG or WebP)</label><input id="sponsorLogo" type="file" accept="image/png,image/jpeg,image/webp">
+        <label for="sponsorAlt">Logo description</label><input id="sponsorAlt" maxlength="160">
+        <div class="switchline"><input id="sponsorResults" type="checkbox" checked><label for="sponsorResults">Show below results</label></div>
+        <div class="switchline"><input id="sponsorPrint" type="checkbox"><label for="sponsorPrint">Include on printed sign</label></div>
+        <p id="sponsorError" class="hint" role="status" aria-live="polite"></p>
+        <div class="actions"><button type="button" class="primary" id="previewSponsor">Preview changes</button><button type="button" class="secondary" id="removeSponsorLogo">Remove logo</button></div>
+        <p class="hint">Drafts clear on event change, admin refresh or sign-out. Existing event branding is unchanged.</p>
+      </section>
+      <section class="card"><h2>Public placement preview</h2><p class="hint">Illustrative preview only. No participant data is displayed.</p>
+        <div class="preview-hero"><h3 id="sponsorEventName">Choose an event</h3><p id="sponsorEventMeta"></p></div>
+        <div class="preview-results"><h3>Results</h3><p>Race results remain above the sponsor area.</p></div>
+        <div id="sponsorPlacement"></div><p id="sponsorEmpty" class="hint">No sponsor configured. The sponsor area is omitted.</p>
+      </section>
+    </div>
+  </section>
+  <section id="supportPanel" class="admin-panel" hidden>
+    <div class="topbar"><div><span class="pill">READ ONLY</span><h1>Support overview</h1><p class="sub" id="supportContext">Choose an event.</p></div><button class="secondary" type="button" id="refreshSupport">Refresh view</button></div>
+    <p class="hint">Read-only view within your existing admin session. No new support access is granted.</p>
+    <div id="supportState" class="status" role="status" aria-live="polite"></div>
+    <div class="row3">
+      <section class="card"><h2>Event &amp; publication</h2><dl id="supportEvent"></dl></section>
+      <section class="card"><h2>Public snapshot</h2><dl id="supportSnapshot"></dl></section>
+      <section class="card"><h2>Timing credentials (account)</h2><div id="supportClients"></div><p class="hint">Account-wide. No event association or online status is implied. Last credential use is not a heartbeat.</p></section>
+    </div>
+    <div class="row">
+      <section class="card"><h2>Recent activity</h2><div class="support-table"><table class="table"><thead><tr><th>When (UTC)</th><th>Action</th><th>Summary</th></tr></thead><tbody id="supportActivity"></tbody></table></div><p class="hint">Safe summaries only. Raw details and participant payloads are omitted.</p></section>
+      <section class="card"><h2>Not available in this source</h2><ul><li>Computer online state</li><li>Source-file freshness</li><li>Queue depth and pending jobs</li><li>Accepted / processed / verified stages</li></ul></section>
+    </div>
+  </section>
+
   <div class="footer">Mercury Road Race Live Admin • R8 scoring controls</div>
 </main>
 
@@ -145,12 +204,26 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let token=localStorage.getItem('mercuryAdminSession')||'';
 let currentSlug='';
 let loaded=null;
+let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0;
+
+function clearEventSettings(message){
+  loaded=null;$('#settingsPanel').inert=true;
+  const ids='eventName eventLocation eventDate eventStart eventDistance eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone awardsJson scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
+  for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
+  $('#activityBody').replaceChildren();hideStatus($('#saveStatus'));
+  $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
+}
+function eventMutationContext(){
+  if(!token||!currentSlug||loaded?.event?.slug!==currentSlug||$('#eventSelect').value!==currentSlug||$('#settingsPanel').inert){status($('#saveStatus'),'Choose and load an event before making changes.',false);return null;}
+  return {slug:currentSlug,epoch:adminLoadEpoch,session:token};
+}
+function eventContextCurrent(context){return context&&context.epoch===adminLoadEpoch&&context.slug===currentSlug&&context.session===token;}
 
 function authHeaders(json=true){const h={Authorization:'Bearer '+token};if(json)h['Content-Type']='application/json';return h}
 function status(el,msg,ok=true){el.textContent=msg;el.className='status '+(ok?'ok':'bad')}
 function hideStatus(el){el.className='status hidden'}
 async function req(url,opt={}){const r=await fetch(url,{cache:'no-store',...opt});let j={};try{j=await r.json()}catch{}if(!r.ok){if(r.status===401){localStorage.removeItem('mercuryAdminSession');token='';showLogin()}throw new Error(j.error||('HTTP '+r.status))}return j}
-function showLogin(){$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
+function showLogin(){adminLoadEpoch++;adminListEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
 function showApp(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden')}
 function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
 
@@ -168,20 +241,26 @@ async function logout(){
 }
 
 async function loadEvents(){
+  const listEpoch=++adminListEpoch;
   const j=await req(API+'/admin-event-settings?action=events',{headers:authHeaders(false)});
+  if(listEpoch!==adminListEpoch||!token)return;
   const events=Array.isArray(j.events)?j.events:[];
   const previous=currentSlug;
   $('#eventSelect').innerHTML=events.map(e=>'<option value="'+esc(e.slug)+'">'+esc(e.name+' — '+(e.event_date||'No date'))+'</option>').join('');
   currentSlug=events.some(e=>e.slug===previous)?previous:(events[0]?.slug||'');
   $('#eventSelect').value=currentSlug;
-  if(currentSlug)await loadEvent();
+  if(currentSlug)await loadEvent();else{adminLoadEpoch++;clearEventSettings('No events available. Refresh to retry.');window.MercuryTools?.clear();}
   await loadClients();
 }
 
 async function loadEvent(){
-  currentSlug=$('#eventSelect').value;
-  if(!currentSlug)return;
-  const j=await req(API+'/admin-event-settings?slug='+encodeURIComponent(currentSlug),{headers:authHeaders(false)});
+  const slug=$('#eventSelect').value;currentSlug=slug;const epoch=++adminLoadEpoch;loaded=null;window.MercuryTools?.clear();
+  clearEventSettings(slug?'Loading selected event...':'No event selected.');
+  if(!slug)return;
+  let j;try{j=await req(API+'/admin-event-settings?slug='+encodeURIComponent(slug),{headers:authHeaders(false)});}catch(e){if(epoch===adminLoadEpoch)$('#adminEventState').textContent='Unable to load the selected event. Refresh to retry.';return;}
+  if(epoch!==adminLoadEpoch||slug!==currentSlug)return;
+  if(j.event?.slug!==slug){$('#adminEventState').textContent='Event response does not match the selection. Refresh to retry.';return;}
+  $('#settingsPanel').inert=false;$('#adminEventState').hidden=true;
   loaded=j;const e=j.event||{},s=j.settings||{},ts=s.team_scoring||{};
   $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
   $('#eventStart').value=e.start_time_label||'';$('#eventDistance').value=e.distance_label||'';$('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
@@ -193,10 +272,12 @@ async function loadEvent(){
   $('#scoreEnabled').checked=ts.enabled===true;$('#scorersPerTeam').value=String(ts.scorers_per_team||5);$('#displacersPerTeam').value=String(ts.displacers_per_team??2);
   $('#unattachedMode').value=ts.unattached_mode||'skip_compress';$('#divisionMode').value=ts.division_mode||'all';$('#tiebreaker').value=ts.tiebreaker||'ncaa_head_to_head';toggleScoring();
   hideStatus($('#saveStatus'));
+  window.MercuryTools?.eventChanged(currentSlug,loaded);
   await loadActivity();
 }
 
 async function save(){
+  const context=eventMutationContext();if(!context)return;
   const st=$('#saveStatus');hideStatus(st);let awards;
   try{awards=JSON.parse($('#awardsJson').value)}catch{status(st,'Awards JSON is not valid.',false);return}
   const body={
@@ -208,16 +289,21 @@ async function save(){
       team_scoring:{enabled:$('#scoreEnabled').checked,scorers_per_team:Number($('#scorersPerTeam').value),displacers_per_team:Number($('#displacersPerTeam').value),unattached_mode:$('#unattachedMode').value,division_mode:$('#divisionMode').value,tiebreaker:$('#tiebreaker').value}
     }
   };
-  try{await req(API+'/admin-event-settings?slug='+encodeURIComponent(currentSlug),{method:'PUT',headers:authHeaders(),body:JSON.stringify(body)});status(st,'Saved.');await loadEvent()}catch(e){status(st,'Save failed: '+e.message,false)}
+  try{await req(API+'/admin-event-settings?slug='+encodeURIComponent(context.slug),{method:'PUT',headers:authHeaders(),body:JSON.stringify(body)});if(eventContextCurrent(context)){status(st,'Saved.');await loadEvent()}}catch(e){if(eventContextCurrent(context))status(st,'Save failed: '+e.message,false)}
 }
 
 async function uploadLogo(){
+  const context=eventMutationContext();if(!context)return;
   const file=$('#logoFile').files[0];if(!file)return;
   const f=new FormData();f.append('file',file);f.append('alt',$('#eventName').value+' logo');
-  await req(API+'/admin-event-settings?action=logo&slug='+encodeURIComponent(currentSlug),{method:'POST',headers:{Authorization:'Bearer '+token},body:f});
-  status($('#saveStatus'),'Logo uploaded.');await loadEvent()
+  await req(API+'/admin-event-settings?action=logo&slug='+encodeURIComponent(context.slug),{method:'POST',headers:authHeaders(false),body:f});
+  if(eventContextCurrent(context)){status($('#saveStatus'),'Logo uploaded.');await loadEvent()}
 }
-async function removeLogo(){if(!confirm('Remove this event logo?'))return;await req(API+'/admin-event-settings?action=logo&slug='+encodeURIComponent(currentSlug),{method:'DELETE',headers:authHeaders(false)});status($('#saveStatus'),'Logo removed.');await loadEvent()}
+async function removeLogo(){
+  const context=eventMutationContext();if(!context||!confirm('Remove this event logo?'))return;
+  await req(API+'/admin-event-settings?action=logo&slug='+encodeURIComponent(context.slug),{method:'DELETE',headers:authHeaders(false)});
+  if(eventContextCurrent(context)){status($('#saveStatus'),'Logo removed.');await loadEvent()}
+}
 
 async function loadClients(){
   try{
@@ -234,11 +320,14 @@ async function createClient(){
 async function setClient(id,active){await req(API+'/admin-event-settings?action=bridge-clients',{method:'PUT',headers:authHeaders(),body:JSON.stringify({id,active})});await loadClients()}
 
 async function loadActivity(){
-  if(!currentSlug)return;
+  const slug=currentSlug,epoch=adminLoadEpoch,activityEpoch=++adminActivityEpoch;
+  if(!slug||loaded?.event?.slug!==slug)return;
+  const isCurrent=()=>epoch===adminLoadEpoch&&slug===currentSlug&&activityEpoch===adminActivityEpoch;
   try{
-    const j=await req(API+'/admin-activity?slug='+encodeURIComponent(currentSlug),{headers:authHeaders(false)});
+    const j=await req(API+'/admin-activity?slug='+encodeURIComponent(slug),{headers:authHeaders(false)});
+    if(!isCurrent())return;
     $('#activityBody').innerHTML=(j.activity||[]).map(a=>'<tr><td>'+esc(a.created_at)+'</td><td>'+esc(a.action)+'</td><td><code>'+esc(JSON.stringify(a.detail||{}))+'</code></td></tr>').join('');
-  }catch(e){$('#activityBody').innerHTML='<tr><td colspan="3">Unable to load activity.</td></tr>'}
+  }catch(e){if(isCurrent())$('#activityBody').innerHTML='<tr><td colspan="3">Unable to load activity.</td></tr>'}
 }
 
 async function changePassword(){
@@ -252,7 +341,10 @@ $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.
 $('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=loadEvent;$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
 $('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
 
-if(token){showApp();loadEvents().catch(()=>showLogin())}else showLogin();
+window.startMercuryAdmin=()=>{if(token){showApp();loadEvents().catch(()=>showLogin())}else showLogin()};
 </script>
+<script src="../assets/qrcode.js"></script>
+<script src="../assets/admin-tools.js"></script>
+<script>startMercuryAdmin();</script>
 </body>
 </html>

@@ -149,6 +149,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
   .footer-inner{display:block;padding:17px 0}.footer-inner span{display:block;margin:3px 0}
 }
 </style>
+<link rel="stylesheet" href="assets/public-states.css">
 </head>
 <body>
 <header class="site-header">
@@ -163,6 +164,13 @@ dialog h3{font-size:28px;margin:0 0 20px}
       <label for="eventSelect">Event</label>
       <select id="eventSelect" aria-label="Choose event"></select>
     </div>
+    <section id="eventState" class="event-state" role="status" aria-live="polite">
+      <h1 id="eventStateTitle">Loading event</h1><p id="eventStateMessage">Checking this event link...</p>
+      <p id="requestedEvent"></p><button id="retryEvent" type="button" hidden>Retry</button>
+      <button id="chooseEvent" type="button" hidden>Choose an event</button>
+    </section>
+    <p id="eventNotice" class="event-notice" role="status" hidden></p>
+    <div id="eventContent" hidden>
     <section class="hero">
       <div class="hero-grid">
         <div>
@@ -174,7 +182,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
           <div class="event-logo-wrap" id="eventLogoWrap"><img id="eventLogo" alt=""></div>
           <div class="live-card">
             <span class="live-pill"><span class="pulse"></span><span id="statusLabel">LIVE</span></span>
-            <span class="updated">Updated <strong id="secondsAgo">0</strong>s ago</span>
+            <span class="updated">Data updated <strong id="secondsAgo">unknown</strong></span>
           </div>
         </div>
       </div>
@@ -238,6 +246,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
 
       <div class="notice"><div class="notice-icon">i</div><div><strong>Results are preliminary while the race is in progress.</strong><p>Times, places, and divisions can change as Mercury Timing reviews live scoring data.</p></div></div>
     </section>
+    </div>
   </div>
 </main>
 <footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.9 R8</span><span id="lastRevision">Feed revision 0</span></div></footer>
@@ -249,32 +258,77 @@ let snapshot=structuredClone(fallback),teamSnapshot={enabled:false,tabActive:fal
 const $=s=>document.querySelector(s),body=$("#resultsBody"),mobile=$("#mobileResults"),recentBody=$("#recentResultsBody"),recentMobile=$("#recentMobileResults"),search=$("#search"),sexFilter=$("#sexFilter"),ageFilter=$("#ageFilter"),categoryFilter=$("#categoryFilter"),empty=$("#emptyState"),recentEmpty=$("#recentEmptyState"),recentCount=$("#recentCount"),eventSwitcher=$("#eventSwitcher"),eventSelect=$("#eventSelect"),teamDivision=$("#teamDivision");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 function nameOf(r){return `${r.firstName||""} ${r.lastName||""}`.trim()}
-async function loadEventList(){
- try{
-  const r=await fetch(`${SUPABASE_URL}/functions/v1/live-events`,{cache:"no-store"}); if(!r.ok) throw 0;
-  const data=await r.json(); publicEvents=Array.isArray(data?.events)?data.events:[];
-  if(!currentEventSlug||!publicEvents.some(e=>e.slug===currentEventSlug)){const p=publicEvents.find(e=>e.status==="live")||publicEvents[0]||null;currentEventSlug=p?.slug||null}
-  eventSelect.innerHTML=publicEvents.map(e=>`<option value="${esc(e.slug)}" ${e.slug===currentEventSlug?"selected":""}>${esc([e.name,e.date].filter(Boolean).join(" — "))}</option>`).join("");
-  eventSwitcher.hidden=publicEvents.length<=1; return !!currentEventSlug;
- }catch(e){eventSwitcher.hidden=true;return !!currentEventSlug}
+// An explicit event link must never resolve to a different event.
+let eventEpoch=0,eventReady=false,snapshotPending=null;
+const publicControllers=new Set();
+async function publicJSON(path){
+ const controller=new AbortController();publicControllers.add(controller);
+ const timer=setTimeout(()=>controller.abort(),10000);
+ try{const r=await fetch(`${SUPABASE_URL}/functions/v1/${path}`,{cache:'no-store',signal:controller.signal});
+  if(!r.ok){const error=new Error('HTTP '+r.status);error.status=r.status;throw error}return await r.json();
+ }finally{clearTimeout(timer);publicControllers.delete(controller)}
 }
-async function loadTeamScores(){
- if(!currentEventSlug){teamSnapshot={enabled:false,tabActive:false,divisions:[]};return}
+function clearEventData(){
+ snapshot=structuredClone(fallback);teamSnapshot={enabled:false,tabActive:false,divisions:[]};teamDivisionKey=null;
+ lastServerTimestamp=null;lastFetchOk=false;activeView='results';recentCountTouched=false;
+ search.value='';sexFilter.value='';ageFilter.value='';categoryFilter.value='';
+ $('#runnerDialog').close();$('#eventLogo').removeAttribute('src');render();
+ $('#eventContent').hidden=true;$('#eventNotice').hidden=true;$('#lastRevision').hidden=true;
+}
+function showEventState(title,message,retry=false){
+ $('#eventState').hidden=false;$('#eventContent').hidden=true;$('#eventNotice').hidden=true;
+ $('#eventStateTitle').textContent=title;$('#eventStateMessage').textContent=message;
+ $('#requestedEvent').textContent=currentEventSlug?'Requested event: '+currentEventSlug:'';
+ $('#retryEvent').hidden=!retry;$('#chooseEvent').hidden=!currentEventSlug||publicEvents.length===0;
+}
+async function loadEventList(epoch=eventEpoch){
  try{
-  const r=await fetch(`${SUPABASE_URL}/functions/v1/team-scores?slug=${encodeURIComponent(currentEventSlug)}`,{cache:"no-store"});
-  if(!r.ok)throw 0;
-  const next=await r.json();
-  if(next?.event?.slug===currentEventSlug)teamSnapshot=next;
- }catch(e){console.warn("Mercury team scoring poll failed",e)}
+  const data=await publicJSON('live-events');if(epoch!==eventEpoch)return false;
+  if(!Array.isArray(data?.events))throw new Error('Invalid event list');
+  publicEvents=data.events.filter(e=>typeof e?.slug==='string'&&e.slug&&typeof e.name==='string');
+  eventSelect.innerHTML='<option value="">Choose an event</option>'+publicEvents.map(e=>`<option value="${esc(e.slug)}">${esc([e.name,e.date].filter(Boolean).join(' / '))}</option>`).join('');
+  eventSelect.value=publicEvents.some(e=>e.slug===currentEventSlug)?currentEventSlug:'';
+  eventSwitcher.hidden=publicEvents.length===0;
+  if(!currentEventSlug){showEventState(publicEvents.length?'Choose an event':'No public events available',publicEvents.length?'Select the race whose results you want to view.':'Please check back later.',!publicEvents.length);return false}
+  if(!publicEvents.some(e=>e.slug===currentEventSlug)){clearEventData();showEventState('Event unavailable','We could not find a public event for this link. It may be incorrect or no longer available.',true);return false}
+  return true;
+ }catch(e){if(epoch===eventEpoch)showEventState('Unable to check this event','The event list could not be loaded. Retry when your connection is available.',true);return false}
+}
+async function loadTeamScores(slug=currentEventSlug,epoch=eventEpoch){
+ try{const next=await publicJSON('team-scores?slug='+encodeURIComponent(slug));
+  if(epoch===eventEpoch&&slug===currentEventSlug&&next?.event?.slug===slug)teamSnapshot=next;
+ }catch{if(epoch===eventEpoch)teamSnapshot={enabled:false,tabActive:false,divisions:[]}}
 }
 async function loadSnapshot(){
- if(!currentEventSlug){snapshot=structuredClone(fallback);lastFetchOk=false;render();return}
+ if(!eventReady||!currentEventSlug||snapshotPending===eventEpoch)return;
+ const epoch=eventEpoch,slug=currentEventSlug;snapshotPending=epoch;
  try{
-  const r=await fetch(`${SUPABASE_URL}/functions/v1/live-results?slug=${encodeURIComponent(currentEventSlug)}`,{cache:"no-store"});if(!r.ok)throw 0;
-  const next=await r.json();lastFetchOk=true;
-  const same=snapshot.event?.slug===next.event?.slug,cur=same?Number(snapshot.revision||0):-1,nxt=Number(next.revision||0);if(nxt>=cur)snapshot=next;
-  await loadTeamScores();lastServerTimestamp=snapshot.updatedAt?new Date(snapshot.updatedAt).getTime():Date.now();render();
- }catch(e){lastFetchOk=false;renderConnection()}
+  const next=await publicJSON('live-results?slug='+encodeURIComponent(slug));
+  if(epoch!==eventEpoch||slug!==currentEventSlug)return;
+  if(next?.event?.slug!==slug){const e=new Error('Event response mismatch');e.status=404;throw e}
+  if(!Array.isArray(next.results)||!Number.isFinite(Number(next.revision)))throw new Error('Invalid results');
+  const cur=snapshot.event?.slug===slug?Number(snapshot.revision):-1;
+  if(Number(next.revision)<cur)throw new Error('Older revision received');
+  snapshot=next;lastFetchOk=true;
+  const stamp=Date.parse(next.updatedAt);lastServerTimestamp=Number.isFinite(stamp)&&stamp<=Date.now()?stamp:null;
+  await loadTeamScores(slug,epoch);if(epoch!==eventEpoch)return;
+  render();$('#eventState').hidden=true;$('#eventContent').hidden=false;$('#eventNotice').hidden=true;$('#lastRevision').hidden=false;
+ }catch(e){
+  if(epoch!==eventEpoch)return;lastFetchOk=false;
+  if(e.status===404||e.status===403){eventReady=false;clearEventData();showEventState('Event unavailable','This event is not currently available through this public link.',true)}
+  else if(snapshot.event?.slug===slug){renderConnection();$('#eventNotice').hidden=false;$('#eventNotice').textContent='Refresh failed. Showing the last received results for this event. Data timestamp: '+(lastServerTimestamp?new Date(lastServerTimestamp).toISOString():'unknown or invalid');}
+  else showEventState('Unable to check this event','Results could not be loaded. Retry to check this same event.',true);
+ }finally{if(snapshotPending===epoch)snapshotPending=null}
+}
+async function refreshPublicEvent(){
+ const epoch=++eventEpoch;eventReady=false;for(const c of publicControllers)c.abort();snapshotPending=null;
+ clearEventData();showEventState('Loading event','Checking this event link...');
+ const found=await loadEventList(epoch);if(epoch!==eventEpoch)return;eventReady=found;if(found)await loadSnapshot();
+}
+function selectPublicEvent(slug){
+ currentEventSlug=slug;const url=new URL(location.href);
+ slug?url.searchParams.set('event',slug):url.searchParams.delete('event');history.replaceState(null,'',url);
+ return refreshPublicEvent();
 }
 function columns(){
  const d=snapshot.display||{}, cols=[];
@@ -298,7 +352,7 @@ function podiumTime(r){const d=snapshot.display||{};if(d.showGunTime!==false&&r?
 function topGender(gender){return snapshot.results.filter(r=>String(r.sex||"").toLowerCase()===gender.toLowerCase()).slice().sort((a,b)=>Number(a.overall??999999)-Number(b.overall??999999)).slice(0,3)}
 function renderPodium(target,rows){const medals=["🥇","🥈","🥉"];target.innerHTML=medals.map((medal,i)=>{const r=rows[i];if(!r)return `<div class="podium-row podium-empty"><span class="podium-medal">${medal}</span><span class="podium-name">Waiting for finisher</span><span class="podium-time">—</span></div>`;return `<div class="podium-row" data-bib="${esc(r.bib)}" tabindex="0"><span class="podium-medal" aria-hidden="true">${medal}</span><span class="podium-name">${esc(nameOf(r))}</span><span class="podium-time">${esc(podiumTime(r))}</span></div>`}).join("")}
 function recentRows(){const n=[5,10,15,20].includes(Number(recentCount.value))?Number(recentCount.value):10;return (Array.isArray(snapshot.recentFinishers)?snapshot.recentFinishers:[]).slice(0,n)}
-function renderConnection(){$("#feedDot").style.background=lastFetchOk?"#1d9b61":"#f79009";$("#feedText").textContent=lastFetchOk?"Mercury feed connected":"Reconnecting…"}
+function renderConnection(){$("#feedDot").style.background=lastFetchOk?"#1d9b61":"#f79009";$("#feedText").textContent=lastFetchOk?"Mercury feed connected":"Last check failed"}
 function runnerCards(rows){return rows.map(r=>{const t=(snapshot.display?.showChipTime!==false&&r.chipTime)?r.chipTime:r.gunTime??"",tl=(snapshot.display?.showChipTime!==false&&r.chipTime)?"Chip":"Gun";return `<article class="runner-card" data-bib="${esc(r.bib)}" tabindex="0"><div class="runner-card-top"><div><div class="place">#${esc(r.overall??"")}</div><div class="runner-name">${esc(nameOf(r))}</div><div class="bib">Bib ${esc(r.bib??"")}</div></div><div class="chip-big"><span>${tl}</span><strong>${esc(t)}</strong></div></div><div class="runner-meta"><div><span>Gender</span><strong>${esc(r.sex??"")}</strong></div><div><span>Age Group</span><strong>${esc(r.ageGroup??"")}</strong></div><div><span>Pace</span><strong>${esc(r.pace?r.pace+"/mi":"")}</strong></div></div></article>`}).join("")}
 function renderTable(rows,headEl,bodyEl,mobileEl){const cols=columns();headEl.innerHTML=cols.map(c=>`<th>${esc(c[1])}</th>`).join("");bodyEl.innerHTML=rows.map(r=>`<tr data-bib="${esc(r.bib)}">${cols.map(c=>`<td class="${c[3]}">${esc(c[2](r))}</td>`).join("")}</tr>`).join("");mobileEl.innerHTML=runnerCards(rows)}
 function renderTeamScores(){
@@ -357,9 +411,11 @@ function render(){
 function showRunner(bib){const r=snapshot.results.find(x=>String(x.bib)===String(bib));if(!r)return;$("#dialogName").textContent=nameOf(r);const details=[["Overall",r.overall?`#${r.overall}`:"—"],["Bib",r.bib??"—"],["Gender",r.sex??"—"],["Age",r.age??"—"],["Age Group",r.ageGroup??"—"],["Category",r.category??"—"],["Gun Time",r.gunTime??"—"],["Chip Time",r.chipTime??"—"],["Pace",r.pace?r.pace+"/mi":"—"]];$("#dialogGrid").innerHTML=details.map(([k,v])=>`<div class="detail"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join("");$("#runnerDialog").showModal()}
 $("#closeDialog").onclick=()=>$("#runnerDialog").close();[search,sexFilter,ageFilter,categoryFilter].forEach(el=>el.addEventListener("input",render));
 $("#resultsTab").onclick=()=>switchView("results");$("#recentTab").onclick=()=>switchView("recent");$("#teamTab").onclick=()=>switchView("team");recentCount.onchange=()=>{recentCountTouched=true;render()};teamDivision.onchange=()=>{teamDivisionKey=teamDivision.value;renderTeamScores()};
-eventSelect.onchange=async()=>{currentEventSlug=eventSelect.value||null;snapshot=structuredClone(fallback);teamSnapshot={enabled:false,tabActive:false,divisions:[]};teamDivisionKey=null;lastServerTimestamp=null;search.value="";sexFilter.value="";ageFilter.value="";categoryFilter.value="";recentCountTouched=false;activeView="results";const u=new URL(location.href);currentEventSlug?u.searchParams.set("event",currentEventSlug):u.searchParams.delete("event");history.replaceState(null,"",u);await loadSnapshot()};
-setInterval(()=>{const base=lastServerTimestamp||Date.now();$("#secondsAgo").textContent=Math.max(0,Math.floor((Date.now()-base)/1000))},1000);
-(async()=>{render();await loadEventList();await loadSnapshot();setInterval(loadSnapshot,3000)})();
+eventSelect.onchange=()=>selectPublicEvent(eventSelect.value||null);
+$("#retryEvent").onclick=refreshPublicEvent;
+$("#chooseEvent").onclick=()=>{eventSwitcher.hidden=false;eventSelect.focus();eventSwitcher.scrollIntoView({block:"center"})};
+setInterval(()=>{$("#secondsAgo").textContent=lastServerTimestamp?String(Math.max(0,Math.floor((Date.now()-lastServerTimestamp)/1000)))+"s ago":"unknown"},1000);
+refreshPublicEvent();setInterval(()=>{if(eventReady)loadSnapshot()},3000);
 </script>
 </body>
 </html>
