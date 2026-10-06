@@ -76,7 +76,7 @@ select{height:46px;border:1px solid var(--line);border-radius:10px;background:#f
 .team-board{display:grid;gap:10px}
 .team-card{background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 4px 14px rgba(20,20,25,.035)}
 .team-card summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:58px minmax(180px,1fr) 90px 145px 145px;gap:10px;align-items:center;padding:14px 16px}
-.team-card summary::-webkit-details-marker{display:none}.team-card summary:after{content:"?";font-size:14px;color:#7a7e87;justify-self:end;grid-column:6}
+.team-card summary::-webkit-details-marker{display:none}.team-card summary:after{content:"▾";font-size:14px;color:#7a7e87;justify-self:end;grid-column:6}
 .team-rank{font-size:18px;font-weight:950}.team-name{font-weight:900}.team-metric small{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.team-metric strong{font-size:14px;font-variant-numeric:tabular-nums}
 .team-detail{border-top:1px solid var(--line);padding:12px 16px 15px;background:#fbfbfc}
 .team-runner-table{width:100%;border-collapse:collapse;min-width:680px}.team-runner-table th{font-size:9px}.team-runner-table td{padding:9px 10px;font-size:12px}
@@ -176,7 +176,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
         <div>
           <p class="eyebrow">Live Results</p>
           <h1 id="eventName">Mercury Road Race Live</h1>
-          <p class="event-meta" id="eventMeta">Loading event.</p>
+          <p class="event-meta" id="eventMeta">Loading event…</p>
         </div>
         <div class="hero-side">
           <div class="event-logo-wrap" id="eventLogoWrap"><img id="eventLogo" alt=""></div>
@@ -191,7 +191,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
       <article class="stat finishers-stat"><span class="stat-label">Finishers</span><strong id="finishers">0</strong></article>
       <article class="stat podium-stat male-podium"><span class="stat-label">Male Top 3</span><div class="podium-list" id="malePodium"></div></article>
       <article class="stat podium-stat female-podium"><span class="stat-label">Female Top 3</span><div class="podium-list" id="femalePodium"></div></article>
-      <article class="stat leader-stat"><span class="stat-label">Leader</span><strong id="leaderTime">-</strong></article>
+      <article class="stat leader-stat"><span class="stat-label">Leader</span><strong id="leaderTime">—</strong></article>
     </div>
     <section>
       <div class="view-tabs-row">
@@ -200,7 +200,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
           <button class="view-tab" id="recentTab" type="button" aria-selected="false">Recent Finishers</button>
           <button class="view-tab" id="teamTab" type="button" aria-selected="false" hidden>Team Scores</button>
         </nav>
-        <div class="feed-status"><span class="feed-dot" id="feedDot"></span><span id="feedText">Mercury feed connecting.</span></div>
+        <div class="feed-status"><span class="feed-dot" id="feedDot"></span><span id="feedText">Mercury feed connecting…</span></div>
       </div>
 
       <div class="view-panel" id="resultsPanel">
@@ -215,7 +215,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
           <select id="categoryFilter" aria-label="Filter by category"><option value="">All categories</option></select>
         </div>
         <div class="results-headline">
-          <div><h2 id="resultsTitle">Results</h2><p id="shownCount">Loading results.</p></div>
+          <div><h2 id="resultsTitle">Results</h2><p id="shownCount">Loading results…</p></div>
         </div>
         <div class="table-wrap" id="tableWrap">
           <table><thead><tr id="tableHead"></tr></thead><tbody id="resultsBody"></tbody></table>
@@ -226,7 +226,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
 
       <div class="view-panel" id="recentPanel" hidden>
         <div class="recent-toolbar">
-          <div><h2>Recent Finishers</h2><p><span class="recent-newest">Newest first</span> � New finishers appear at the top automatically.</p></div>
+          <div><h2>Recent Finishers</h2><p><span class="recent-newest">Newest first</span> · New finishers appear at the top automatically.</p></div>
           <div class="recent-count-wrap"><label for="recentCount">Show</label><select id="recentCount" aria-label="Number of recent finishers"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></div>
         </div>
         <div class="table-wrap" id="recentTableWrap" style="border-radius:0 0 14px 14px;border-top:0">
@@ -249,8 +249,8 @@ dialog h3{font-size:28px;margin:0 0 20px}
     </div>
   </div>
 </main>
-<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live  v0.9 R8</span><span id="lastRevision">Feed revision 0</span></div></footer>
-<dialog id="runnerDialog"><button class="dialog-close" id="closeDialog" aria-label="Close">x</button><p class="eyebrow" style="color:var(--accent)">Runner Details</p><h3 id="dialogName"></h3><div id="dialogGrid" class="dialog-grid"></div></dialog>
+<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.9 R8</span><span id="lastRevision">Feed revision 0</span></div></footer>
+<dialog id="runnerDialog"><button class="dialog-close" id="closeDialog" aria-label="Close">×</button><p class="eyebrow" style="color:var(--accent)">Runner Details</p><h3 id="dialogName"></h3><div id="dialogGrid" class="dialog-grid"></div></dialog>
 <script>
 const SUPABASE_URL="https://wajusbsyouyufpccixol.supabase.co";
 const fallback={schemaVersion:5,revision:0,updatedAt:null,status:"setup",event:{slug:null,name:"Mercury Road Race Live",location:null,date:null,startTime:null,distance:null},branding:{eventLogoUrl:null,eventLogoAlt:null,accentColor:"#b30f2b"},display:{showOverallPlace:true,showBib:true,showName:true,showGender:true,showAge:false,showAgeGroup:true,showTeam:false,showGunTime:true,showChipTime:true,showPace:true,showRecentFinishers:true,recentFinishersDefaultCount:10},awards:{age_groups:[]},recentFinishers:[],results:[]};
@@ -355,7 +355,7 @@ function filtered(){
 }
 function podiumTime(r){if(shown('showGunTime')&&r?.gunTime)return r.gunTime;if(shown('showChipTime')&&r?.chipTime)return r.chipTime;return '-'}
 function topGender(gender){return snapshot.results.filter(r=>String(r.sex||"").toLowerCase()===gender.toLowerCase()).slice().sort((a,b)=>Number(a.overall??999999)-Number(b.overall??999999)).slice(0,3)}
-function renderPodium(target,rows){const medals=["??","??","??"];target.innerHTML=medals.map((medal,i)=>{const r=rows[i];if(!r)return `<div class="podium-row podium-empty"><span class="podium-medal">${medal}</span><span class="podium-name">Waiting for finisher</span><span class="podium-time">-</span></div>`;return `<div class="podium-row" data-runner="${runnerTarget(r)}" tabindex="0"><span class="podium-medal" aria-hidden="true">${medal}</span><span class="podium-name">${esc(shown("showName")?nameOf(r):"Runner")}</span><span class="podium-time">${esc(podiumTime(r))}</span></div>`}).join("")}
+function renderPodium(target,rows){const medals=["🥇","🥈","🥉"];target.innerHTML=medals.map((medal,i)=>{const r=rows[i];if(!r)return `<div class="podium-row podium-empty"><span class="podium-medal">${medal}</span><span class="podium-name">Waiting for finisher</span><span class="podium-time">—</span></div>`;return `<div class="podium-row" data-runner="${runnerTarget(r)}" tabindex="0"><span class="podium-medal" aria-hidden="true">${medal}</span><span class="podium-name">${esc(shown("showName")?nameOf(r):"Runner")}</span><span class="podium-time">${esc(podiumTime(r))}</span></div>`}).join("")}
 function recentRows(){const n=[5,10,15,20].includes(Number(recentCount.value))?Number(recentCount.value):10;return (Array.isArray(snapshot.recentFinishers)?snapshot.recentFinishers:[]).slice(0,n)}
 function renderConnection(){$("#feedDot").style.background=lastFetchOk?"#1d9b61":"#f79009";$("#feedText").textContent=lastFetchOk?"Mercury feed connected":"Last check failed"}
 function runnerCards(rows){return rows.map(r=>{const time=shown('showChipTime')&&r.chipTime?['Chip',r.chipTime]:shown('showGunTime')&&r.gunTime?['Gun',r.gunTime]:null;const meta=columns().filter(c=>['sex','age','ageGroup','team','pace'].includes(c[0]));return `<article class="runner-card" data-runner="${runnerTarget(r)}" tabindex="0"><div class="runner-card-top"><div>${shown('showOverallPlace')?`<div class="place">#${esc(r.overall??'')}</div>`:''}<div class="runner-name">${esc(shown('showName')?nameOf(r):'Runner')}</div>${shown('showBib')?`<div class="bib">Bib ${esc(r.bib??'')}</div>`:''}</div>${time?`<div class="chip-big"><span>${time[0]}</span><strong>${esc(time[1])}</strong></div>`:''}</div><div class="runner-meta">${meta.map(c=>`<div><span>${esc(c[1])}</span><strong>${esc(c[2](r))}</strong></div>`).join('')}</div></article>`}).join('')}
@@ -370,11 +370,11 @@ function renderTeamScores(){
   teamDivisionKey=(divisions.find(d=>d.active&&!d.reviewRequired)||divisions[0])?.key||null;
  }
  const prior=teamDivisionKey;
- teamDivision.innerHTML=divisions.map(d=>`<option value="${esc(d.key)}" ${d.key===prior?"selected":""}>${esc(d.label)}${d.active?"":" - waiting"}</option>`).join("");
+ teamDivision.innerHTML=divisions.map(d=>`<option value="${esc(d.key)}" ${d.key===prior?"selected":""}>${esc(d.label)}${d.active?"":" — waiting"}</option>`).join("");
  $("#teamDivisionWrap").hidden=divisions.length<=1;
  const d=divisions.find(x=>x.key===teamDivisionKey)||divisions[0];
  const cfg=teamSnapshot.config||{};
- $("#teamScoringSummary").textContent=`${cfg.scorers_per_team||5} scorers � ${cfg.displacers_per_team||0} displacers � lowest score wins`;
+ $("#teamScoringSummary").textContent=`${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · lowest score wins`;
  if(d.reviewRequired){
   $("#teamScoresBody").innerHTML=`<div class="team-review"><strong>Team scoring needs review.</strong><div style="margin-top:5px">Duplicate overall places were detected, so Mercury will not publish standings for this division.</div></div>`;return;
  }
@@ -382,8 +382,8 @@ function renderTeamScores(){
   $("#teamScoresBody").innerHTML=`<div class="team-waiting"><strong>Team scoring will appear when the first complete team finishes.</strong></div>`;return;
  }
  const cards=(d.standings||[]).map(t=>{
-  const rows=[...(t.scorers||[]),...(t.displacers||[])].map(r=>`<tr><td><span class="role-pill ${r.role==="scorer"?"role-scorer":"role-displacer"}">${esc(r.role)}</span></td>${shown("showName")?`<td>${esc(r.name)}</td>`:""}${shown("showBib")?`<td>${esc(r.bib)}</td>`:""}${shown("showOverallPlace")?`<td>${esc(r.overallPlace??"")}</td>`:""}<td>${esc(r.scoringPlace??"")}</td><td>${esc(r.points??"-")}</td>${teamTimeAllowed()?`<td>${esc(r.scoringTime||"-")}</td>`:""}</tr>`).join("");
-  return `<details class="team-card"><summary><div class="team-rank">#${esc(t.rank)}</div><div class="team-name">${esc(t.team)}</div><div class="team-metric"><small>Score</small><strong>${esc(t.score)}</strong></div>${teamTimeAllowed()?`<div class="team-metric team-time-total"><small>Total scorer time</small><strong>${esc(t.totalTime||"-")}</strong></div><div class="team-metric team-time-avg"><small>Average scorer time</small><strong>${esc(t.averageTime||"-")}</strong></div>`:""}</summary><div class="team-detail"><div style="overflow:auto"><table class="team-runner-table"><thead><tr><th>Role</th>${shown("showName")?"<th>Runner</th>":""}${shown("showBib")?"<th>Bib</th>":""}${shown("showOverallPlace")?"<th>Overall</th>":""}<th>Scoring Place</th><th>Points</th>${teamTimeAllowed()?"<th>Time</th>":""}</tr></thead><tbody>${rows}</tbody></table></div></div></details>`;
+  const rows=[...(t.scorers||[]),...(t.displacers||[])].map(r=>`<tr><td><span class="role-pill ${r.role==="scorer"?"role-scorer":"role-displacer"}">${esc(r.role)}</span></td>${shown("showName")?`<td>${esc(r.name)}</td>`:""}${shown("showBib")?`<td>${esc(r.bib)}</td>`:""}${shown("showOverallPlace")?`<td>${esc(r.overallPlace??"")}</td>`:""}<td>${esc(r.scoringPlace??"")}</td><td>${esc(r.points??"—")}</td>${teamTimeAllowed()?`<td>${esc(r.scoringTime||"-")}</td>`:""}</tr>`).join("");
+  return `<details class="team-card"><summary><div class="team-rank">#${esc(t.rank)}</div><div class="team-name">${esc(t.team)}</div><div class="team-metric"><small>Score</small><strong>${esc(t.score)}</strong></div>${teamTimeAllowed()?`<div class="team-metric team-time-total"><small>Total scorer time</small><strong>${esc(t.totalTime||"—")}</strong></div><div class="team-metric team-time-avg"><small>Average scorer time</small><strong>${esc(t.averageTime||"—")}</strong></div>`:""}</summary><div class="team-detail"><div style="overflow:auto"><table class="team-runner-table"><thead><tr><th>Role</th>${shown("showName")?"<th>Runner</th>":""}${shown("showBib")?"<th>Bib</th>":""}${shown("showOverallPlace")?"<th>Overall</th>":""}<th>Scoring Place</th><th>Points</th>${teamTimeAllowed()?"<th>Time</th>":""}</tr></thead><tbody>${rows}</tbody></table></div></div></details>`;
  }).join("");
  const incomplete=(d.incompleteTeams||[]).length?`<div class="incomplete-wrap"><h3>Incomplete Teams</h3><div class="incomplete-list">${d.incompleteTeams.map(t=>`<div class="incomplete-row"><strong>${esc(t.team)}</strong><span>${esc(t.status)}</span></div>`).join("")}</div></div>`:"";
  $("#teamScoresBody").innerHTML=`<div class="team-board">${cards}</div>${incomplete}`;
@@ -409,8 +409,8 @@ function render(){
  search.placeholder=search.disabled?'Search unavailable':shown('showName')&&shown('showBib')?'Search runner or bib':shown('showName')?'Search runner':'Search bib';
 
  const accent=snapshot.branding?.accentColor||"#b30f2b";document.documentElement.style.setProperty("--accent",accent);
- const ev=snapshot.event||{};$("#eventName").textContent=ev.name||"Mercury Road Race Live";$("#eventMeta").textContent=[ev.location,ev.date,ev.startTime].filter(Boolean).join("  ")||"Live road-race results";
- $("#resultsTitle").textContent=ev.distance?`${ev.distance} Results`:"Results";document.title=ev.name?`${ev.name} - Mercury Road Race Live`:"Mercury Road Race Live";
+ const ev=snapshot.event||{};$("#eventName").textContent=ev.name||"Mercury Road Race Live";$("#eventMeta").textContent=[ev.location,ev.date,ev.startTime].filter(Boolean).join(" • ")||"Live road-race results";
+ $("#resultsTitle").textContent=ev.distance?`${ev.distance} Results`:"Results";document.title=ev.name?`${ev.name} — Mercury Road Race Live`:"Mercury Road Race Live";
  $("#finishers").textContent=snapshot.results.length;renderPodium($("#malePodium"),podiumVisible?topGender("Male"):[]);renderPodium($("#femalePodium"),podiumVisible?topGender("Female"):[]);$("#leaderTime").textContent=!shown("showOverallPlace")?"-":podiumTime(snapshot.results.slice().sort((a,b)=>Number(a.overall??999999)-Number(b.overall??999999))[0]);$("#lastRevision").textContent=`Feed revision ${snapshot.revision||0}`;
  const statusMap={live:"LIVE",final:"FINAL",finished:"FINISHED",official:"OFFICIAL",shadow:"SHADOW",setup:"UPCOMING"};$("#statusLabel").textContent=statusMap[snapshot.status]||String(snapshot.status||"LIVE").toUpperCase();
  const logo=snapshot.branding?.eventLogoUrl;if(logo){$("#eventLogo").src=logo;$("#eventLogo").alt=snapshot.branding?.eventLogoAlt||`${ev.name||"Event"} logo`;$("#eventLogoWrap").classList.add("visible")}else{$("#eventLogoWrap").classList.remove("visible")}
