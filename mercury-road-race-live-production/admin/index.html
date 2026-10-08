@@ -19,6 +19,7 @@ label{display:block;font-size:11px;font-weight:800;color:#5e626b;text-transform:
 input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 11px;color:var(--ink);font:inherit}
 input,select{height:44px}textarea{min-height:110px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
 button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:#eceef2;color:#24262a}.danger{background:#fee4e2;color:#b42318}.small{padding:7px 10px;font-size:12px}
+.password-row{display:flex;gap:8px}.password-row input{flex:1;min-width:0}.password-row button{min-width:68px;min-height:44px}.password-row button[aria-pressed="true"]{background:#dce0e7;box-shadow:inset 0 0 0 1px #b7becb}.password-row button:focus-visible,.password-row input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.status{font-size:12px;padding:8px 10px;border-radius:9px;background:var(--soft);color:#4a4e56}.status.ok{color:var(--ok);background:#ecfdf3}.status.bad{color:var(--bad);background:#fff1f0}
 .switchline{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fafbfc}.switchline input{width:auto;height:auto}.switchline label{margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)}
 .scoring{border:2px solid #ecd0d6;background:#fffafb}.hint{font-size:11px;color:var(--muted);line-height:1.45}.sep{height:1px;background:var(--line);margin:18px 0}
@@ -37,7 +38,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
   <p class="sub">Sign in with the Mercury admin password.</p>
   <div style="height:16px"></div>
   <label for="password">Admin password</label>
-  <input id="password" type="password" autocomplete="current-password">
+  <div class="password-row"><input id="password" type="password" autocomplete="current-password"><button type="button" id="passwordVisibility" class="secondary" aria-controls="password" aria-label="Show password" aria-pressed="false">Show</button></div>
   <div style="height:12px"></div>
   <div class="actions"><button class="primary" id="loginBtn">Sign in</button><span id="loginStatus" class="status hidden"></span></div>
 </div>
@@ -223,7 +224,8 @@ function authHeaders(json=true){const h={Authorization:'Bearer '+token};if(json)
 function status(el,msg,ok=true){el.textContent=msg;el.className='status '+(ok?'ok':'bad')}
 function hideStatus(el){el.className='status hidden'}
 async function req(url,opt={}){const r=await fetch(url,{cache:'no-store',...opt});let j={};try{j=await r.json()}catch{}if(!r.ok){if(r.status===401){localStorage.removeItem('mercuryAdminSession');token='';showLogin()}throw new Error(j.error||('HTTP '+r.status))}return j}
-function showLogin(){adminLoadEpoch++;adminListEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
+function setPasswordVisible(visible){const input=$('#password'),button=$('#passwordVisibility');input.type=visible?'text':'password';button.textContent=visible?'Hide':'Show';button.setAttribute('aria-label',visible?'Hide password':'Show password');button.setAttribute('aria-pressed',String(visible))}
+function showLogin(){setPasswordVisible(false);adminLoadEpoch++;adminListEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
 function showApp(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden')}
 function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
 
@@ -231,7 +233,7 @@ async function login(){
   const st=$('#loginStatus');hideStatus(st);
   try{
     const j=await req(API+'/admin-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',password:$('#password').value})});
-    token=j.token;localStorage.setItem('mercuryAdminSession',token);$('#password').value='';showApp();await loadEvents();
+    token=j.token;localStorage.setItem('mercuryAdminSession',token);$('#password').value='';setPasswordVisible(false);showApp();await loadEvents();
   }catch(e){status(st,'Sign-in failed: '+e.message,false)}
 }
 
@@ -337,6 +339,7 @@ async function changePassword(){
   }catch(e){alert('Password change failed: '+e.message)}
 }
 
+$('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
 $('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=loadEvent;$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
 $('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
