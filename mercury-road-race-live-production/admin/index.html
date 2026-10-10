@@ -25,7 +25,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .scoring{border:2px solid #ecd0d6;background:#fffafb}.hint{font-size:11px;color:var(--muted);line-height:1.45}.sep{height:1px;background:var(--line);margin:18px 0}
 .topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
-.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
 @media(max-width:720px){.row,.row3{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
 <link rel="stylesheet" href="../assets/admin-tools.css">
@@ -69,6 +69,19 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
     <div style="height:12px"></div>
     <div class="switchline"><input id="eventPublic" type="checkbox"><label for="eventPublic">Public event — appears in Road Race Live event list</label></div>
+  </section>
+
+  <section class="card">
+    <h2>Race Names</h2>
+    <p class="sub">Change spectator-facing race names without changing the MYLAPS source label or Mercury's internal race key.</p>
+    <div style="height:12px"></div>
+    <div id="raceNamesEmpty" class="hint">No configured race aliases for this event.</div>
+    <div id="raceNamesTableWrap" style="overflow:auto" hidden>
+      <table class="table">
+        <thead><tr><th>MYLAPS source</th><th>Internal key</th><th>Public race name</th></tr></thead>
+        <tbody id="raceNamesBody"></tbody>
+      </table>
+    </div>
   </section>
 
   <section class="card">
@@ -195,7 +208,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R8 scoring controls</div>
+  <div class="footer">Mercury Road Race Live Admin • R9 race naming + scoring controls</div>
 </main>
 
 <script>
@@ -211,7 +224,7 @@ function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
   const ids='eventName eventLocation eventDate eventStart eventDistance eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone awardsJson scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
-  $('#activityBody').replaceChildren();hideStatus($('#saveStatus'));
+  $('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;hideStatus($('#saveStatus'));
   $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
 }
 function eventMutationContext(){
@@ -228,6 +241,12 @@ function setPasswordVisible(visible){const input=$('#password'),button=$('#passw
 function showLogin(){setPasswordVisible(false);adminLoadEpoch++;adminListEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
 function showApp(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden')}
 function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
+function renderRaceNames(rows){
+  const aliases=Array.isArray(rows)?rows:[];
+  $('#raceNamesBody').innerHTML=aliases.map(row=>'<tr data-race-alias-id="'+esc(row.id)+'"><td>'+esc(row.source_label||'')+'</td><td><span class="race-key">'+esc(row.race_key||'')+'</span></td><td><input class="race-name-input" maxlength="80" aria-label="Public race name for '+esc(row.source_label||row.race_key||'race')+'" value="'+esc(row.display_label||row.race_key||'')+'"></td></tr>').join('');
+  $('#raceNamesTableWrap').hidden=aliases.length===0;
+  $('#raceNamesEmpty').hidden=aliases.length!==0;
+}
 
 async function login(){
   const st=$('#loginStatus');hideStatus(st);
@@ -264,6 +283,7 @@ async function loadEvent(){
   if(j.event?.slug!==slug){$('#adminEventState').textContent='Event response does not match the selection. Refresh to retry.';return;}
   $('#settingsPanel').inert=false;$('#adminEventState').hidden=true;
   loaded=j;const e=j.event||{},s=j.settings||{},ts=s.team_scoring||{};
+  renderRaceNames(j.raceAliases||[]);
   $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
   $('#eventStart').value=e.start_time_label||'';$('#eventDistance').value=e.distance_label||'';$('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
   $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
@@ -282,8 +302,11 @@ async function save(){
   const context=eventMutationContext();if(!context)return;
   const st=$('#saveStatus');hideStatus(st);let awards;
   try{awards=JSON.parse($('#awardsJson').value)}catch{status(st,'Awards JSON is not valid.',false);return}
+  const raceAliases=[...document.querySelectorAll('[data-race-alias-id]')].map(row=>({id:Number(row.dataset.raceAliasId),display_label:row.querySelector('.race-name-input').value.trim()}));
+  if(raceAliases.some(row=>!row.display_label)){status(st,'Every public race name must have a value.',false);return}
   const body={
     event:{name:$('#eventName').value,location:$('#eventLocation').value,event_date:$('#eventDate').value,start_time_label:$('#eventStart').value,distance_label:$('#eventDistance').value,status:$('#eventStatus').value,is_public:$('#eventPublic').checked},
+    raceAliases,
     settings:{
       timezone:$('#timezone').value,accent_color:$('#accentColor').value,show_overall_place:$('#showOverall').checked,show_bib:$('#showBib').checked,show_name:$('#showName').checked,
       show_gender:$('#showGender').checked,show_age:$('#showAge').checked,show_age_group:$('#showAgeGroup').checked,show_team:$('#showTeam').checked,show_gun_time:$('#showGun').checked,
