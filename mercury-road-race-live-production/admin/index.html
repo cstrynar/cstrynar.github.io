@@ -25,7 +25,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .scoring{border:2px solid #ecd0d6;background:#fffafb}.hint{font-size:11px;color:var(--muted);line-height:1.45}.sep{height:1px;background:var(--line);margin:18px 0}
 .topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
-.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
 @media(max-width:720px){.row,.row3{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
 <link rel="stylesheet" href="../assets/admin-tools.css">
@@ -139,11 +139,16 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 
   <section class="card">
     <h2>Timing Computers</h2>
+    <p class="sub">Create Mercury Bridge credentials and control which computers may read or publish the selected event. Publish access always requires Read access.</p>
+    <div style="height:12px"></div>
     <div class="actions"><input id="clientName" placeholder="New timing computer name" style="max-width:360px"><button class="secondary" id="createClientBtn">Create credential</button></div>
-    <p class="hint">A newly created Bridge credential is shown once. Store it on the intended timing computer.</p>
+    <p class="hint">A newly created Bridge credential is shown once. Store it on the intended timing computer. New computers receive no event access until you enable Read below.</p>
     <div id="newKey" class="status hidden" style="word-break:break-all"></div>
     <div style="height:10px"></div>
-    <table class="table"><thead><tr><th>Name</th><th>Status</th><th>Last used</th><th></th></tr></thead><tbody id="clientsBody"></tbody></table>
+    <p id="clientAccessState" class="hint" role="status" aria-live="polite">Choose an event to manage timing-computer access.</p>
+    <div style="overflow:auto">
+      <table class="table"><thead><tr><th>Name</th><th>Computer</th><th>Last used</th><th>Read event</th><th>Publish event</th><th>Writer lease</th><th></th></tr></thead><tbody id="clientsBody"></tbody></table>
+    </div>
   </section>
 
   <section class="card">
@@ -208,7 +213,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R9 race naming + scoring controls</div>
+  <div class="footer">Mercury Road Race Live Admin • R10 timing computer access + scoring controls</div>
 </main>
 
 <script>
@@ -218,7 +223,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let token=localStorage.getItem('mercuryAdminSession')||'';
 let currentSlug='';
 let loaded=null;
-let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0;
+let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0;
 
 function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
@@ -238,7 +243,7 @@ function status(el,msg,ok=true){el.textContent=msg;el.className='status '+(ok?'o
 function hideStatus(el){el.className='status hidden'}
 async function req(url,opt={}){const r=await fetch(url,{cache:'no-store',...opt});let j={};try{j=await r.json()}catch{}if(!r.ok){if(r.status===401){localStorage.removeItem('mercuryAdminSession');token='';showLogin()}throw new Error(j.error||('HTTP '+r.status))}return j}
 function setPasswordVisible(visible){const input=$('#password'),button=$('#passwordVisibility');input.type=visible?'text':'password';button.textContent=visible?'Hide':'Show';button.setAttribute('aria-label',visible?'Hide password':'Show password');button.setAttribute('aria-pressed',String(visible))}
-function showLogin(){setPasswordVisible(false);adminLoadEpoch++;adminListEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
+function showLogin(){setPasswordVisible(false);adminLoadEpoch++;adminListEpoch++;adminClientEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
 function showApp(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden')}
 function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
 function renderRaceNames(rows){
@@ -331,18 +336,60 @@ async function removeLogo(){
 }
 
 async function loadClients(){
+  const slug=currentSlug,eventEpoch=adminLoadEpoch,clientEpoch=++adminClientEpoch;
+  const state=$('#clientAccessState');
+  if(!slug){$('#clientsBody').replaceChildren();state.textContent='Choose an event to manage timing-computer access.';return}
+  state.textContent='Loading timing-computer access...';
   try{
-    const j=await req(API+'/admin-event-settings?action=bridge-clients',{headers:authHeaders(false)});
-    $('#clientsBody').innerHTML=(j.clients||[]).map(c=>'<tr><td>'+esc(c.name)+'</td><td><span class="pill">'+(c.active?'Active':'Disabled')+'</span></td><td>'+esc(c.last_used_at||'Never')+'</td><td><button class="small secondary" data-client="'+esc(c.id)+'" data-active="'+(!c.active)+'">'+(c.active?'Disable':'Enable')+'</button></td></tr>').join('');
+    const j=await req(API+'/admin-event-settings?action=bridge-access&slug='+encodeURIComponent(slug),{headers:authHeaders(false)});
+    if(clientEpoch!==adminClientEpoch||eventEpoch!==adminLoadEpoch||slug!==currentSlug)return;
+    const clients=Array.isArray(j.clients)?j.clients:[],leaseId=String(j.lease?.bridge_client_id||'');
+    if(j.policy?.require_lease===true){
+      state.textContent=j.lease?.client_name?'Exclusive writer lease required. Current holder: '+j.lease.client_name+' (expires '+(j.lease.expires_at||'soon')+').':'Exclusive writer lease required. No timing computer currently holds it.';
+    }else state.textContent='Exclusive writer lease is not required for this event.';
+    $('#clientsBody').innerHTML=clients.map(c=>{
+      const read=c.grant?.can_read===true,publish=c.grant?.can_publish===true,disabled=c.active!==true;
+      const writer=String(c.id)===leaseId?'<span class="pill">Holds lease</span>':'—';
+      return '<tr data-client-row="'+esc(c.id)+'" data-client-name="'+esc(c.name)+'"><td>'+esc(c.name)+'</td><td><span class="pill">'+(c.active?'Active':'Disabled')+'</span></td><td>'+esc(c.last_used_at||'Never')+'</td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="read" data-client-id="'+esc(c.id)+'" aria-label="Read access for '+esc(c.name)+'" '+(read?'checked ':'')+(disabled?'disabled ':'')+'></td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="publish" data-client-id="'+esc(c.id)+'" aria-label="Publish access for '+esc(c.name)+'" '+(publish?'checked ':'')+(disabled?'disabled ':'')+'></td><td>'+writer+'</td><td><button class="small secondary" data-client="'+esc(c.id)+'" data-active="'+(!c.active)+'">'+(c.active?'Disable':'Enable')+'</button></td></tr>';
+    }).join('');
     document.querySelectorAll('[data-client]').forEach(b=>b.onclick=()=>setClient(b.dataset.client,b.dataset.active==='true'));
-  }catch(e){$('#clientsBody').innerHTML='<tr><td colspan="4">Unable to load timing computers.</td></tr>'}
+    document.querySelectorAll('[data-access]').forEach(box=>box.onchange=()=>changeEventAccess(box.dataset.clientId,box.dataset.access));
+  }catch(e){
+    if(clientEpoch===adminClientEpoch&&eventEpoch===adminLoadEpoch&&slug===currentSlug){
+      state.textContent='Unable to load timing-computer access.';
+      $('#clientsBody').innerHTML='<tr><td colspan="7">Unable to load timing computers.</td></tr>';
+    }
+  }
 }
 async function createClient(){
   const name=$('#clientName').value.trim();if(!name)return;
   const j=await req(API+'/admin-event-settings?action=bridge-clients',{method:'POST',headers:authHeaders(),body:JSON.stringify({name})});
   $('#newKey').className='status ok';$('#newKey').textContent='New credential — copy now: '+j.bridgeKey;$('#clientName').value='';await loadClients()
 }
-async function setClient(id,active){await req(API+'/admin-event-settings?action=bridge-clients',{method:'PUT',headers:authHeaders(),body:JSON.stringify({id,active})});await loadClients()}
+async function setClient(id,active){
+  if(!active&&!confirm('Disable this timing computer credential? It will no longer be able to authenticate until re-enabled.'))return;
+  await req(API+'/admin-event-settings?action=bridge-clients',{method:'PUT',headers:authHeaders(),body:JSON.stringify({id,active})});
+  await loadClients()
+}
+async function changeEventAccess(id,changed){
+  const context=eventMutationContext();if(!context){await loadClients();return}
+  const row=[...document.querySelectorAll('[data-client-row]')].find(r=>r.dataset.clientRow===id);if(!row)return;
+  const readBox=row.querySelector('[data-access="read"]'),publishBox=row.querySelector('[data-access="publish"]');
+  if(changed==='read'&&!readBox.checked)publishBox.checked=false;
+  if(changed==='publish'&&publishBox.checked){
+    readBox.checked=true;
+    const clientName=row.dataset.clientName||'this timing computer',eventName=loaded?.event?.name||context.slug;
+    if(!confirm('Grant '+clientName+' publishing access to '+eventName+'? The exclusive writer lease and all Bridge safety gates will still apply.')){await loadClients();return}
+  }
+  const canRead=readBox.checked,canPublish=publishBox.checked;
+  readBox.disabled=true;publishBox.disabled=true;$('#clientAccessState').textContent='Updating event access...';
+  try{
+    await req(API+'/admin-event-settings?action=bridge-access&slug='+encodeURIComponent(context.slug),{method:'PUT',headers:authHeaders(),body:JSON.stringify({clientId:id,canRead,canPublish})});
+    if(eventContextCurrent(context)){await loadClients();await loadActivity()}
+  }catch(e){
+    if(eventContextCurrent(context)){status($('#saveStatus'),'Timing-computer access update failed: '+e.message,false);await loadClients()}
+  }
+}
 
 async function loadActivity(){
   const slug=currentSlug,epoch=adminLoadEpoch,activityEpoch=++adminActivityEpoch;
@@ -364,7 +411,7 @@ async function changePassword(){
 
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
-$('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=loadEvent;$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
+$('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
 $('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
 
 window.startMercuryAdmin=()=>{if(token){showApp();loadEvents().catch(()=>showLogin())}else showLogin()};
