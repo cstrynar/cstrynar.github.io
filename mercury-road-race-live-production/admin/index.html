@@ -25,7 +25,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .scoring{border:2px solid #ecd0d6;background:#fffafb}.hint{font-size:11px;color:var(--muted);line-height:1.45}.sep{height:1px;background:var(--line);margin:18px 0}
 .topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
-.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.4fr 1fr 1.2fr auto;gap:8px;align-items:end;margin-bottom:8px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
 @media(max-width:720px){.row,.row3{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
 <link rel="stylesheet" href="../assets/admin-tools.css">
@@ -46,7 +46,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 <main id="appView" class="shell hidden">
   <div class="topbar">
     <div class="grow"><label for="eventSelect">Event</label><select id="eventSelect"></select></div>
-    <div class="actions"><button class="secondary" id="refreshBtn">Refresh</button><button class="secondary" id="logoutBtn">Log out</button></div>
+    <div class="actions"><button class="primary" id="newEventBtn">New event</button><button class="secondary" id="refreshBtn">Refresh</button><button class="secondary" id="logoutBtn">Log out</button></div>
   </div>
 
   <nav class="tool-nav" aria-label="Admin views">
@@ -57,6 +57,30 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
   </nav>
   <p id="adminEventState" class="status" role="status" hidden></p>
   <div id="settingsPanel" class="admin-panel">
+  <section id="newEventCard" class="card hidden">
+    <h2>Create New Event</h2>
+    <p class="sub">Creates a clean revision-0 Mercury event. No timing computer receives access until you grant it in Timing Computers.</p>
+    <div style="height:12px"></div>
+    <div class="row">
+      <div><label>Event name</label><input id="newEventName" maxlength="180"></div>
+      <div><label>Event slug</label><input id="newEventSlug" maxlength="120" placeholder="example-race-2027"></div>
+      <div><label>Date</label><input id="newEventDate" type="date"></div>
+      <div><label>Location</label><input id="newEventLocation"></div>
+      <div><label>Start time label</label><input id="newEventStart" placeholder="5K 9:00 AM"></div>
+      <div><label>Distance label</label><input id="newEventDistance" placeholder="5K"></div>
+      <div><label>Timezone</label><input id="newEventTimezone" value="America/New_York"></div>
+      <div><label>Accent color</label><input id="newEventAccent" type="color" value="#b30f2b"></div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="switchline"><input id="newEventPublic" type="checkbox"><label for="newEventPublic">Make public immediately — spectators can see the UPCOMING revision-0 page</label></div>
+    <h3>Races</h3>
+    <p class="hint">Enter the exact MYLAPS source label, a stable Mercury key, and the spectator-facing public name. You can rename the public label later without changing the source/key.</p>
+    <div id="newRaceRows"></div>
+    <div class="actions"><button type="button" class="secondary small" id="addRaceBtn">Add race</button></div>
+    <div class="sep"></div>
+    <div class="actions"><button type="button" class="primary" id="createEventBtn">Create clean event</button><button type="button" class="secondary" id="cancelNewEventBtn">Cancel</button><span id="createEventStatus" class="status hidden"></span></div>
+  </section>
+
   <section class="card">
     <h2>Event Setup</h2>
     <div class="row">
@@ -213,7 +237,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R10 timing computer access + scoring controls</div>
+  <div class="footer">Mercury Road Race Live Admin • R11 new event + timing computer controls</div>
 </main>
 
 <script>
@@ -223,7 +247,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let token=localStorage.getItem('mercuryAdminSession')||'';
 let currentSlug='';
 let loaded=null;
-let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0;
+let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,newSlugTouched=false;
 
 function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
@@ -251,6 +275,46 @@ function renderRaceNames(rows){
   $('#raceNamesBody').innerHTML=aliases.map(row=>'<tr data-race-alias-id="'+esc(row.id)+'"><td>'+esc(row.source_label||'')+'</td><td><span class="race-key">'+esc(row.race_key||'')+'</span></td><td><input class="race-name-input" maxlength="80" aria-label="Public race name for '+esc(row.source_label||row.race_key||'race')+'" value="'+esc(row.display_label||row.race_key||'')+'"></td></tr>').join('');
   $('#raceNamesTableWrap').hidden=aliases.length===0;
   $('#raceNamesEmpty').hidden=aliases.length!==0;
+}
+
+
+function slugify(value){return String(value||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120)}
+function addNewRaceRow(seed={}){
+  const row=document.createElement('div');row.className='race-create-row';
+  row.innerHTML='<div><label>MYLAPS source label</label><input data-new-race="source" maxlength="160"></div><div><label>Mercury key</label><input data-new-race="key" maxlength="80" placeholder="5k"></div><div><label>Public race name</label><input data-new-race="display" maxlength="80"></div><button type="button" class="danger small" aria-label="Remove race">Remove</button>';
+  const source=row.querySelector('[data-new-race="source"]'),key=row.querySelector('[data-new-race="key"]'),display=row.querySelector('[data-new-race="display"]');
+  source.value=seed.source_label||'';key.value=seed.race_key||'';display.value=seed.display_label||'';
+  source.addEventListener('input',()=>{if(!key.dataset.touched)key.value=slugify(source.value);if(!display.dataset.touched)display.value=source.value});
+  key.addEventListener('input',()=>{key.dataset.touched='1';key.value=slugify(key.value)});
+  display.addEventListener('input',()=>{display.dataset.touched='1'});
+  row.querySelector('button').onclick=()=>{if($('#newRaceRows').children.length>1)row.remove()};
+  $('#newRaceRows').append(row);
+}
+function openNewEvent(){
+  newSlugTouched=false;$('#newEventCard').classList.remove('hidden');hideStatus($('#createEventStatus'));
+  for(const id of ['newEventName','newEventSlug','newEventDate','newEventLocation','newEventStart','newEventDistance'])$('#'+id).value='';
+  $('#newEventTimezone').value='America/New_York';$('#newEventAccent').value='#b30f2b';$('#newEventPublic').checked=false;$('#newRaceRows').replaceChildren();addNewRaceRow();$('#newEventName').focus();
+}
+function closeNewEvent(){$('#newEventCard').classList.add('hidden');hideStatus($('#createEventStatus'))}
+async function createEvent(){
+  const st=$('#createEventStatus');hideStatus(st);
+  const races=[...document.querySelectorAll('.race-create-row')].map(row=>({
+    source_label:row.querySelector('[data-new-race="source"]').value.trim(),
+    race_key:slugify(row.querySelector('[data-new-race="key"]').value),
+    display_label:row.querySelector('[data-new-race="display"]').value.trim()
+  }));
+  const name=$('#newEventName').value.trim(),slug=slugify($('#newEventSlug').value);
+  if(!name){status(st,'Event name is required.',false);return}
+  if(!slug){status(st,'Event slug is required.',false);return}
+  if(races.some(r=>!r.source_label||!r.race_key||!r.display_label)){status(st,'Complete all race fields.',false);return}
+  const body={event:{name,slug,event_date:$('#newEventDate').value,location:$('#newEventLocation').value,start_time_label:$('#newEventStart').value,distance_label:$('#newEventDistance').value,is_public:$('#newEventPublic').checked},timezone:$('#newEventTimezone').value,accent_color:$('#newEventAccent').value,races};
+  if(!confirm('Create '+name+' as a clean revision-0 event with '+races.length+' race'+(races.length===1?'':'s')+'? No timing computer will receive access yet.'))return;
+  try{
+    const j=await req(API+'/admin-event-settings?action=create-event',{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});
+    status(st,'Event created.');
+    closeNewEvent();await loadEvents();
+    if(j.event?.slug){$('#eventSelect').value=j.event.slug;currentSlug=j.event.slug;await loadEvent();await loadClients()}
+  }catch(e){status(st,'Create failed: '+e.message,false)}
 }
 
 async function login(){
@@ -409,6 +473,7 @@ async function changePassword(){
   }catch(e){alert('Password change failed: '+e.message)}
 }
 
+$('#newEventBtn').onclick=openNewEvent;$('#cancelNewEventBtn').onclick=closeNewEvent;$('#addRaceBtn').onclick=()=>addNewRaceRow();$('#createEventBtn').onclick=createEvent;$('#newEventName').addEventListener('input',()=>{if(!newSlugTouched)$('#newEventSlug').value=slugify($('#newEventName').value)});$('#newEventSlug').addEventListener('input',()=>{newSlugTouched=true;$('#newEventSlug').value=slugify($('#newEventSlug').value)});
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
 $('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
