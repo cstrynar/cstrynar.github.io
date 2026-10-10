@@ -163,15 +163,15 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 
   <section class="card">
     <h2>Timing Computers</h2>
-    <p class="sub">Create Mercury Bridge credentials and control which computers may read or publish the selected event. Publish access always requires Read access.</p>
+    <p class="sub">Register Mercury timing computers, issue one-time activation codes, and control which computers may read or publish the selected event. Publish access always requires Read access.</p>
     <div style="height:12px"></div>
-    <div class="actions"><input id="clientName" placeholder="New timing computer name" style="max-width:360px"><button class="secondary" id="createClientBtn">Create credential</button></div>
-    <p class="hint">A newly created Bridge credential is shown once. Store it on the intended timing computer. New computers receive no event access until you enable Read below.</p>
+    <div class="actions"><input id="clientName" placeholder="New timing computer name" style="max-width:360px"><button class="secondary" id="createClientBtn">Add timing computer</button></div>
+    <p class="hint">New computers receive a 15-minute one-time activation code. Enter it once in Mercury Bridge on that PC; the long credential is generated and stored encrypted for that Windows user. Event access remains off until you enable Read below.</p>
     <div id="newKey" class="status hidden" style="word-break:break-all"></div>
     <div style="height:10px"></div>
     <p id="clientAccessState" class="hint" role="status" aria-live="polite">Choose an event to manage timing-computer access.</p>
     <div style="overflow:auto">
-      <table class="table"><thead><tr><th>Name</th><th>Computer</th><th>Last used</th><th>Read event</th><th>Publish event</th><th>Writer lease</th><th></th></tr></thead><tbody id="clientsBody"></tbody></table>
+      <table class="table"><thead><tr><th>Name</th><th>Computer</th><th>Last used</th><th>Read event</th><th>Publish event</th><th>Writer lease</th><th>Activation</th><th></th></tr></thead><tbody id="clientsBody"></tbody></table>
     </div>
   </section>
 
@@ -237,7 +237,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R11 new event + timing computer controls</div>
+  <div class="footer">Mercury Road Race Live Admin • R12 one-time activation + event controls</div>
 </main>
 
 <script>
@@ -414,21 +414,34 @@ async function loadClients(){
     $('#clientsBody').innerHTML=clients.map(c=>{
       const read=c.grant?.can_read===true,publish=c.grant?.can_publish===true,disabled=c.active!==true;
       const writer=String(c.id)===leaseId?'<span class="pill">Holds lease</span>':'—';
-      return '<tr data-client-row="'+esc(c.id)+'" data-client-name="'+esc(c.name)+'"><td>'+esc(c.name)+'</td><td><span class="pill">'+(c.active?'Active':'Disabled')+'</span></td><td>'+esc(c.last_used_at||'Never')+'</td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="read" data-client-id="'+esc(c.id)+'" aria-label="Read access for '+esc(c.name)+'" '+(read?'checked ':'')+(disabled?'disabled ':'')+'></td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="publish" data-client-id="'+esc(c.id)+'" aria-label="Publish access for '+esc(c.name)+'" '+(publish?'checked ':'')+(disabled?'disabled ':'')+'></td><td>'+writer+'</td><td><button class="small secondary" data-client="'+esc(c.id)+'" data-active="'+(!c.active)+'">'+(c.active?'Disable':'Enable')+'</button></td></tr>';
+      return '<tr data-client-row="'+esc(c.id)+'" data-client-name="'+esc(c.name)+'"><td>'+esc(c.name)+'</td><td><span class="pill">'+(c.active?'Active':'Disabled')+'</span></td><td>'+esc(c.last_used_at||'Never')+'</td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="read" data-client-id="'+esc(c.id)+'" aria-label="Read access for '+esc(c.name)+'" '+(read?'checked ':'')+(disabled?'disabled ':'')+'></td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="publish" data-client-id="'+esc(c.id)+'" aria-label="Publish access for '+esc(c.name)+'" '+(publish?'checked ':'')+(disabled?'disabled ':'')+'></td><td>'+writer+'</td><td><button class="small secondary" data-activate="'+esc(c.id)+'" '+(disabled?'disabled':'')+'>New code</button></td><td><button class="small secondary" data-client="'+esc(c.id)+'" data-active="'+(!c.active)+'">'+(c.active?'Disable':'Enable')+'</button></td></tr>';
     }).join('');
     document.querySelectorAll('[data-client]').forEach(b=>b.onclick=()=>setClient(b.dataset.client,b.dataset.active==='true'));
+    document.querySelectorAll('[data-activate]').forEach(b=>b.onclick=()=>issueActivationCode(b.dataset.activate));
     document.querySelectorAll('[data-access]').forEach(box=>box.onchange=()=>changeEventAccess(box.dataset.clientId,box.dataset.access));
   }catch(e){
     if(clientEpoch===adminClientEpoch&&eventEpoch===adminLoadEpoch&&slug===currentSlug){
       state.textContent='Unable to load timing-computer access.';
-      $('#clientsBody').innerHTML='<tr><td colspan="7">Unable to load timing computers.</td></tr>';
+      $('#clientsBody').innerHTML='<tr><td colspan="8">Unable to load timing computers.</td></tr>';
     }
   }
 }
+function showActivationCode(j){
+  const el=$('#newKey');
+  el.className='status ok';
+  el.textContent='One-time activation code: '+j.activationCode+' — expires '+(j.expiresAt||'in 15 minutes')+'. Enter this code once in Mercury Bridge on the intended PC.';
+}
 async function createClient(){
   const name=$('#clientName').value.trim();if(!name)return;
-  const j=await req(API+'/admin-event-settings?action=bridge-clients',{method:'POST',headers:authHeaders(),body:JSON.stringify({name})});
-  $('#newKey').className='status ok';$('#newKey').textContent='New credential — copy now: '+j.bridgeKey;$('#clientName').value='';await loadClients()
+  const j=await req(API+'/admin-event-settings?action=bridge-clients',{method:'POST',headers:authHeaders(),body:JSON.stringify({name,activationMode:true})});
+  showActivationCode(j);$('#clientName').value='';await loadClients()
+}
+async function issueActivationCode(id){
+  const row=[...document.querySelectorAll('[data-client-row]')].find(r=>r.dataset.clientRow===id);
+  const name=row?.dataset.clientName||'this timing computer';
+  if(!confirm('Issue a new 15-minute activation code for '+name+'? Generating the code does not interrupt the existing credential. The old credential is rotated only if the code is redeemed.'))return;
+  const j=await req(API+'/admin-event-settings?action=bridge-activation',{method:'POST',headers:authHeaders(),body:JSON.stringify({clientId:id})});
+  showActivationCode(j)
 }
 async function setClient(id,active){
   if(!active&&!confirm('Disable this timing computer credential? It will no longer be able to authenticate until re-enabled.'))return;
