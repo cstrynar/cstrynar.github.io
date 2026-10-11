@@ -324,7 +324,9 @@ function parseElapsedOffset(value){
 function formatElapsedOffset(seconds){
   const total=Math.max(0,Number(seconds)||0),whole=Math.floor(total),tenths=Math.round((total-whole)*10)%10;
   const h=Math.floor(whole/3600),m=Math.floor((whole%3600)/60),s=whole%60;
-  return h>0?String(h)+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+tenths:String(Math.floor(whole/60))+':'+String(s).padStart(2,'0')+'.'+tenths;
+  if(h>0)return String(h)+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+tenths;
+  if(whole>=60)return String(Math.floor(whole/60))+':'+String(s).padStart(2,'0')+'.'+tenths;
+  return String(s)+'.'+tenths;
 }
 function clockSourceLabel(source){return source==='push'?'push start':source==='mylaps'?'MYLAPS':source==='admin_now'?'legacy set-to-now':'manual'}
 function renderRaceClocks(rows){
@@ -333,14 +335,14 @@ function renderRaceClocks(rows){
   $('#raceClockRows').innerHTML=aliases.map(row=>{
     const hasSavedStart=!!row.running_clock_start_at,running=row.running_clock_enabled===true&&hasSavedStart;
     const state=running?'RUNNING · spectator clock visible':hasSavedStart?'STOPPED · spectator clock hidden':'READY · spectator clock hidden';
-    return '<div class="clock-row" data-clock-row="'+esc(row.id)+'"><div class="clock-race"><strong>'+esc(row.display_label||row.race_key||'Race')+'</strong><span>'+esc(state)+(row.running_clock_source?' · '+esc(clockSourceLabel(row.running_clock_source)):'')+'</span></div><div><label>Start clock at elapsed time</label><input class="clock-offset" inputmode="decimal" autocomplete="off" value="0:00.0" aria-label="Elapsed time to start '+esc(row.display_label||row.race_key||'race')+' clock at"><p class="hint" style="margin:5px 0 0">0:00.0 = gun start. Example: enter 1:00.0, then press START at the 1-minute mark.</p></div><div class="actions"><button type="button" class="primary clock-start" data-clock-action="start">'+(running?'RESTART':'START')+'</button><button type="button" class="secondary small" data-clock-action="zero">Set 0:00.0</button><button type="button" class="secondary small" data-clock-action="hide" '+(running?'':'disabled')+'>STOP / HIDE</button></div></div>';
+    return '<div class="clock-row" data-clock-row="'+esc(row.id)+'"><div class="clock-race"><strong>'+esc(row.display_label||row.race_key||'Race')+'</strong><span>'+esc(state)+(row.running_clock_source?' · '+esc(clockSourceLabel(row.running_clock_source)):'')+'</span></div><div><label>Start clock at elapsed time</label><input class="clock-offset" inputmode="decimal" autocomplete="off" value="0.0" aria-label="Elapsed time to start '+esc(row.display_label||row.race_key||'race')+' clock at"><p class="hint" style="margin:5px 0 0">0.0 = gun start. Example: enter 1:00.0, then press START at the 1-minute mark.</p></div><div class="actions"><button type="button" class="primary clock-start" data-clock-action="start">'+(running?'RESTART':'START')+'</button><button type="button" class="secondary small" data-clock-action="zero">Set 0.0</button><button type="button" class="secondary small" data-clock-action="hide" '+(running?'':'disabled')+'>STOP / HIDE</button></div></div>';
   }).join('');
   for(const row of document.querySelectorAll('[data-clock-row]')){
     const id=Number(row.dataset.clockRow),offset=row.querySelector('.clock-offset');
-    row.querySelector('[data-clock-action="zero"]').onclick=()=>{offset.value='0:00.0';offset.focus();offset.select()};
+    row.querySelector('[data-clock-action="zero"]').onclick=()=>{offset.value='0.0';offset.focus();offset.select()};
     row.querySelector('[data-clock-action="start"]').onclick=()=>{
       const seconds=parseElapsedOffset(offset.value);
-      if(seconds===null){status($('#raceClockStatus'),'Enter elapsed time as 0:00.0, 1:00.0, or H:MM:SS.0.',false);offset.focus();return}
+      if(seconds===null){status($('#raceClockStatus'),'Enter elapsed time as 0.0, 1:00.0, or H:MM:SS.0.',false);offset.focus();return}
       setRaceClock(id,'start',seconds);
     };
     row.querySelector('[data-clock-action="hide"]').onclick=()=>setRaceClock(id,'hide',0);
