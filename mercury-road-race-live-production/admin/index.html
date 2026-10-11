@@ -25,8 +25,10 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .scoring{border:2px solid #ecd0d6;background:#fffafb}.hint{font-size:11px;color:var(--muted);line-height:1.45}.sep{height:1px;background:var(--line);margin:18px 0}
 .topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
-.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.4fr 1fr 1.2fr auto;gap:8px;align-items:end;margin-bottom:8px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
-@media(max-width:720px){.row,.row3,.race-create-row{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.4fr 1fr 1.2fr auto;gap:8px;align-items:end;margin-bottom:8px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}
+.clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(170px,.8fr) minmax(330px,1.6fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-time{font-variant-numeric:tabular-nums}
+.footer{font-size:11px;color:#737780;text-align:center;padding:20px}
+@media(max-width:720px){.row,.row3,.race-create-row,.clock-row{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
 <link rel="stylesheet" href="../assets/admin-tools.css">
 </head>
@@ -122,6 +124,14 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
         <tbody id="raceNamesBody"></tbody>
       </table>
     </div>
+  </section>
+
+  <section class="card">
+    <h2>Unofficial Running Clock</h2>
+    <p class="sub">Spectator aid only. This clock never changes official Gun/Chip times or results. Enter the actual MYLAPS gun time-of-day, or set the start to the current server time.</p>
+    <div id="raceClockRows" class="clock-list"></div>
+    <div style="height:10px"></div>
+    <span id="raceClockStatus" class="status hidden"></span>
   </section>
 
   <section class="card">
@@ -253,7 +263,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R13 admin recovery + activation controls</div>
+  <div class="footer">Mercury Road Race Live Admin • R14 unofficial race clock</div>
 </main>
 
 <script>
@@ -269,7 +279,7 @@ function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
   const ids='eventName eventLocation eventDate eventStart eventDistance eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone awardsJson scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
-  $('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;hideStatus($('#saveStatus'));
+  $('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
   $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
 }
 function eventMutationContext(){
@@ -291,6 +301,45 @@ function renderRaceNames(rows){
   $('#raceNamesBody').innerHTML=aliases.map(row=>'<tr data-race-alias-id="'+esc(row.id)+'"><td>'+esc(row.source_label||'')+'</td><td><span class="race-key">'+esc(row.race_key||'')+'</span></td><td><input class="race-name-input" maxlength="80" aria-label="Public race name for '+esc(row.source_label||row.race_key||'race')+'" value="'+esc(row.display_label||row.race_key||'')+'"></td></tr>').join('');
   $('#raceNamesTableWrap').hidden=aliases.length===0;
   $('#raceNamesEmpty').hidden=aliases.length!==0;
+}
+function clockInputValue(iso,timezone){
+  if(!iso)return '';
+  const stamp=Date.parse(iso);if(!Number.isFinite(stamp))return '';
+  try{
+    const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:timezone,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(stamp)).map(p=>[p.type,p.value]));
+    return [parts.hour,parts.minute,parts.second].join(':');
+  }catch{return ''}
+}
+function clockDisplayValue(iso,timezone){
+  if(!iso)return '';
+  const stamp=Date.parse(iso);if(!Number.isFinite(stamp))return '';
+  try{return new Intl.DateTimeFormat('en-US',{timeZone:timezone,hour:'numeric',minute:'2-digit',second:'2-digit'}).format(new Date(stamp))}catch{return ''}
+}
+function clockSourceLabel(source){return source==='admin_now'?'set to now':source==='mylaps'?'MYLAPS':'manual'}
+function renderRaceClocks(rows,event,settings){
+  const aliases=Array.isArray(rows)?rows:[],timezone=String(settings?.timezone||'America/New_York'),hasDate=!!event?.event_date;
+  if(!aliases.length){$('#raceClockRows').innerHTML='<p class="hint">No configured races for this event.</p>';return}
+  $('#raceClockRows').innerHTML=aliases.map(row=>{
+    const start=clockDisplayValue(row.running_clock_start_at,timezone),input=clockInputValue(row.running_clock_start_at,timezone);
+    const running=row.running_clock_enabled===true&&!!start;
+    const state=running?'Running from '+start+' · '+clockSourceLabel(row.running_clock_source):start?'Hidden · saved start '+start:'Not started';
+    return '<div class="clock-row" data-clock-row="'+esc(row.id)+'"><div class="clock-race"><strong>'+esc(row.display_label||row.race_key||'Race')+'</strong><span>'+esc(state)+'</span></div><div><label>Gun time of day</label><input class="clock-time" type="time" step="1" value="'+esc(input)+'" '+(hasDate?'':'disabled')+'></div><div class="actions"><button type="button" class="secondary small" data-clock-action="manual" '+(hasDate?'':'disabled')+'>Use entered time</button><button type="button" class="primary small" data-clock-action="now">Set start to now</button><button type="button" class="secondary small" data-clock-action="hide" '+(running?'':'disabled')+'>Hide clock</button></div></div>';
+  }).join('');
+  for(const row of document.querySelectorAll('[data-clock-row]')){
+    const id=Number(row.dataset.clockRow),raceName=row.querySelector('.clock-race strong')?.textContent||'this race',time=row.querySelector('.clock-time');
+    for(const button of row.querySelectorAll('[data-clock-action]'))button.onclick=()=>setRaceClock(id,button.dataset.clockAction,time?.value||'',raceName);
+  }
+}
+async function setRaceClock(raceAliasId,mode,timeOfDay,raceName){
+  const context=eventMutationContext();if(!context)return;
+  const st=$('#raceClockStatus');hideStatus(st);
+  if(mode==='manual'&&!/^\d{2}:\d{2}(?::\d{2})?$/.test(timeOfDay)){status(st,'Enter the MYLAPS gun time-of-day first.',false);return}
+  if(mode==='now'&&!confirm('Start the unofficial '+raceName+' spectator clock now? This does not affect official results.'))return;
+  try{
+    status(st,'Updating unofficial clock...');
+    await req(API+'/admin-event-settings?action=race-clock&slug='+encodeURIComponent(context.slug),{method:'POST',headers:authHeaders(),body:JSON.stringify({raceAliasId,mode,timeOfDay})});
+    if(eventContextCurrent(context)){await loadEvent();status($('#raceClockStatus'),mode==='hide'?'Clock hidden. Official results are unchanged.':'Unofficial running clock updated. Official results are unchanged.')}
+  }catch(e){if(eventContextCurrent(context))status(st,'Clock update failed: '+e.message,false)}
 }
 
 
@@ -384,6 +433,7 @@ async function loadEvent(){
   $('#settingsPanel').inert=false;$('#adminEventState').hidden=true;
   loaded=j;const e=j.event||{},s=j.settings||{},ts=s.team_scoring||{};
   renderRaceNames(j.raceAliases||[]);
+  renderRaceClocks(j.raceAliases||[],e,s);
   $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
   $('#eventStart').value=e.start_time_label||'';$('#eventDistance').value=e.distance_label||'';$('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
   $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
