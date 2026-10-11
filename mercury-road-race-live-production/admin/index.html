@@ -128,7 +128,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 
   <section class="card">
     <h2>Unofficial Running Clock</h2>
-    <p class="sub">Spectator aid only. This clock never changes official Gun/Chip times or results. Enter the actual MYLAPS gun time-of-day, or set the start to the current server time.</p>
+    <p class="sub"><b>Use the ACTUAL gun trigger time only — not the scheduled race start.</b> After the race has physically started, enter the MYLAPS gun mark time-of-day or activate the clock immediately with the current server time. This spectator clock never changes official Gun/Chip times or results.</p>
     <div id="raceClockRows" class="clock-list"></div>
     <div style="height:10px"></div>
     <span id="raceClockStatus" class="status hidden"></span>
@@ -323,7 +323,7 @@ function renderRaceClocks(rows,event,settings){
     const start=clockDisplayValue(row.running_clock_start_at,timezone),input=clockInputValue(row.running_clock_start_at,timezone);
     const running=row.running_clock_enabled===true&&!!start;
     const state=running?'Running from '+start+' · '+clockSourceLabel(row.running_clock_source):start?'Hidden · saved start '+start:'Not started';
-    return '<div class="clock-row" data-clock-row="'+esc(row.id)+'"><div class="clock-race"><strong>'+esc(row.display_label||row.race_key||'Race')+'</strong><span>'+esc(state)+'</span></div><div><label>Gun time of day</label><input class="clock-time" type="time" step="1" value="'+esc(input)+'" '+(hasDate?'':'disabled')+'></div><div class="actions"><button type="button" class="secondary small" data-clock-action="manual" '+(hasDate?'':'disabled')+'>Use entered time</button><button type="button" class="primary small" data-clock-action="now">Set start to now</button><button type="button" class="secondary small" data-clock-action="hide" '+(running?'':'disabled')+'>Hide clock</button></div></div>';
+    return '<div class="clock-row" data-clock-row="'+esc(row.id)+'"><div class="clock-race"><strong>'+esc(row.display_label||row.race_key||'Race')+'</strong><span>'+esc(state)+'</span></div><div><label>Actual gun trigger time (NOT scheduled start)</label><input class="clock-time" type="time" step="1" value="'+esc(input)+'" '+(hasDate?'':'disabled')+'></div><div class="actions"><button type="button" class="secondary small" data-clock-action="manual" '+(hasDate?'':'disabled')+'>Activate using actual gun time</button><button type="button" class="primary small" data-clock-action="now">Activate clock now</button><button type="button" class="secondary small" data-clock-action="hide" '+(running?'':'disabled')+'>Hide clock</button></div></div>';
   }).join('');
   for(const row of document.querySelectorAll('[data-clock-row]')){
     const id=Number(row.dataset.clockRow),raceName=row.querySelector('.clock-race strong')?.textContent||'this race',time=row.querySelector('.clock-time');
@@ -333,13 +333,14 @@ function renderRaceClocks(rows,event,settings){
 async function setRaceClock(raceAliasId,mode,timeOfDay,raceName){
   const context=eventMutationContext();if(!context)return;
   const st=$('#raceClockStatus');hideStatus(st);
-  if(mode==='manual'&&!/^\d{2}:\d{2}(?::\d{2})?$/.test(timeOfDay)){status(st,'Enter the MYLAPS gun time-of-day first.',false);return}
-  if(mode==='now'&&!confirm('Start the unofficial '+raceName+' spectator clock now? This does not affect official results.'))return;
+  if(mode==='manual'&&!/^\d{2}:\d{2}(?::\d{2})?$/.test(timeOfDay)){status(st,'Enter the ACTUAL MYLAPS gun trigger time first — not the scheduled race start.',false);return}
+  if(mode==='manual'&&!confirm('Activate the unofficial '+raceName+' clock using '+timeOfDay+' as the ACTUAL gun trigger time?\n\nDo not continue if this is only the scheduled start time.'))return;
+  if(mode==='now'&&!confirm('Activate the unofficial '+raceName+' spectator clock now? Use this only after the race has actually started. This does not affect official results.'))return;
   try{
     status(st,'Updating unofficial clock...');
     await req(API+'/admin-event-settings?action=race-clock&slug='+encodeURIComponent(context.slug),{method:'POST',headers:authHeaders(),body:JSON.stringify({raceAliasId,mode,timeOfDay})});
     if(eventContextCurrent(context)){await loadEvent();status($('#raceClockStatus'),mode==='hide'?'Clock hidden. Official results are unchanged.':'Unofficial running clock updated. Official results are unchanged.')}
-  }catch(e){if(eventContextCurrent(context))status(st,'Clock update failed: '+e.message,false)}
+  }catch(e){if(eventContextCurrent(context)){const msg=e.message==='gun_time_is_in_future'?'The entered gun time is still in the future. Enter the ACTUAL gun trigger time after the race starts — not the scheduled start.':'Clock update failed: '+e.message;status(st,msg,false)}}
 }
 
 
