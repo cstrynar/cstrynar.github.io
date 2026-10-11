@@ -369,11 +369,11 @@ function elapsedText(milliseconds){const total=Math.max(0,Math.floor(millisecond
 function updateRaceClock(races=null){
  const list=Array.isArray(races)?races:raceCatalog(),selected=list.find(r=>r.key===currentRaceKey)||list[0],card=$("#raceClockCard");
  const start=selected?.clock?.enabled===true?Date.parse(selected.clock.startAt):NaN;
- if(!selected||!Number.isFinite(start)){card.hidden=true;return}
+ const now=Date.now()+(Number.isFinite(serverClockOffsetMs)?serverClockOffsetMs:0);
+ if(!selected||!Number.isFinite(start)||start>now){card.hidden=true;return}
  card.hidden=false;$("#raceClockLabel").textContent=(raceDisplay(selected.label||selected.key)||'Race')+' elapsed';
- const now=Date.now()+(Number.isFinite(serverClockOffsetMs)?serverClockOffsetMs:0),delta=now-start;
- $("#raceClockValue").textContent=elapsedText(delta);
- $("#raceClockNote").textContent=delta<0?'Unofficial · waiting for entered start time':'Unofficial running time';
+ $("#raceClockValue").textContent=elapsedText(now-start);
+ $("#raceClockNote").textContent='Unofficial running time';
 }
 function syncRaceFilter(){const races=raceCatalog();const prior=currentRaceKey;if(races.length&&(!prior||!races.some(r=>r.key===prior)))currentRaceKey=races[0].key;if(!races.length)currentRaceKey=null;raceFilter.hidden=races.length<=1;raceFilter.disabled=races.length<=1;raceFilter.innerHTML=races.map(r=>`<option value="${esc(r.key)}">${esc(raceDisplay(r.label||r.key))} (${r.count})</option>`).join('');raceFilter.value=currentRaceKey||'';return races}
 function raceRows(rows=snapshot.results){const list=Array.isArray(rows)?rows:[];return currentRaceKey?list.filter(r=>String(r?.race??'').trim()===currentRaceKey):list}
