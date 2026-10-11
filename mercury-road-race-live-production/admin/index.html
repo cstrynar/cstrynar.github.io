@@ -344,8 +344,7 @@ async function recoverPassword(){
   if(password!==confirmPassword){status(st,'New passwords do not match.',false);return}
   try{
     const j=await req(API+'/admin-recover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({recoveryCode:code,newPassword:password})});
-    status(st,'Password changed. Sign in with the new password.');
-    $('#password').value='';closeRecovery();$('#password').focus();
+    $('#password').value='';closeRecovery();status($('#loginStatus'),'Password changed. Sign in with the new password.');$('#password').focus();
   }catch(e){status(st,'Recovery failed: '+e.message,false)}
 }
 
