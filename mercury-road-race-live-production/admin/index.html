@@ -26,7 +26,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
 .pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.4fr 1fr 1.2fr auto;gap:8px;align-items:end;margin-bottom:8px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}
-.clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(170px,.8fr) minmax(330px,1.6fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-time{font-variant-numeric:tabular-nums}
+.clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(240px,1fr) minmax(330px,1.35fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-offset{font-variant-numeric:tabular-nums;font-weight:800}.clock-start{min-width:110px;font-size:15px;letter-spacing:.04em}
 .footer{font-size:11px;color:#737780;text-align:center;padding:20px}
 @media(max-width:720px){.row,.row3,.race-create-row,.clock-row{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
@@ -128,7 +128,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 
   <section class="card">
     <h2>Unofficial Running Clock</h2>
-    <p class="sub"><b>Use the ACTUAL gun trigger time only — not the scheduled race start.</b> After the race has physically started, enter the MYLAPS gun mark time-of-day or activate the clock immediately with the current server time. This spectator clock never changes official Gun/Chip times or results.</p>
+    <p class="sub"><b>Push START when the race actually begins — never when entering the scheduled start during event setup.</b> The default is <b>0:00.0</b>. If you are late to the start, enter the known elapsed race time (for example <b>1:00.0</b>) and press START at that moment. This spectator clock never changes official Gun/Chip times or results.</p>
     <div id="raceClockRows" class="clock-list"></div>
     <div style="height:10px"></div>
     <span id="raceClockStatus" class="status hidden"></span>
@@ -263,7 +263,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R14 unofficial race clock</div>
+  <div class="footer">Mercury Road Race Live Admin • R15 push-to-start unofficial race clock</div>
 </main>
 
 <script>
@@ -302,47 +302,59 @@ function renderRaceNames(rows){
   $('#raceNamesTableWrap').hidden=aliases.length===0;
   $('#raceNamesEmpty').hidden=aliases.length!==0;
 }
-function clockInputValue(iso,timezone){
-  if(!iso)return '';
-  const stamp=Date.parse(iso);if(!Number.isFinite(stamp))return '';
-  try{
-    const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:timezone,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(stamp)).map(p=>[p.type,p.value]));
-    return [parts.hour,parts.minute,parts.second].join(':');
-  }catch{return ''}
+function parseElapsedOffset(value){
+  const text=String(value||'').trim();
+  if(!text)return null;
+  const parts=text.split(':');
+  if(parts.length<1||parts.length>3)return null;
+  const nums=parts.map(Number);
+  if(nums.some(n=>!Number.isFinite(n)||n<0))return null;
+  let seconds=0;
+  if(parts.length===1)seconds=nums[0];
+  else if(parts.length===2){
+    if(nums[1]>=60)return null;
+    seconds=nums[0]*60+nums[1];
+  }else{
+    if(nums[1]>=60||nums[2]>=60)return null;
+    seconds=nums[0]*3600+nums[1]*60+nums[2];
+  }
+  if(seconds>172800)return null;
+  return Math.round(seconds*10)/10;
 }
-function clockDisplayValue(iso,timezone){
-  if(!iso)return '';
-  const stamp=Date.parse(iso);if(!Number.isFinite(stamp))return '';
-  try{return new Intl.DateTimeFormat('en-US',{timeZone:timezone,hour:'numeric',minute:'2-digit',second:'2-digit'}).format(new Date(stamp))}catch{return ''}
+function formatElapsedOffset(seconds){
+  const total=Math.max(0,Number(seconds)||0),whole=Math.floor(total),tenths=Math.round((total-whole)*10)%10;
+  const h=Math.floor(whole/3600),m=Math.floor((whole%3600)/60),s=whole%60;
+  return h>0?String(h)+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+tenths:String(Math.floor(whole/60))+':'+String(s).padStart(2,'0')+'.'+tenths;
 }
-function clockSourceLabel(source){return source==='admin_now'?'set to now':source==='mylaps'?'MYLAPS':'manual'}
-function renderRaceClocks(rows,event,settings){
-  const aliases=Array.isArray(rows)?rows:[],timezone=String(settings?.timezone||'America/New_York'),hasDate=!!event?.event_date;
+function clockSourceLabel(source){return source==='push'?'push start':source==='mylaps'?'MYLAPS':source==='admin_now'?'legacy set-to-now':'manual'}
+function renderRaceClocks(rows){
+  const aliases=Array.isArray(rows)?rows:[];
   if(!aliases.length){$('#raceClockRows').innerHTML='<p class="hint">No configured races for this event.</p>';return}
   $('#raceClockRows').innerHTML=aliases.map(row=>{
-    const start=clockDisplayValue(row.running_clock_start_at,timezone),input=clockInputValue(row.running_clock_start_at,timezone);
-    const running=row.running_clock_enabled===true&&!!start;
-    const state=running?'Running from '+start+' · '+clockSourceLabel(row.running_clock_source):start?'Hidden · saved start '+start:'Not started';
-    return '<div class="clock-row" data-clock-row="'+esc(row.id)+'"><div class="clock-race"><strong>'+esc(row.display_label||row.race_key||'Race')+'</strong><span>'+esc(state)+'</span></div><div><label>Actual gun trigger time (NOT scheduled start)</label><input class="clock-time" type="time" step="1" value="'+esc(input)+'" '+(hasDate?'':'disabled')+'></div><div class="actions"><button type="button" class="secondary small" data-clock-action="manual" '+(hasDate?'':'disabled')+'>Activate using actual gun time</button><button type="button" class="primary small" data-clock-action="now">Activate clock now</button><button type="button" class="secondary small" data-clock-action="hide" '+(running?'':'disabled')+'>Hide clock</button></div></div>';
+    const hasSavedStart=!!row.running_clock_start_at,running=row.running_clock_enabled===true&&hasSavedStart;
+    const state=running?'RUNNING · spectator clock visible':hasSavedStart?'STOPPED · spectator clock hidden':'READY · spectator clock hidden';
+    return '<div class="clock-row" data-clock-row="'+esc(row.id)+'"><div class="clock-race"><strong>'+esc(row.display_label||row.race_key||'Race')+'</strong><span>'+esc(state)+(row.running_clock_source?' · '+esc(clockSourceLabel(row.running_clock_source)):'')+'</span></div><div><label>Start clock at elapsed time</label><input class="clock-offset" inputmode="decimal" autocomplete="off" value="0:00.0" aria-label="Elapsed time to start '+esc(row.display_label||row.race_key||'race')+' clock at"><p class="hint" style="margin:5px 0 0">0:00.0 = gun start. Example: enter 1:00.0, then press START at the 1-minute mark.</p></div><div class="actions"><button type="button" class="primary clock-start" data-clock-action="start">'+(running?'RESTART':'START')+'</button><button type="button" class="secondary small" data-clock-action="zero">Set 0:00.0</button><button type="button" class="secondary small" data-clock-action="hide" '+(running?'':'disabled')+'>STOP / HIDE</button></div></div>';
   }).join('');
   for(const row of document.querySelectorAll('[data-clock-row]')){
-    const id=Number(row.dataset.clockRow),raceName=row.querySelector('.clock-race strong')?.textContent||'this race',time=row.querySelector('.clock-time');
-    for(const button of row.querySelectorAll('[data-clock-action]'))button.onclick=()=>setRaceClock(id,button.dataset.clockAction,time?.value||'',raceName);
+    const id=Number(row.dataset.clockRow),offset=row.querySelector('.clock-offset');
+    row.querySelector('[data-clock-action="zero"]').onclick=()=>{offset.value='0:00.0';offset.focus();offset.select()};
+    row.querySelector('[data-clock-action="start"]').onclick=()=>{
+      const seconds=parseElapsedOffset(offset.value);
+      if(seconds===null){status($('#raceClockStatus'),'Enter elapsed time as 0:00.0, 1:00.0, or H:MM:SS.0.',false);offset.focus();return}
+      setRaceClock(id,'start',seconds);
+    };
+    row.querySelector('[data-clock-action="hide"]').onclick=()=>setRaceClock(id,'hide',0);
   }
 }
-async function setRaceClock(raceAliasId,mode,timeOfDay,raceName){
+async function setRaceClock(raceAliasId,mode,offsetSeconds){
   const context=eventMutationContext();if(!context)return;
   const st=$('#raceClockStatus');hideStatus(st);
-  if(mode==='manual'&&!/^\d{2}:\d{2}(?::\d{2})?$/.test(timeOfDay)){status(st,'Enter the ACTUAL MYLAPS gun trigger time first — not the scheduled race start.',false);return}
-  if(mode==='manual'&&!confirm('Activate the unofficial '+raceName+' clock using '+timeOfDay+' as the ACTUAL gun trigger time?\n\nDo not continue if this is only the scheduled start time.'))return;
-  if(mode==='now'&&!confirm('Activate the unofficial '+raceName+' spectator clock now? Use this only after the race has actually started. This does not affect official results.'))return;
   try{
-    status(st,'Updating unofficial clock...');
-    await req(API+'/admin-event-settings?action=race-clock&slug='+encodeURIComponent(context.slug),{method:'POST',headers:authHeaders(),body:JSON.stringify({raceAliasId,mode,timeOfDay})});
-    if(eventContextCurrent(context)){await loadEvent();status($('#raceClockStatus'),mode==='hide'?'Clock hidden. Official results are unchanged.':'Unofficial running clock updated. Official results are unchanged.')}
-  }catch(e){if(eventContextCurrent(context)){const msg=e.message==='gun_time_is_in_future'?'The entered gun time is still in the future. Enter the ACTUAL gun trigger time after the race starts — not the scheduled start.':'Clock update failed: '+e.message;status(st,msg,false)}}
+    status(st,mode==='start'?'Starting unofficial spectator clock...':'Hiding unofficial spectator clock...');
+    await req(API+'/admin-event-settings?action=race-clock&slug='+encodeURIComponent(context.slug),{method:'POST',headers:authHeaders(),body:JSON.stringify({raceAliasId,mode,offsetSeconds})});
+    if(eventContextCurrent(context)){await loadEvent();status($('#raceClockStatus'),mode==='hide'?'Clock stopped/hidden. Official results are unchanged.':'Clock started at '+formatElapsedOffset(offsetSeconds)+'. Official results are unchanged.')}
+  }catch(e){if(eventContextCurrent(context))status(st,'Clock update failed: '+e.message,false)}
 }
-
 
 function slugify(value){return String(value||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120)}
 function addNewRaceRow(seed={}){
@@ -434,7 +446,7 @@ async function loadEvent(){
   $('#settingsPanel').inert=false;$('#adminEventState').hidden=true;
   loaded=j;const e=j.event||{},s=j.settings||{},ts=s.team_scoring||{};
   renderRaceNames(j.raceAliases||[]);
-  renderRaceClocks(j.raceAliases||[],e,s);
+  renderRaceClocks(j.raceAliases||[]);
   $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
   $('#eventStart').value=e.start_time_label||'';$('#eventDistance').value=e.distance_label||'';$('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
   $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
