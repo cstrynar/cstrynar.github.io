@@ -40,7 +40,23 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
   <label for="password">Admin password</label>
   <div class="password-row"><input id="password" type="password" autocomplete="current-password"><button type="button" id="passwordVisibility" class="secondary" aria-controls="password" aria-label="Show password" aria-pressed="false">Show</button></div>
   <div style="height:12px"></div>
-  <div class="actions"><button class="primary" id="loginBtn">Sign in</button><span id="loginStatus" class="status hidden"></span></div>
+  <div class="actions"><button class="primary" id="loginBtn">Sign in</button><button type="button" class="secondary" id="forgotPasswordBtn">Forgot password</button><span id="loginStatus" class="status hidden"></span></div>
+  <div id="recoveryPanel" class="hidden">
+    <div class="sep"></div>
+    <h2>Recover Admin Access</h2>
+    <p class="sub">Enter a one-time Mercury recovery code and choose a new password. Recovery codes expire quickly and can only be used once.</p>
+    <div style="height:12px"></div>
+    <label for="recoveryCode">Recovery code</label>
+    <input id="recoveryCode" autocomplete="one-time-code" placeholder="MR-....">
+    <div style="height:10px"></div>
+    <label for="recoveryPassword">New password (12+ characters)</label>
+    <div class="password-row"><input id="recoveryPassword" type="password" autocomplete="new-password"><button type="button" id="recoveryPasswordVisibility" class="secondary" aria-controls="recoveryPassword" aria-label="Show password" aria-pressed="false">Show</button></div>
+    <div style="height:10px"></div>
+    <label for="recoveryPasswordConfirm">Confirm new password</label>
+    <input id="recoveryPasswordConfirm" type="password" autocomplete="new-password">
+    <div style="height:12px"></div>
+    <div class="actions"><button type="button" class="primary" id="recoverPasswordBtn">Set new password</button><button type="button" class="secondary" id="cancelRecoveryBtn">Cancel</button><span id="recoveryStatus" class="status hidden"></span></div>
+  </div>
 </div>
 
 <main id="appView" class="shell hidden">
@@ -237,7 +253,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R12 one-time activation + event controls</div>
+  <div class="footer">Mercury Road Race Live Admin • R13 admin recovery + activation controls</div>
 </main>
 
 <script>
@@ -267,7 +283,7 @@ function status(el,msg,ok=true){el.textContent=msg;el.className='status '+(ok?'o
 function hideStatus(el){el.className='status hidden'}
 async function req(url,opt={}){const r=await fetch(url,{cache:'no-store',...opt});let j={};try{j=await r.json()}catch{}if(!r.ok){if(r.status===401){localStorage.removeItem('mercuryAdminSession');token='';showLogin()}throw new Error(j.error||('HTTP '+r.status))}return j}
 function setPasswordVisible(visible){const input=$('#password'),button=$('#passwordVisibility');input.type=visible?'text':'password';button.textContent=visible?'Hide':'Show';button.setAttribute('aria-label',visible?'Hide password':'Show password');button.setAttribute('aria-pressed',String(visible))}
-function showLogin(){setPasswordVisible(false);adminLoadEpoch++;adminListEpoch++;adminClientEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
+function showLogin(){setPasswordVisible(false);closeRecovery();adminLoadEpoch++;adminListEpoch++;adminClientEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
 function showApp(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden')}
 function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
 function renderRaceNames(rows){
@@ -315,6 +331,22 @@ async function createEvent(){
     closeNewEvent();await loadEvents();
     if(j.event?.slug){$('#eventSelect').value=j.event.slug;currentSlug=j.event.slug;await loadEvent();await loadClients()}
   }catch(e){status(st,'Create failed: '+e.message,false)}
+}
+
+
+function setRecoveryPasswordVisible(visible){const input=$('#recoveryPassword'),button=$('#recoveryPasswordVisibility');input.type=visible?'text':'password';button.textContent=visible?'Hide':'Show';button.setAttribute('aria-label',visible?'Hide password':'Show password');button.setAttribute('aria-pressed',String(visible))}
+function openRecovery(){hideStatus($('#loginStatus'));hideStatus($('#recoveryStatus'));$('#recoveryPanel').classList.remove('hidden');$('#recoveryCode').focus()}
+function closeRecovery(){$('#recoveryPanel').classList.add('hidden');$('#recoveryCode').value='';$('#recoveryPassword').value='';$('#recoveryPasswordConfirm').value='';setRecoveryPasswordVisible(false);hideStatus($('#recoveryStatus'))}
+async function recoverPassword(){
+  const st=$('#recoveryStatus');hideStatus(st);
+  const code=$('#recoveryCode').value.trim(),password=$('#recoveryPassword').value,confirmPassword=$('#recoveryPasswordConfirm').value;
+  if(password.length<12){status(st,'New password must be at least 12 characters.',false);return}
+  if(password!==confirmPassword){status(st,'New passwords do not match.',false);return}
+  try{
+    const j=await req(API+'/admin-recover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({recoveryCode:code,newPassword:password})});
+    status(st,'Password changed. Sign in with the new password.');
+    $('#password').value='';closeRecovery();$('#password').focus();
+  }catch(e){status(st,'Recovery failed: '+e.message,false)}
 }
 
 async function login(){
@@ -487,6 +519,7 @@ async function changePassword(){
 }
 
 $('#newEventBtn').onclick=openNewEvent;$('#cancelNewEventBtn').onclick=closeNewEvent;$('#addRaceBtn').onclick=()=>addNewRaceRow();$('#createEventBtn').onclick=createEvent;$('#newEventName').addEventListener('input',()=>{if(!newSlugTouched)$('#newEventSlug').value=slugify($('#newEventName').value)});$('#newEventSlug').addEventListener('input',()=>{newSlugTouched=true;$('#newEventSlug').value=slugify($('#newEventSlug').value)});
+$('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=closeRecovery;$('#recoverPasswordBtn').onclick=recoverPassword;$('#recoveryPasswordVisibility').onclick=()=>setRecoveryPasswordVisible($('#recoveryPassword').type==='password');
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
 $('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
