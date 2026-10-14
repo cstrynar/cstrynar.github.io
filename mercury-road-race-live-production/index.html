@@ -262,7 +262,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
     </div>
   </div>
 </main>
-<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.10 R14</span><span id="lastRevision">Feed revision 0</span></div></footer>
+<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.10 R17</span><span id="lastRevision">Feed revision 0</span></div></footer>
 <dialog id="runnerDialog"><button class="dialog-close" id="closeDialog" aria-label="Close">×</button><p class="eyebrow" style="color:var(--accent)">Runner Details</p><h3 id="dialogName"></h3><div id="dialogGrid" class="dialog-grid"></div></dialog>
 <script>
 const SUPABASE_URL="https://wajusbsyouyufpccixol.supabase.co";
@@ -439,7 +439,7 @@ function render(){
 
  const accent=snapshot.branding?.accentColor||"#b30f2b";document.documentElement.style.setProperty("--accent",accent);
  const ev=snapshot.event||{};$("#eventName").textContent=ev.name||"Mercury Road Race Live";$("#eventMeta").textContent=[ev.location,ev.date,ev.startTime].filter(Boolean).join(" • ")||"Live road-race results";
- const selectedRace=races.find(r=>r.key===currentRaceKey);updateRaceClock(races);$("#resultsTitle").textContent=races.length>1&&selectedRace?`${raceDisplay(selectedRace.label||selectedRace.key)} Results`:ev.distance?`${ev.distance} Results`:"Results";document.title=ev.name?`${ev.name} — Mercury Road Race Live`:"Mercury Road Race Live";
+ const selectedRace=races.find(r=>r.key===currentRaceKey);updateRaceClock(races);$("#resultsTitle").textContent=selectedRace?`${raceDisplay(selectedRace.label||selectedRace.key)} Results`:ev.distance?`${ev.distance} Results`:"Results";document.title=ev.name?`${ev.name} — Mercury Road Race Live`:"Mercury Road Race Live";
  $("#finishers").textContent=raceScoped.length;renderPodium($("#malePodium"),podiumVisible?topGender("Male"):[]);renderPodium($("#femalePodium"),podiumVisible?topGender("Female"):[]);$("#leaderTime").textContent=!shown("showOverallPlace")?"-":podiumTime(raceScoped.slice().sort((a,b)=>Number(a.overall??999999)-Number(b.overall??999999))[0]);$("#lastRevision").textContent=`Feed revision ${snapshot.revision||0}`;
  const statusMap={live:"LIVE",final:"FINAL",finished:"FINISHED",official:"OFFICIAL",shadow:"SHADOW",setup:"UPCOMING"};$("#statusLabel").textContent=statusMap[snapshot.status]||String(snapshot.status||"LIVE").toUpperCase();
  const logo=snapshot.branding?.eventLogoUrl;if(logo){$("#eventLogo").src=logo;$("#eventLogo").alt=snapshot.branding?.eventLogoAlt||`${ev.name||"Event"} logo`;$("#eventLogoWrap").classList.add("visible")}else{$("#eventLogoWrap").classList.remove("visible")}
