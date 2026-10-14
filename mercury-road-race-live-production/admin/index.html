@@ -225,6 +225,8 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <p class="hint">New computers receive a 15-minute one-time activation code. Enter it once in Mercury Bridge on that PC; the long credential is generated and stored encrypted for that Windows user. Event access remains off until you enable Read below.</p>
     <div id="newKey" class="status hidden" style="word-break:break-all"></div>
     <div style="height:10px"></div>
+    <div class="switchline"><input id="showRetiredComputers" type="checkbox"><label for="showRetiredComputers">Show retired timing computers</label></div>
+    <div style="height:10px"></div>
     <p id="clientAccessState" class="hint" role="status" aria-live="polite">Choose an event to manage timing-computer access.</p>
     <div style="overflow:auto">
       <table class="table"><thead><tr><th>Name</th><th>Computer</th><th>Last used</th><th>Read event</th><th>Publish event</th><th>Writer lease</th><th>Activation</th><th></th></tr></thead><tbody id="clientsBody"></tbody></table>
@@ -293,7 +295,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R22 persistent logo thumbnail</div>
+  <div class="footer">Mercury Road Race Live Admin • R23 active/retired timing-computer list</div>
 </main>
 
 <script>
@@ -671,10 +673,13 @@ async function loadClients(){
   try{
     const j=await req(API+'/admin-event-settings?action=bridge-access&slug='+encodeURIComponent(slug),{headers:authHeaders(false)});
     if(clientEpoch!==adminClientEpoch||eventEpoch!==adminLoadEpoch||slug!==currentSlug)return;
-    const clients=Array.isArray(j.clients)?j.clients:[],leaseId=String(j.lease?.bridge_client_id||'');
+    const allClients=Array.isArray(j.clients)?j.clients:[],leaseId=String(j.lease?.bridge_client_id||'');
+    const retiredCount=allClients.filter(c=>c.active!==true).length;
+    const clients=$('#showRetiredComputers').checked?allClients:allClients.filter(c=>c.active===true);
     if(j.policy?.require_lease===true){
       state.textContent=j.lease?.client_name?'Exclusive writer lease required. Current holder: '+j.lease.client_name+' (expires '+(j.lease.expires_at||'soon')+').':'Exclusive writer lease required. No timing computer currently holds it.';
     }else state.textContent='Exclusive writer lease is not required for this event.';
+    state.textContent+=' Showing '+clients.length+' timing computer'+(clients.length===1?'':'s')+(retiredCount&&!$('#showRetiredComputers').checked?' · '+retiredCount+' retired hidden.':retiredCount?' · includes '+retiredCount+' retired.':'') ;
     $('#clientsBody').innerHTML=clients.map(c=>{
       const read=c.grant?.can_read===true,publish=c.grant?.can_publish===true,disabled=c.active!==true;
       const writer=String(c.id)===leaseId?'<span class="pill">Holds lease</span>':'—';
@@ -755,7 +760,7 @@ $('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=clo
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#existingRaceSource').addEventListener('input',()=>{if(!$('#existingRaceKey').dataset.touched)$('#existingRaceKey').value=slugify($('#existingRaceSource').value);if(!$('#existingRaceDisplay').dataset.touched)$('#existingRaceDisplay').value=$('#existingRaceSource').value});$('#existingRaceKey').addEventListener('input',()=>{$('#existingRaceKey').dataset.touched='1';$('#existingRaceKey').value=slugify($('#existingRaceKey').value)});$('#existingRaceDisplay').addEventListener('input',()=>{$('#existingRaceDisplay').dataset.touched='1'});
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
-$('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
+$('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#showRetiredComputers').onchange=loadClients;$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
 $('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
 
 window.startMercuryAdmin=()=>{if(token){showApp();loadEvents().catch(()=>showLogin())}else showLogin()};
