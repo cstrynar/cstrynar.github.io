@@ -26,7 +26,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
 .pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.35fr .9fr 1.15fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}.age-group-row{display:grid;grid-template-columns:1.5fr .8fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}.age-group-row button{height:44px}.award-actions{margin-top:10px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}
-.clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(240px,1fr) minmax(330px,1.35fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-offset{font-variant-numeric:tabular-nums;font-weight:800}.clock-start{min-width:110px;font-size:15px;letter-spacing:.04em}
+.clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(240px,1fr) minmax(330px,1.35fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-offset{font-variant-numeric:tabular-nums;font-weight:800}.clock-start{min-width:110px;font-size:15px;letter-spacing:.04em}.logo-preview{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc;margin:8px 0 12px}.logo-preview img{width:120px;height:80px;object-fit:contain;background:#fff;border:1px solid #ececf0;border-radius:9px;padding:6px}.logo-preview strong{display:block;font-size:13px;margin-bottom:4px}.logo-preview p{margin:0}
 .footer{font-size:11px;color:#737780;text-align:center;padding:20px}
 @media(max-width:720px){.row,.row3,.race-create-row,.age-group-row,.clock-row{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
@@ -206,6 +206,10 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
     <div class="sep"></div>
     <label>Event logo</label>
+    <div id="currentLogoPreview" class="logo-preview">
+      <img id="currentLogoImage" alt="" hidden>
+      <div><strong id="currentLogoTitle">No event logo uploaded</strong><p id="currentLogoMeta" class="hint">Upload a logo to display it on this event's public results page.</p></div>
+    </div>
     <div class="actions"><input id="logoFile" type="file" accept=".png,.jpg,.jpeg,.webp,.svg,image/*"><button class="secondary" id="uploadLogoBtn">Upload / replace logo</button><button class="danger small" id="removeLogoBtn">Remove logo</button></div>
   </section>
 
@@ -289,11 +293,12 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R21 add races to existing events</div>
+  <div class="footer">Mercury Road Race Live Admin • R22 persistent logo thumbnail</div>
 </main>
 
 <script>
 const API='https://wajusbsyouyufpccixol.supabase.co/functions/v1';
+const SUPABASE_URL=API.replace('/functions/v1','');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 let token=localStorage.getItem('mercuryAdminSession')||'';
@@ -305,7 +310,7 @@ function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
   const ids='eventName eventLocation eventDate eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone overallPlaces removeOverallFromAgeGroups separateGenderAgeGroups scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
-  preservedSpecialDivisions=[];$('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();$('#ageGroupRows').replaceChildren();$('#addExistingRacePanel').classList.add('hidden');$('#raceStructureHint').textContent='';hideStatus($('#addRaceStatus'));hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
+  preservedSpecialDivisions=[];$('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();$('#ageGroupRows').replaceChildren();$('#addExistingRacePanel').classList.add('hidden');$('#raceStructureHint').textContent='';renderCurrentLogo(null,null);hideStatus($('#addRaceStatus'));hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
   $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
 }
 function eventMutationContext(){
@@ -322,6 +327,26 @@ function setPasswordVisible(visible){const input=$('#password'),button=$('#passw
 function showLogin(){setPasswordVisible(false);closeRecovery();adminLoadEpoch++;adminListEpoch++;adminClientEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
 function showApp(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden')}
 function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
+function renderCurrentLogo(settings,event){
+  const path=String(settings?.event_logo_path||'').trim();
+  const img=$('#currentLogoImage'),title=$('#currentLogoTitle'),meta=$('#currentLogoMeta'),remove=$('#removeLogoBtn');
+  if(!path){
+    img.hidden=true;img.removeAttribute('src');img.alt='';
+    title.textContent='No event logo uploaded';
+    meta.textContent='Upload a logo to display it on this event\'s public results page.';
+    remove.disabled=true;
+    return;
+  }
+  const encoded=path.split('/').map(encodeURIComponent).join('/');
+  const version=encodeURIComponent(String(settings?.updated_at||''));
+  img.src=SUPABASE_URL+'/storage/v1/object/public/event-assets/'+encoded+(version?'?v='+version:'');
+  img.alt=String(settings?.event_logo_alt||((event?.name||'Event')+' logo'));
+  img.hidden=false;
+  title.textContent='Current event logo';
+  meta.textContent='Saved and attached to this event.';
+  remove.disabled=false;
+  img.onerror=()=>{img.hidden=true;title.textContent='Logo is saved';meta.textContent='The logo is attached to this event, but the thumbnail could not be loaded.'};
+}
 function renderRaceNames(rows){
   const aliases=Array.isArray(rows)?rows:[];
   $('#raceNamesBody').innerHTML=aliases.map(row=>'<tr data-race-alias-id="'+esc(row.id)+'"><td>'+esc(row.source_label||'')+'</td><td><span class="race-key">'+esc(row.race_key||'')+'</span></td><td><input class="race-name-input" maxlength="80" aria-label="Public race name for '+esc(row.source_label||row.race_key||'race')+'" value="'+esc(row.display_label||row.race_key||'')+'"></td><td><input class="race-start-input" type="time" aria-label="Scheduled start for '+esc(row.display_label||row.race_key||'race')+'" value="'+esc(String(row.scheduled_start_time||'').slice(0,5))+'"></td></tr>').join('');
@@ -597,6 +622,7 @@ async function loadEvent(){
   $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showTeam').checked=s.show_team===true;
   $('#showGun').checked=s.show_gun_time!==false;$('#showChip').checked=s.show_chip_time!==false;$('#showPace').checked=s.show_pace!==false;$('#showRecent').checked=s.show_recent_finishers!==false;
   $('#recentCount').value=String(s.recent_finishers_default_count||10);$('#accentColor').value=s.accent_color||'#b30f2b';$('#timezone').value=s.timezone||'America/New_York';
+  renderCurrentLogo(s,e);
   renderAwards(s.awards||{overall_places:3,remove_overall_from_age_groups:true,age_groups:[],special_divisions:[]});
   $('#scoreEnabled').checked=ts.enabled===true;$('#scorersPerTeam').value=String(ts.scorers_per_team||5);$('#displacersPerTeam').value=String(ts.displacers_per_team??2);
   $('#unattachedMode').value=ts.unattached_mode||'skip_compress';$('#divisionMode').value=ts.division_mode||'all';$('#tiebreaker').value=ts.tiebreaker||'ncaa_head_to_head';toggleScoring();
