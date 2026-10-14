@@ -103,7 +103,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
       <div><label>Name</label><input id="eventName"></div>
       <div><label>Location</label><input id="eventLocation"></div>
       <div><label>Date</label><input id="eventDate" type="date"></div>
-      <div><label>Status</label><select id="eventStatus"><option>setup</option><option>shadow</option><option>live</option><option>final</option><option>finished</option><option>official</option><option>archived</option></select></div>
+      <div><label>Status</label><select id="eventStatus" aria-describedby="eventStatusHelp"><option value="setup">Setup — Upcoming / configuring</option><option value="shadow">Shadow — Controlled rehearsal / test</option><option value="live">Live — Race in progress</option><option value="final">Final — Results closed</option><option value="finished">Finished — Event concluded</option><option value="official">Official — Results formally approved</option><option value="archived">Archived — Historical record</option></select><p id="eventStatusHelp" class="hint" style="margin:6px 0 0"></p></div>
     </div>
     <div style="height:12px"></div>
     <div class="switchline"><input id="eventPublic" type="checkbox"><label for="eventPublic">Public event — appears in Road Race Live event list</label></div>
@@ -315,7 +315,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R25 explicit overall-award settings</div>
+  <div class="footer">Mercury Road Race Live Admin • R26 self-explanatory event statuses</div>
 </main>
 
 <script>
@@ -349,6 +349,19 @@ function setPasswordVisible(visible){const input=$('#password'),button=$('#passw
 function showLogin(){setPasswordVisible(false);closeRecovery();adminLoadEpoch++;adminListEpoch++;adminClientEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
 function showApp(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden')}
 function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
+function renderStatusHelp(){
+  const value=$('#eventStatus').value;
+  const help={
+    setup:'Upcoming/configuring. Bridge publishing is technically allowed only if a timing computer also has Publish ON and holds the required writer lease. Normal pre-race practice is Publish OFF.',
+    shadow:'Controlled rehearsal/test state. Bridge publishing is allowed, so use this mainly for private testing or rehearsal events.',
+    live:'Race in progress. Bridge publishing is allowed for an authorized timing computer with the required writer lease.',
+    final:'Results are closed/final. Bridge publishing is blocked.',
+    finished:'The event has concluded. Bridge publishing is blocked.',
+    official:'Results have been formally approved/declared official. Bridge publishing is blocked.',
+    archived:'Historical record. Bridge publishing is blocked; use this when the event no longer belongs in the active workflow.'
+  };
+  $('#eventStatusHelp').textContent=help[value]||'';
+}
 function renderCurrentLogo(settings,event){
   const path=String(settings?.event_logo_path||'').trim();
   const img=$('#currentLogoImage'),title=$('#currentLogoTitle'),meta=$('#currentLogoMeta'),remove=$('#removeLogoBtn');
@@ -641,7 +654,7 @@ async function loadEvent(){
   renderRaceNames(j.raceAliases||[]);
   renderRaceClocks(j.raceAliases||[]);
   $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
-  $('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
+  $('#eventStatus').value=e.status||'setup';renderStatusHelp();$('#eventPublic').checked=e.is_public===true;
   const raceStructureLocked=Number(e.current_revision||0)!==0||!!e.last_published_at||!['setup','shadow'].includes(String(e.status||''));
   $('#addExistingRaceBtn').disabled=raceStructureLocked;
   $('#raceStructureHint').textContent=raceStructureLocked?'Race structure is locked after results are published or the event leaves setup/shadow status.':'Add another race/distance before the event begins.';
@@ -794,7 +807,7 @@ $('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=clo
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#existingRaceSource').addEventListener('input',()=>{if(!$('#existingRaceKey').dataset.touched)$('#existingRaceKey').value=slugify($('#existingRaceSource').value);if(!$('#existingRaceDisplay').dataset.touched)$('#existingRaceDisplay').value=$('#existingRaceSource').value});$('#existingRaceKey').addEventListener('input',()=>{$('#existingRaceKey').dataset.touched='1';$('#existingRaceKey').value=slugify($('#existingRaceKey').value)});$('#existingRaceDisplay').addEventListener('input',()=>{$('#existingRaceDisplay').dataset.touched='1'});
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
-$('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#showRetiredComputers').onchange=loadClients;$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
+$('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#eventStatus').onchange=renderStatusHelp;$('#showRetiredComputers').onchange=loadClients;$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
 $('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
 
 window.startMercuryAdmin=()=>{if(token){showApp();loadEvents().catch(()=>showLogin())}else showLogin()};
