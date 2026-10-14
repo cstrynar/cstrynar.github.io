@@ -25,10 +25,10 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .scoring{border:2px solid #ecd0d6;background:#fffafb}.hint{font-size:11px;color:var(--muted);line-height:1.45}.sep{height:1px;background:var(--line);margin:18px 0}
 .topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
-.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.35fr .9fr 1.15fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.35fr .9fr 1.15fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}.age-group-row{display:grid;grid-template-columns:1.35fr .75fr .75fr 1.1fr auto;gap:8px;align-items:end;margin-bottom:8px}.age-group-row button{height:44px}.award-actions{margin-top:10px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}
 .clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(240px,1fr) minmax(330px,1.35fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-offset{font-variant-numeric:tabular-nums;font-weight:800}.clock-start{min-width:110px;font-size:15px;letter-spacing:.04em}
 .footer{font-size:11px;color:#737780;text-align:center;padding:20px}
-@media(max-width:720px){.row,.row3,.race-create-row,.clock-row{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
+@media(max-width:720px){.row,.row3,.race-create-row,.age-group-row,.clock-row{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
 <link rel="stylesheet" href="../assets/admin-tools.css">
 </head>
@@ -167,13 +167,29 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
   </section>
 
   <section class="card">
-    <h2>Branding & Awards</h2>
+    <h2>Age Groups &amp; Awards</h2>
+    <p class="sub">Set the award structure without editing JSON. “Male &amp; Female” creates separate Male and Female award divisions behind the scenes.</p>
+    <div style="height:12px"></div>
+    <div class="row">
+      <div><label>Overall award places</label><input id="overallPlaces" type="number" min="0" max="20" value="3"></div>
+      <div class="switchline"><input id="removeOverallFromAgeGroups" type="checkbox" checked><label for="removeOverallFromAgeGroups">Remove overall winners from age-group awards</label></div>
+    </div>
+    <h3>Age Groups</h3>
+    <div id="ageGroupRows"></div>
+    <div class="actions award-actions">
+      <button type="button" class="secondary small" id="standardAgeGroupsBtn">Use Mercury standard groups</button>
+      <button type="button" class="secondary small" id="addAgeGroupBtn">Add age group</button>
+      <button type="button" class="danger small" id="clearAgeGroupsBtn">Clear age groups</button>
+    </div>
+    <p class="hint">Leave Maximum age blank for an open-ended final group such as 80+. Existing special-division settings, if any, are preserved when age groups are edited.</p>
+  </section>
+
+  <section class="card">
+    <h2>Branding</h2>
     <div class="row">
       <div><label>Accent color</label><input id="accentColor" type="color"></div>
       <div><label>Timezone</label><input id="timezone"></div>
     </div>
-    <div style="height:12px"></div>
-    <label>Awards JSON</label><textarea id="awardsJson"></textarea>
     <div class="sep"></div>
     <label>Event logo</label>
     <div class="actions"><input id="logoFile" type="file" accept=".png,.jpg,.jpeg,.webp,.svg,image/*"><button class="secondary" id="uploadLogoBtn">Upload / replace logo</button><button class="danger small" id="removeLogoBtn">Remove logo</button></div>
@@ -259,7 +275,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R17 race-defined schedule and distance setup</div>
+  <div class="footer">Mercury Road Race Live Admin • R18 age-group awards editor</div>
 </main>
 
 <script>
@@ -269,13 +285,13 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let token=localStorage.getItem('mercuryAdminSession')||'';
 let currentSlug='';
 let loaded=null;
-let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,newSlugTouched=false;
+let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,newSlugTouched=false,preservedSpecialDivisions=[];
 
 function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
-  const ids='eventName eventLocation eventDate eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone awardsJson scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
+  const ids='eventName eventLocation eventDate eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone overallPlaces removeOverallFromAgeGroups scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
-  $('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
+  preservedSpecialDivisions=[];$('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();$('#ageGroupRows').replaceChildren();hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
   $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
 }
 function eventMutationContext(){
@@ -298,6 +314,74 @@ function renderRaceNames(rows){
   $('#raceNamesTableWrap').hidden=aliases.length===0;
   $('#raceNamesEmpty').hidden=aliases.length!==0;
 }
+function ageNumber(value){
+  const text=String(value??'').trim();
+  if(!text)return null;
+  const n=Number(text);
+  return Number.isInteger(n)&&n>=0&&n<=999?n:null;
+}
+function addAgeGroupRow(seed={}){
+  const row=document.createElement('div');row.className='age-group-row';row.dataset.ageGroupRow='1';
+  row.innerHTML='<div><label>Label</label><input data-age="label" maxlength="60" placeholder="20–29"></div><div><label>Minimum age</label><input data-age="min" type="number" min="0" max="999"></div><div><label>Maximum age</label><input data-age="max" type="number" min="0" max="999" placeholder="No limit"></div><div><label>Gender awards</label><select data-age="division"><option value="both">Male &amp; Female</option><option value="Male">Male only</option><option value="Female">Female only</option><option value="All">All participants</option></select></div><button type="button" class="danger small" aria-label="Remove age group">Remove</button>';
+  row.querySelector('[data-age="label"]').value=seed.label||'';
+  row.querySelector('[data-age="min"]').value=seed.min??'';
+  row.querySelector('[data-age="max"]').value=Number(seed.max)>=999?'':(seed.max??'');
+  row.querySelector('[data-age="division"]').value=seed.division||'both';
+  row.querySelector('button').onclick=()=>row.remove();
+  $('#ageGroupRows').append(row);
+}
+function collapsedAgeGroups(groups){
+  const list=Array.isArray(groups)?groups:[];
+  const byKey=new Map();
+  for(const g of list){
+    const min=ageNumber(g?.min??g?.min_age),max=ageNumber(g?.max??g?.max_age),label=String(g?.label??g?.name??'').trim(),division=String(g?.division??g?.gender??'All').trim()||'All';
+    if(min===null||max===null||!label)continue;
+    const key=min+'|'+max+'|'+label;
+    const item=byKey.get(key)||{min,max,label,divisions:new Set()};
+    item.divisions.add(division);byKey.set(key,item);
+  }
+  const rows=[];
+  for(const item of byKey.values()){
+    if(item.divisions.has('Male')&&item.divisions.has('Female')&&item.divisions.size===2)rows.push({min:item.min,max:item.max,label:item.label,division:'both'});
+    else for(const division of item.divisions)rows.push({min:item.min,max:item.max,label:item.label,division:['Male','Female','All'].includes(division)?division:'All'});
+  }
+  return rows.sort((a,b)=>a.min-b.min||a.max-b.max||a.label.localeCompare(b.label));
+}
+function renderAwards(raw){
+  const awards=raw&&typeof raw==='object'?raw:{};
+  $('#overallPlaces').value=String(Number.isInteger(Number(awards.overall_places))?Number(awards.overall_places):3);
+  $('#removeOverallFromAgeGroups').checked=awards.remove_overall_from_age_groups!==false;
+  preservedSpecialDivisions=Array.isArray(awards.special_divisions)?structuredClone(awards.special_divisions):[];
+  $('#ageGroupRows').replaceChildren();
+  for(const group of collapsedAgeGroups(awards.age_groups))addAgeGroupRow(group);
+}
+function useStandardAgeGroups(){
+  const standards=[
+    [0,10,'10 & under'],[11,15,'11–15'],[16,19,'16–19'],[20,29,'20–29'],[30,39,'30–39'],
+    [40,49,'40–49'],[50,59,'50–59'],[60,69,'60–69'],[70,79,'70–79'],[80,999,'80+']
+  ];
+  $('#ageGroupRows').replaceChildren();for(const [min,max,label] of standards)addAgeGroupRow({min,max,label,division:'both'});
+}
+function collectAwards(){
+  const overall=Number($('#overallPlaces').value);
+  if(!Number.isInteger(overall)||overall<0||overall>20)throw new Error('Overall award places must be a whole number from 0 to 20.');
+  const ageGroups=[];
+  for(const [index,row] of [...document.querySelectorAll('[data-age-group-row]')].entries()){
+    const label=row.querySelector('[data-age="label"]').value.trim();
+    const min=ageNumber(row.querySelector('[data-age="min"]').value);
+    const maxText=row.querySelector('[data-age="max"]').value.trim();
+    const max=maxText?ageNumber(maxText):999;
+    const division=row.querySelector('[data-age="division"]').value;
+    if(!label)throw new Error('Age group '+(index+1)+' needs a label.');
+    if(min===null)throw new Error('Age group '+(index+1)+' needs a valid minimum age.');
+    if(max===null)throw new Error('Age group '+(index+1)+' needs a valid maximum age.');
+    if(min>max)throw new Error('Age group '+(index+1)+' has a minimum age greater than its maximum age.');
+    const divisions=division==='both'?['Male','Female']:[division];
+    for(const d of divisions)ageGroups.push({min,max,label,division:d});
+  }
+  return {overall_places:overall,remove_overall_from_age_groups:$('#removeOverallFromAgeGroups').checked,age_groups:ageGroups,special_divisions:structuredClone(preservedSpecialDivisions)};
+}
+
 function parseElapsedOffset(value){
   const text=String(value||'').trim();
   if(!text)return null;
@@ -464,7 +548,7 @@ async function loadEvent(){
   $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showTeam').checked=s.show_team===true;
   $('#showGun').checked=s.show_gun_time!==false;$('#showChip').checked=s.show_chip_time!==false;$('#showPace').checked=s.show_pace!==false;$('#showRecent').checked=s.show_recent_finishers!==false;
   $('#recentCount').value=String(s.recent_finishers_default_count||10);$('#accentColor').value=s.accent_color||'#b30f2b';$('#timezone').value=s.timezone||'America/New_York';
-  $('#awardsJson').value=JSON.stringify(s.awards||{overall_places:3,remove_overall_from_age_groups:true,age_groups:[],special_divisions:[]},null,2);
+  renderAwards(s.awards||{overall_places:3,remove_overall_from_age_groups:true,age_groups:[],special_divisions:[]});
   $('#scoreEnabled').checked=ts.enabled===true;$('#scorersPerTeam').value=String(ts.scorers_per_team||5);$('#displacersPerTeam').value=String(ts.displacers_per_team??2);
   $('#unattachedMode').value=ts.unattached_mode||'skip_compress';$('#divisionMode').value=ts.division_mode||'all';$('#tiebreaker').value=ts.tiebreaker||'ncaa_head_to_head';toggleScoring();
   hideStatus($('#saveStatus'));
@@ -475,7 +559,7 @@ async function loadEvent(){
 async function save(){
   const context=eventMutationContext();if(!context)return;
   const st=$('#saveStatus');hideStatus(st);let awards;
-  try{awards=JSON.parse($('#awardsJson').value)}catch{status(st,'Awards JSON is not valid.',false);return}
+  try{awards=collectAwards()}catch(e){status(st,e.message||'Check the age-group settings.',false);return}
   const raceAliases=[...document.querySelectorAll('[data-race-alias-id]')].map(row=>({id:Number(row.dataset.raceAliasId),display_label:row.querySelector('.race-name-input').value.trim(),scheduled_start_time:row.querySelector('.race-start-input').value}));
   if(raceAliases.some(row=>!row.display_label)){status(st,'Every public race name must have a value.',false);return}
   const body={
@@ -591,7 +675,7 @@ async function changePassword(){
   }catch(e){alert('Password change failed: '+e.message)}
 }
 
-$('#newEventBtn').onclick=openNewEvent;$('#cancelNewEventBtn').onclick=closeNewEvent;$('#addRaceBtn').onclick=()=>addNewRaceRow();$('#createEventBtn').onclick=createEvent;$('#newEventName').addEventListener('input',()=>{if(!newSlugTouched)$('#newEventSlug').value=slugify($('#newEventName').value)});$('#newEventSlug').addEventListener('input',()=>{newSlugTouched=true;$('#newEventSlug').value=slugify($('#newEventSlug').value)});
+$('#newEventBtn').onclick=openNewEvent;$('#cancelNewEventBtn').onclick=closeNewEvent;$('#addRaceBtn').onclick=()=>addNewRaceRow();$('#createEventBtn').onclick=createEvent;$('#standardAgeGroupsBtn').onclick=useStandardAgeGroups;$('#addAgeGroupBtn').onclick=()=>addAgeGroupRow();$('#clearAgeGroupsBtn').onclick=()=>$('#ageGroupRows').replaceChildren();$('#newEventName').addEventListener('input',()=>{if(!newSlugTouched)$('#newEventSlug').value=slugify($('#newEventName').value)});$('#newEventSlug').addEventListener('input',()=>{newSlugTouched=true;$('#newEventSlug').value=slugify($('#newEventSlug').value)});
 $('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=closeRecovery;$('#recoverPasswordBtn').onclick=recoverPassword;$('#recoveryPasswordVisibility').onclick=()=>setRecoveryPasswordVisible($('#recoveryPassword').type==='password');
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
