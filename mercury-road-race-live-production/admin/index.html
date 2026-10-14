@@ -182,12 +182,15 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <h2>Age Groups &amp; Awards</h2>
     <p class="sub">Set the award structure without editing JSON. Age groups can be awarded separately to Male and Female participants, or combined across all participants.</p>
     <div style="height:12px"></div>
+    <h3>Overall Awards</h3>
     <div class="row">
-      <div><label>Overall award places</label><input id="overallPlaces" type="number" min="0" max="20" value="3"></div>
+      <div><label>Overall places awarded per gender</label><input id="overallPlaces" type="number" min="0" max="20" value="3"><p class="hint">Example: 3 = Top 3 Male + Top 3 Female overall.</p></div>
+    </div>
+    <h3>Age Groups</h3>
+    <div id="ageGroupOptions" class="row">
       <div class="switchline"><input id="removeOverallFromAgeGroups" type="checkbox" checked><label for="removeOverallFromAgeGroups">Remove overall winners from age-group awards</label></div>
       <div class="switchline"><input id="separateGenderAgeGroups" type="checkbox" checked><label for="separateGenderAgeGroups">Separate Male and Female age-group awards</label></div>
     </div>
-    <h3>Age Groups</h3>
     <div id="ageGroupEmpty" class="hint">No age groups configured yet. Use Mercury standard groups or add an age group.</div>
     <div id="ageGroupRows"></div>
     <div class="actions award-actions">
@@ -312,7 +315,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R24 self-explanatory timing-computer controls</div>
+  <div class="footer">Mercury Road Race Live Admin • R25 explicit overall-award settings</div>
 </main>
 
 <script>
@@ -403,7 +406,13 @@ function ageGroupsAreSeparate(groups){
   if(!list.length)return true;
   return list.some(g=>String(g?.division??g?.gender??'').trim()==='Male')&&list.some(g=>String(g?.division??g?.gender??'').trim()==='Female');
 }
-function updateAgeGroupEmpty(){$('#ageGroupEmpty').hidden=$('#ageGroupRows').children.length>0;}
+function updateAgeGroupEmpty(){
+  const hasGroups=$('#ageGroupRows').children.length>0;
+  $('#ageGroupEmpty').hidden=hasGroups;
+  $('#ageGroupOptions').style.opacity=hasGroups?'1':'.55';
+  $('#removeOverallFromAgeGroups').disabled=!hasGroups;
+  $('#separateGenderAgeGroups').disabled=!hasGroups;
+}
 function renderAwards(raw){
   const awards=raw&&typeof raw==='object'?raw:{};
   $('#overallPlaces').value=String(Number.isInteger(Number(awards.overall_places))?Number(awards.overall_places):3);
