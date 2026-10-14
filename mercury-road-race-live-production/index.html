@@ -201,8 +201,8 @@ dialog h3{font-size:28px;margin:0 0 20px}
     </section>
     <div class="summary-grid">
       <article class="stat finishers-stat"><span class="stat-label">Finishers</span><strong id="finishers">0</strong></article>
-      <article class="stat podium-stat male-podium"><span class="stat-label">Male Top 3</span><div class="podium-list" id="malePodium"></div></article>
-      <article class="stat podium-stat female-podium"><span class="stat-label">Female Top 3</span><div class="podium-list" id="femalePodium"></div></article>
+      <article class="stat podium-stat male-podium"><span class="stat-label" id="malePodiumLabel">Male Top 3</span><div class="podium-list" id="malePodium"></div></article>
+      <article class="stat podium-stat female-podium"><span class="stat-label" id="femalePodiumLabel">Female Top 3</span><div class="podium-list" id="femalePodium"></div></article>
       <article class="stat leader-stat"><span class="stat-label">Leader</span><strong id="leaderTime">—</strong></article>
     </div>
     <section>
@@ -262,7 +262,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
     </div>
   </div>
 </main>
-<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.10 R17</span><span id="lastRevision">Feed revision 0</span></div></footer>
+<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.10 R25</span><span id="lastRevision">Feed revision 0</span></div></footer>
 <dialog id="runnerDialog"><button class="dialog-close" id="closeDialog" aria-label="Close">×</button><p class="eyebrow" style="color:var(--accent)">Runner Details</p><h3 id="dialogName"></h3><div id="dialogGrid" class="dialog-grid"></div></dialog>
 <script>
 const SUPABASE_URL="https://wajusbsyouyufpccixol.supabase.co";
@@ -382,8 +382,9 @@ function filtered(){
  return raceRows().filter(r=>{const hay=[shown('showBib')?r.bib:'',shown('showName')?nameOf(r):''].join(' ').toLowerCase();return(!q||hay.includes(q))&&(!shown('showGender')||!sexFilter.value||r.sex===sexFilter.value)&&(!shown('showAgeGroup')||!ageFilter.value||r.ageGroup===ageFilter.value)&&(!shown('showAgeGroup')||!categoryFilter.value||r.category===categoryFilter.value)})
 }
 function podiumTime(r){if(shown('showGunTime')&&r?.gunTime)return r.gunTime;if(shown('showChipTime')&&r?.chipTime)return r.chipTime;return '-'}
-function topGender(gender){return raceRows().filter(r=>String(r.sex||"").toLowerCase()===gender.toLowerCase()).slice().sort((a,b)=>Number(a.overall??999999)-Number(b.overall??999999)).slice(0,3)}
-function renderPodium(target,rows){const medals=["🥇","🥈","🥉"];target.innerHTML=medals.map((medal,i)=>{const r=rows[i];if(!r)return `<div class="podium-row podium-empty"><span class="podium-medal">${medal}</span><span class="podium-name">Waiting for finisher</span><span class="podium-time">—</span></div>`;return `<div class="podium-row" data-runner="${runnerTarget(r)}" tabindex="0"><span class="podium-medal" aria-hidden="true">${medal}</span><span class="podium-name">${esc(shown("showName")?nameOf(r):"Runner")}</span><span class="podium-time">${esc(podiumTime(r))}</span></div>`}).join("")}
+function overallAwardPlaces(){const n=Number(snapshot.awards?.overall_places??3);return Number.isInteger(n)?Math.max(0,Math.min(20,n)):3}
+function topGender(gender){return raceRows().filter(r=>String(r.sex||"").toLowerCase()===gender.toLowerCase()).slice().sort((a,b)=>Number(a.overall??999999)-Number(b.overall??999999)).slice(0,overallAwardPlaces())}
+function renderPodium(target,rows,count){const medals=["🥇","🥈","🥉"];target.innerHTML=Array.from({length:count},(_,i)=>{const marker=medals[i]||('#'+(i+1));const r=rows[i];if(!r)return `<div class="podium-row podium-empty"><span class="podium-medal">${marker}</span><span class="podium-name">Waiting for finisher</span><span class="podium-time">—</span></div>`;return `<div class="podium-row" data-runner="${runnerTarget(r)}" tabindex="0"><span class="podium-medal" aria-hidden="true">${marker}</span><span class="podium-name">${esc(shown("showName")?nameOf(r):"Runner")}</span><span class="podium-time">${esc(podiumTime(r))}</span></div>`}).join("")}
 function recentRows(){const n=[5,10,15,20].includes(Number(recentCount.value))?Number(recentCount.value):10;return raceRows(Array.isArray(snapshot.recentFinishers)?snapshot.recentFinishers:[]).slice(0,n)}
 function renderConnection(){$("#feedDot").style.background=lastFetchOk?"#1d9b61":"#f79009";$("#feedText").textContent=lastFetchOk?"Mercury feed connected":"Last check failed"}
 function runnerCards(rows){return rows.map(r=>{const time=shown('showChipTime')&&r.chipTime?['Chip',r.chipTime]:shown('showGunTime')&&r.gunTime?['Gun',r.gunTime]:null;const meta=columns().filter(c=>['sex','age','ageGroup','team','pace'].includes(c[0]));return `<article class="runner-card" data-runner="${runnerTarget(r)}" tabindex="0"><div class="runner-card-top"><div>${shown('showOverallPlace')?`<div class="place">#${esc(r.overall??'')}</div>`:''}<div class="runner-name">${esc(shown('showName')?nameOf(r):'Runner')}</div>${shown('showBib')?`<div class="bib">Bib ${esc(r.bib??'')}</div>`:''}</div>${time?`<div class="chip-big"><span>${time[0]}</span><strong>${esc(time[1])}</strong></div>`:''}</div><div class="runner-meta">${meta.map(c=>`<div><span>${esc(c[1])}</span><strong>${esc(c[2](r))}</strong></div>`).join('')}</div></article>`}).join('')}
@@ -429,8 +430,9 @@ function bindRunnerClicks(){document.querySelectorAll('[data-runner]').forEach(e
 function render(){
  runnerTargets=[];$('#runnerDialog').close();$('#dialogName').textContent='';$('#dialogGrid').innerHTML='';
  const races=syncRaceFilter(),raceScoped=raceRows();
- const podiumVisible=shown('showGender')&&shown('showOverallPlace');
+ const overallPlaces=overallAwardPlaces(),podiumVisible=shown('showGender')&&shown('showOverallPlace')&&overallPlaces>0;
  $('.male-podium').hidden=!podiumVisible;$('.female-podium').hidden=!podiumVisible;
+ $('#malePodiumLabel').textContent='Male Top '+overallPlaces;$('#femalePodiumLabel').textContent='Female Top '+overallPlaces;
  $('.leader-stat').hidden=!shown('showOverallPlace');
  sexFilter.hidden=!shown('showGender');sexFilter.disabled=!shown('showGender');if(sexFilter.disabled)sexFilter.value='';
  ageFilter.hidden=!shown('showAgeGroup');categoryFilter.hidden=!shown('showAgeGroup');if(!shown('showAgeGroup')){ageFilter.value='';categoryFilter.value=''}
@@ -440,7 +442,7 @@ function render(){
  const accent=snapshot.branding?.accentColor||"#b30f2b";document.documentElement.style.setProperty("--accent",accent);
  const ev=snapshot.event||{};$("#eventName").textContent=ev.name||"Mercury Road Race Live";$("#eventMeta").textContent=[ev.location,ev.date,ev.startTime].filter(Boolean).join(" • ")||"Live road-race results";
  const selectedRace=races.find(r=>r.key===currentRaceKey);updateRaceClock(races);$("#resultsTitle").textContent=selectedRace?`${raceDisplay(selectedRace.label||selectedRace.key)} Results`:ev.distance?`${ev.distance} Results`:"Results";document.title=ev.name?`${ev.name} — Mercury Road Race Live`:"Mercury Road Race Live";
- $("#finishers").textContent=raceScoped.length;renderPodium($("#malePodium"),podiumVisible?topGender("Male"):[]);renderPodium($("#femalePodium"),podiumVisible?topGender("Female"):[]);$("#leaderTime").textContent=!shown("showOverallPlace")?"-":podiumTime(raceScoped.slice().sort((a,b)=>Number(a.overall??999999)-Number(b.overall??999999))[0]);$("#lastRevision").textContent=`Feed revision ${snapshot.revision||0}`;
+ $("#finishers").textContent=raceScoped.length;renderPodium($("#malePodium"),podiumVisible?topGender("Male"):[],overallPlaces);renderPodium($("#femalePodium"),podiumVisible?topGender("Female"):[],overallPlaces);$("#leaderTime").textContent=!shown("showOverallPlace")?"-":podiumTime(raceScoped.slice().sort((a,b)=>Number(a.overall??999999)-Number(b.overall??999999))[0]);$("#lastRevision").textContent=`Feed revision ${snapshot.revision||0}`;
  const statusMap={live:"LIVE",final:"FINAL",finished:"FINISHED",official:"OFFICIAL",shadow:"SHADOW",setup:"UPCOMING"};$("#statusLabel").textContent=statusMap[snapshot.status]||String(snapshot.status||"LIVE").toUpperCase();
  const logo=snapshot.branding?.eventLogoUrl;if(logo){$("#eventLogo").src=logo;$("#eventLogo").alt=snapshot.branding?.eventLogoAlt||`${ev.name||"Event"} logo`;$("#eventLogoWrap").classList.add("visible")}else{$("#eventLogoWrap").classList.remove("visible")}
  const recentEnabled=snapshot.display?.showRecentFinishers===true;$("#recentTab").hidden=!recentEnabled;if(!recentEnabled&&activeView==="recent")activeView="results";
