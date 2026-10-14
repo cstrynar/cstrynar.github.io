@@ -120,6 +120,18 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
         <tbody id="raceNamesBody"></tbody>
       </table>
     </div>
+    <div style="height:12px"></div>
+    <div class="actions"><button type="button" class="secondary small" id="addExistingRaceBtn">Add race</button><span id="raceStructureHint" class="hint"></span></div>
+    <div id="addExistingRacePanel" class="hidden" style="margin-top:12px">
+      <div class="race-create-row">
+        <div><label>MYLAPS source label</label><input id="existingRaceSource" maxlength="160"></div>
+        <div><label>Mercury key</label><input id="existingRaceKey" maxlength="80" placeholder="10k"></div>
+        <div><label>Public race name</label><input id="existingRaceDisplay" maxlength="80" placeholder="10K"></div>
+        <div><label>Scheduled start</label><input id="existingRaceStart" type="time"></div>
+        <div class="actions"><button type="button" class="primary small" id="saveExistingRaceBtn">Add race</button><button type="button" class="secondary small" id="cancelExistingRaceBtn">Cancel</button></div>
+      </div>
+      <span id="addRaceStatus" class="status hidden"></span>
+    </div>
   </section>
 
   <section class="card">
@@ -277,7 +289,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R20 neutral team-scoring styling</div>
+  <div class="footer">Mercury Road Race Live Admin • R21 add races to existing events</div>
 </main>
 
 <script>
@@ -293,7 +305,7 @@ function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
   const ids='eventName eventLocation eventDate eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone overallPlaces removeOverallFromAgeGroups separateGenderAgeGroups scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
-  preservedSpecialDivisions=[];$('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();$('#ageGroupRows').replaceChildren();hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
+  preservedSpecialDivisions=[];$('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();$('#ageGroupRows').replaceChildren();$('#addExistingRacePanel').classList.add('hidden');$('#raceStructureHint').textContent='';hideStatus($('#addRaceStatus'));hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
   $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
 }
 function eventMutationContext(){
@@ -452,6 +464,37 @@ function addNewRaceRow(seed={}){
   row.querySelector('button').onclick=()=>{if($('#newRaceRows').children.length>1)row.remove()};
   $('#newRaceRows').append(row);
 }
+function resetExistingRaceForm(){
+  for(const id of ['existingRaceSource','existingRaceKey','existingRaceDisplay','existingRaceStart'])$('#'+id).value='';
+  delete $('#existingRaceKey').dataset.touched;delete $('#existingRaceDisplay').dataset.touched;hideStatus($('#addRaceStatus'));
+}
+function setExistingRacePanel(active){
+  $('#addExistingRacePanel').classList.toggle('hidden',!active);
+  if(active){resetExistingRaceForm();$('#existingRaceSource').focus()}
+  else resetExistingRaceForm();
+}
+async function addExistingRace(){
+  const context=eventMutationContext();if(!context)return;
+  const st=$('#addRaceStatus');hideStatus(st);
+  const body={
+    source_label:$('#existingRaceSource').value.trim(),
+    race_key:slugify($('#existingRaceKey').value),
+    display_label:$('#existingRaceDisplay').value.trim(),
+    scheduled_start_time:$('#existingRaceStart').value
+  };
+  if(!body.source_label||!body.race_key||!body.display_label){status(st,'Complete MYLAPS source label, Mercury key, and public race name.',false);return}
+  try{
+    status(st,'Adding race...');
+    await req(API+'/admin-event-settings?action=race-alias&slug='+encodeURIComponent(context.slug),{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});
+    if(eventContextCurrent(context)){setExistingRacePanel(false);await loadEvent();status($('#saveStatus'),'Race added.')}
+  }catch(e){
+    if(eventContextCurrent(context)){
+      const friendly=e.message==='event_structure_locked_after_publish'?'Race structure is locked because results have already been published.':e.message==='duplicate_race_source_label'?'That MYLAPS source label is already used by this event.':e.message==='duplicate_race_key'?'That Mercury key is already used by this event.':'Add race failed: '+e.message;
+      status(st,friendly,false);
+    }
+  }
+}
+
 function setNewEventMode(active){
   $('#newEventCard').classList.toggle('hidden',!active);
   const nav=document.querySelector('.tool-nav');nav.hidden=active;
@@ -546,6 +589,10 @@ async function loadEvent(){
   renderRaceClocks(j.raceAliases||[]);
   $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
   $('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
+  const raceStructureLocked=Number(e.current_revision||0)!==0||!!e.last_published_at||!['setup','shadow'].includes(String(e.status||''));
+  $('#addExistingRaceBtn').disabled=raceStructureLocked;
+  $('#raceStructureHint').textContent=raceStructureLocked?'Race structure is locked after results are published or the event leaves setup/shadow status.':'Add another race/distance before the event begins.';
+  if(raceStructureLocked)$('#addExistingRacePanel').classList.add('hidden');
   $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
   $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showTeam').checked=s.show_team===true;
   $('#showGun').checked=s.show_gun_time!==false;$('#showChip').checked=s.show_chip_time!==false;$('#showPace').checked=s.show_pace!==false;$('#showRecent').checked=s.show_recent_finishers!==false;
@@ -677,9 +724,10 @@ async function changePassword(){
   }catch(e){alert('Password change failed: '+e.message)}
 }
 
-$('#newEventBtn').onclick=openNewEvent;$('#cancelNewEventBtn').onclick=closeNewEvent;$('#addRaceBtn').onclick=()=>addNewRaceRow();$('#createEventBtn').onclick=createEvent;$('#standardAgeGroupsBtn').onclick=useStandardAgeGroups;$('#addAgeGroupBtn').onclick=()=>addAgeGroupRow();$('#clearAgeGroupsBtn').onclick=()=>{$('#ageGroupRows').replaceChildren();updateAgeGroupEmpty()};$('#newEventName').addEventListener('input',()=>{if(!newSlugTouched)$('#newEventSlug').value=slugify($('#newEventName').value)});$('#newEventSlug').addEventListener('input',()=>{newSlugTouched=true;$('#newEventSlug').value=slugify($('#newEventSlug').value)});
+$('#newEventBtn').onclick=openNewEvent;$('#cancelNewEventBtn').onclick=closeNewEvent;$('#addRaceBtn').onclick=()=>addNewRaceRow();$('#createEventBtn').onclick=createEvent;$('#addExistingRaceBtn').onclick=()=>setExistingRacePanel(true);$('#cancelExistingRaceBtn').onclick=()=>setExistingRacePanel(false);$('#saveExistingRaceBtn').onclick=addExistingRace;$('#standardAgeGroupsBtn').onclick=useStandardAgeGroups;$('#addAgeGroupBtn').onclick=()=>addAgeGroupRow();$('#clearAgeGroupsBtn').onclick=()=>{$('#ageGroupRows').replaceChildren();updateAgeGroupEmpty()};$('#newEventName').addEventListener('input',()=>{if(!newSlugTouched)$('#newEventSlug').value=slugify($('#newEventName').value)});$('#newEventSlug').addEventListener('input',()=>{newSlugTouched=true;$('#newEventSlug').value=slugify($('#newEventSlug').value)});
 $('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=closeRecovery;$('#recoverPasswordBtn').onclick=recoverPassword;$('#recoveryPasswordVisibility').onclick=()=>setRecoveryPasswordVisible($('#recoveryPassword').type==='password');
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
+$('#existingRaceSource').addEventListener('input',()=>{if(!$('#existingRaceKey').dataset.touched)$('#existingRaceKey').value=slugify($('#existingRaceSource').value);if(!$('#existingRaceDisplay').dataset.touched)$('#existingRaceDisplay').value=$('#existingRaceSource').value});$('#existingRaceKey').addEventListener('input',()=>{$('#existingRaceKey').dataset.touched='1';$('#existingRaceKey').value=slugify($('#existingRaceKey').value)});$('#existingRaceDisplay').addEventListener('input',()=>{$('#existingRaceDisplay').dataset.touched='1'});
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
 $('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
 $('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
