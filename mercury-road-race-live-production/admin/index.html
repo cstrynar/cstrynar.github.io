@@ -26,7 +26,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
 .pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.35fr .9fr 1.15fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}.age-group-row{display:grid;grid-template-columns:1.5fr .8fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}.age-group-row button{height:44px}.award-actions{margin-top:10px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}
-.clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(240px,1fr) minmax(330px,1.35fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-offset{font-variant-numeric:tabular-nums;font-weight:800}.clock-start{min-width:110px;font-size:15px;letter-spacing:.04em}.logo-preview{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc;margin:8px 0 12px}.logo-preview img{width:120px;height:80px;object-fit:contain;background:#fff;border:1px solid #ececf0;border-radius:9px;padding:6px}.logo-preview strong{display:block;font-size:13px;margin-bottom:4px}.logo-preview p{margin:0}
+.clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(240px,1fr) minmax(330px,1.35fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-offset{font-variant-numeric:tabular-nums;font-weight:800}.clock-start{min-width:110px;font-size:15px;letter-spacing:.04em}.logo-preview{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc;margin:8px 0 12px}.logo-preview img{width:120px;height:80px;object-fit:contain;background:#fff;border:1px solid #ececf0;border-radius:9px;padding:6px}.logo-preview strong{display:block;font-size:13px;margin-bottom:4px}.logo-preview p{margin:0}.operator-guide{border:1px solid #cfd5df;border-radius:12px;background:#f8fafc;padding:14px;margin:14px 0}.operator-guide h3{margin:0 0 8px}.operator-guide p{margin:5px 0;font-size:12px;line-height:1.5}.operator-guide strong{color:#24262a}.role-guide{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}.role-guide th,.role-guide td{text-align:left;vertical-align:top;border-top:1px solid #e3e7ee;padding:8px 7px}.role-guide th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#646a75}.role-badge{display:inline-block;margin-top:4px;border-radius:999px;padding:3px 7px;background:var(--soft);font-size:10px;font-weight:800;color:#555b66}
 .footer{font-size:11px;color:#737780;text-align:center;padding:20px}
 @media(max-width:720px){.row,.row3,.race-create-row,.age-group-row,.clock-row{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
@@ -219,8 +219,25 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 
   <section class="card">
     <h2>Timing Computers</h2>
-    <p class="sub">Register Mercury timing computers, issue one-time activation codes, and control which computers may read or publish the selected event. Publish access always requires Read access.</p>
-    <div style="height:12px"></div>
+    <p class="sub">Choose which physical computers can see this event in Mercury Bridge and which computer is allowed to send live results.</p>
+    <div class="operator-guide">
+      <h3>How to use these settings</h3>
+      <p><strong>Read / see event:</strong> makes this event appear in Mercury Bridge on that computer and lets the operator verify the selected destination. Read access by itself cannot change or publish results.</p>
+      <p><strong>Publish results:</strong> allows Mercury Bridge on that computer to send result revisions for this event. Publish requires Read. Bridge safety gates and the exclusive writer lease still apply.</p>
+      <p><strong>Writer lease:</strong> not a setting you turn on. When publishing is allowed, Bridge automatically uses the lease so only one computer can be the active writer at a time.</p>
+      <p><strong>Credential Active / Disabled:</strong> controls whether that computer's saved Mercury Bridge credential can authenticate at all. Normally leave computers in service Active.</p>
+      <p><strong>New code:</strong> creates a temporary 15-minute activation/replacement code for that physical computer. It does not grant event access and does not interrupt the existing credential unless the new code is redeemed.</p>
+      <table class="role-guide">
+        <thead><tr><th>Computer role</th><th>Normal setup before race day</th><th>Race-day change</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Primary race-day computer</strong></td><td>Read ON · Publish OFF</td><td>After the race-day GO decision: Read ON · Publish ON</td></tr>
+          <tr><td><strong>Backup race-day computer</strong></td><td>Read ON · Publish OFF</td><td>Leave Publish OFF unless the backup is deliberately taking over from the Primary.</td></tr>
+          <tr><td><strong>HyTek / test computer</strong></td><td>For production events: Read OFF · Publish OFF. For private rehearsal events, Read may be ON.</td><td>Do not enable production Publish unless intentionally performing a controlled private test.</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Failover rule:</strong> if the Backup must take over during a race, turn Primary Publish OFF first, then turn Backup Publish ON. Do not leave two production computers intentionally publish-enabled.</p>
+    </div>
+    <div style="height:4px"></div>
     <div class="actions"><input id="clientName" placeholder="New timing computer name" style="max-width:360px"><button class="secondary" id="createClientBtn">Add timing computer</button></div>
     <p class="hint">New computers receive a 15-minute one-time activation code. Enter it once in Mercury Bridge on that PC; the long credential is generated and stored encrypted for that Windows user. Event access remains off until you enable Read below.</p>
     <div id="newKey" class="status hidden" style="word-break:break-all"></div>
@@ -229,7 +246,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div style="height:10px"></div>
     <p id="clientAccessState" class="hint" role="status" aria-live="polite">Choose an event to manage timing-computer access.</p>
     <div style="overflow:auto">
-      <table class="table"><thead><tr><th>Name</th><th>Computer</th><th>Last used</th><th>Read event</th><th>Publish event</th><th>Writer lease</th><th>Activation</th><th></th></tr></thead><tbody id="clientsBody"></tbody></table>
+      <table class="table"><thead><tr><th>Name / role</th><th>Credential</th><th>Last used</th><th>Read / see event</th><th>Publish results</th><th>Writer lease</th><th>New activation</th><th>Enable / disable</th></tr></thead><tbody id="clientsBody"></tbody></table>
     </div>
   </section>
 
@@ -295,7 +312,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R23 active/retired timing-computer list</div>
+  <div class="footer">Mercury Road Race Live Admin • R24 self-explanatory timing-computer controls</div>
 </main>
 
 <script>
@@ -683,7 +700,8 @@ async function loadClients(){
     $('#clientsBody').innerHTML=clients.map(c=>{
       const read=c.grant?.can_read===true,publish=c.grant?.can_publish===true,disabled=c.active!==true;
       const writer=String(c.id)===leaseId?'<span class="pill">Holds lease</span>':'—';
-      return '<tr data-client-row="'+esc(c.id)+'" data-client-name="'+esc(c.name)+'"><td>'+esc(c.name)+'</td><td><span class="pill">'+(c.active?'Active':'Disabled')+'</span></td><td>'+esc(c.last_used_at||'Never')+'</td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="read" data-client-id="'+esc(c.id)+'" aria-label="Read access for '+esc(c.name)+'" '+(read?'checked ':'')+(disabled?'disabled ':'')+'></td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="publish" data-client-id="'+esc(c.id)+'" aria-label="Publish access for '+esc(c.name)+'" '+(publish?'checked ':'')+(disabled?'disabled ':'')+'></td><td>'+writer+'</td><td><button class="small secondary" data-activate="'+esc(c.id)+'" '+(disabled?'disabled':'')+'>New code</button></td><td><button class="small secondary" data-client="'+esc(c.id)+'" data-active="'+(!c.active)+'">'+(c.active?'Disable':'Enable')+'</button></td></tr>';
+      const role=timingComputerRole(c.name);
+      return '<tr data-client-row="'+esc(c.id)+'" data-client-name="'+esc(c.name)+'"><td><strong>'+esc(c.name)+'</strong>'+(role?'<br><span class="role-badge">'+esc(role)+'</span>':'')+'</td><td><span class="pill">'+(c.active?'Active':'Disabled')+'</span></td><td>'+esc(c.last_used_at||'Never')+'</td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="read" data-client-id="'+esc(c.id)+'" title="Read / see event: show this event in Mercury Bridge without allowing result publishing." aria-label="Read / see event access for '+esc(c.name)+'" '+(read?'checked ':'')+(disabled?'disabled ':'')+'></td><td class="access-cell"><input class="grant-toggle" type="checkbox" data-access="publish" data-client-id="'+esc(c.id)+'" title="Publish results: allow this computer to send result revisions. Requires Read and remains subject to safety gates and writer lease." aria-label="Publish results access for '+esc(c.name)+'" '+(publish?'checked ':'')+(disabled?'disabled ':'')+'></td><td>'+writer+'</td><td><button class="small secondary" data-activate="'+esc(c.id)+'" '+(disabled?'disabled':'')+'>New code</button></td><td><button class="small secondary" data-client="'+esc(c.id)+'" data-active="'+(!c.active)+'">'+(c.active?'Disable':'Enable')+'</button></td></tr>';
     }).join('');
     document.querySelectorAll('[data-client]').forEach(b=>b.onclick=()=>setClient(b.dataset.client,b.dataset.active==='true'));
     document.querySelectorAll('[data-activate]').forEach(b=>b.onclick=()=>issueActivationCode(b.dataset.activate));
@@ -694,6 +712,13 @@ async function loadClients(){
       $('#clientsBody').innerHTML='<tr><td colspan="8">Unable to load timing computers.</td></tr>';
     }
   }
+}
+function timingComputerRole(name){
+  const value=String(name||'');
+  if(value.includes('Primary'))return 'Primary race-day computer';
+  if(value.includes('Backup'))return 'Backup race-day computer';
+  if(value.includes('HyTek'))return 'Test / rehearsal computer';
+  return '';
 }
 function showActivationCode(j){
   const el=$('#newKey');
