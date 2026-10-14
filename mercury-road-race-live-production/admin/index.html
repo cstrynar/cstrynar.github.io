@@ -25,7 +25,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .scoring{border:2px solid #ecd0d6;background:#fffafb}.hint{font-size:11px;color:var(--muted);line-height:1.45}.sep{height:1px;background:var(--line);margin:18px 0}
 .topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
-.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.4fr 1fr 1.2fr auto;gap:8px;align-items:end;margin-bottom:8px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.35fr .9fr 1.15fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}
 .clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(240px,1fr) minmax(330px,1.35fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-offset{font-variant-numeric:tabular-nums;font-weight:800}.clock-start{min-width:110px;font-size:15px;letter-spacing:.04em}
 .footer{font-size:11px;color:#737780;text-align:center;padding:20px}
 @media(max-width:720px){.row,.row3,.race-create-row,.clock-row{grid-template-columns:1fr}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
@@ -76,14 +76,13 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
   <p id="adminEventState" class="status" role="status" hidden></p>
   <section id="newEventCard" class="card hidden">
     <h2>Create New Event</h2>
-    <p class="sub">Creates a clean revision-0 Mercury event. No timing computer receives access until you grant it in Timing Computers.</p>
+    <p class="sub">Creates a clean revision-0 Mercury event. Enter the event details, then define each race and its scheduled start. Scheduled starts are public schedule information only; they do not start a clock or affect MYLAPS timing.</p>
     <div style="height:12px"></div>
     <div class="row">
       <div><label>Event name</label><input id="newEventName" maxlength="180"></div>
       <div><label>Event slug</label><input id="newEventSlug" maxlength="120" placeholder="example-race-2027"></div>
       <div><label>Date</label><input id="newEventDate" type="date"></div>
       <div><label>Location</label><input id="newEventLocation"></div>
-      <div><label>Start time label</label><input id="newEventStart" placeholder="5K 9:00 AM"></div>
       <div><label>Distance label</label><input id="newEventDistance" placeholder="5K"></div>
       <div><label>Timezone</label><input id="newEventTimezone" value="America/New_York"></div>
       <div><label>Accent color</label><input id="newEventAccent" type="color" value="#b30f2b"></div>
@@ -91,7 +90,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div style="height:12px"></div>
     <div class="switchline"><input id="newEventPublic" type="checkbox"><label for="newEventPublic">Make public immediately — spectators can see the UPCOMING revision-0 page</label></div>
     <h3>Races</h3>
-    <p class="hint">Enter the exact MYLAPS source label, a stable Mercury key, and the spectator-facing public name. You can rename the public label later without changing the source/key.</p>
+    <p class="hint">Enter the exact MYLAPS source label, a stable Mercury key, the spectator-facing public name, and the scheduled start time. Scheduled start may be left blank if it is not known yet.</p>
     <div id="newRaceRows"></div>
     <div class="actions"><button type="button" class="secondary small" id="addRaceBtn">Add race</button></div>
     <div class="sep"></div>
@@ -105,7 +104,6 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
       <div><label>Name</label><input id="eventName"></div>
       <div><label>Location</label><input id="eventLocation"></div>
       <div><label>Date</label><input id="eventDate" type="date"></div>
-      <div><label>Start time label</label><input id="eventStart"></div>
       <div><label>Distance label</label><input id="eventDistance"></div>
       <div><label>Status</label><select id="eventStatus"><option>setup</option><option>shadow</option><option>live</option><option>final</option><option>finished</option><option>official</option><option>archived</option></select></div>
     </div>
@@ -114,13 +112,13 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
   </section>
 
   <section class="card">
-    <h2>Race Names</h2>
-    <p class="sub">Change spectator-facing race names without changing the MYLAPS source label or Mercury's internal race key.</p>
+    <h2>Race Setup</h2>
+    <p class="sub">Change spectator-facing race names and scheduled start times without changing the MYLAPS source label or Mercury's internal race key. Scheduled starts are informational only and never start the unofficial clock.</p>
     <div style="height:12px"></div>
     <div id="raceNamesEmpty" class="hint">No configured race aliases for this event.</div>
     <div id="raceNamesTableWrap" style="overflow:auto" hidden>
       <table class="table">
-        <thead><tr><th>MYLAPS source</th><th>Internal key</th><th>Public race name</th></tr></thead>
+        <thead><tr><th>MYLAPS source</th><th>Internal key</th><th>Public race name</th><th>Scheduled start</th></tr></thead>
         <tbody id="raceNamesBody"></tbody>
       </table>
     </div>
@@ -263,7 +261,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R15 push-to-start unofficial race clock</div>
+  <div class="footer">Mercury Road Race Live Admin • R16 per-race scheduled start setup</div>
 </main>
 
 <script>
@@ -277,7 +275,7 @@ let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,ne
 
 function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
-  const ids='eventName eventLocation eventDate eventStart eventDistance eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone awardsJson scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
+  const ids='eventName eventLocation eventDate eventDistance eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone awardsJson scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
   $('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
   $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
@@ -298,7 +296,7 @@ function showApp(){$('#loginView').classList.add('hidden');$('#appView').classLi
 function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
 function renderRaceNames(rows){
   const aliases=Array.isArray(rows)?rows:[];
-  $('#raceNamesBody').innerHTML=aliases.map(row=>'<tr data-race-alias-id="'+esc(row.id)+'"><td>'+esc(row.source_label||'')+'</td><td><span class="race-key">'+esc(row.race_key||'')+'</span></td><td><input class="race-name-input" maxlength="80" aria-label="Public race name for '+esc(row.source_label||row.race_key||'race')+'" value="'+esc(row.display_label||row.race_key||'')+'"></td></tr>').join('');
+  $('#raceNamesBody').innerHTML=aliases.map(row=>'<tr data-race-alias-id="'+esc(row.id)+'"><td>'+esc(row.source_label||'')+'</td><td><span class="race-key">'+esc(row.race_key||'')+'</span></td><td><input class="race-name-input" maxlength="80" aria-label="Public race name for '+esc(row.source_label||row.race_key||'race')+'" value="'+esc(row.display_label||row.race_key||'')+'"></td><td><input class="race-start-input" type="time" aria-label="Scheduled start for '+esc(row.display_label||row.race_key||'race')+'" value="'+esc(String(row.scheduled_start_time||'').slice(0,5))+'"></td></tr>').join('');
   $('#raceNamesTableWrap').hidden=aliases.length===0;
   $('#raceNamesEmpty').hidden=aliases.length!==0;
 }
@@ -361,33 +359,46 @@ async function setRaceClock(raceAliasId,mode,offsetSeconds){
 function slugify(value){return String(value||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120)}
 function addNewRaceRow(seed={}){
   const row=document.createElement('div');row.className='race-create-row';
-  row.innerHTML='<div><label>MYLAPS source label</label><input data-new-race="source" maxlength="160"></div><div><label>Mercury key</label><input data-new-race="key" maxlength="80" placeholder="5k"></div><div><label>Public race name</label><input data-new-race="display" maxlength="80"></div><button type="button" class="danger small" aria-label="Remove race">Remove</button>';
-  const source=row.querySelector('[data-new-race="source"]'),key=row.querySelector('[data-new-race="key"]'),display=row.querySelector('[data-new-race="display"]');
-  source.value=seed.source_label||'';key.value=seed.race_key||'';display.value=seed.display_label||'';
+  row.innerHTML='<div><label>MYLAPS source label</label><input data-new-race="source" maxlength="160"></div><div><label>Mercury key</label><input data-new-race="key" maxlength="80" placeholder="5k"></div><div><label>Public race name</label><input data-new-race="display" maxlength="80"></div><div><label>Scheduled start</label><input data-new-race="start" type="time"></div><button type="button" class="danger small" aria-label="Remove race">Remove</button>';
+  const source=row.querySelector('[data-new-race="source"]'),key=row.querySelector('[data-new-race="key"]'),display=row.querySelector('[data-new-race="display"]'),start=row.querySelector('[data-new-race="start"]');
+  source.value=seed.source_label||'';key.value=seed.race_key||'';display.value=seed.display_label||'';start.value=String(seed.scheduled_start_time||'').slice(0,5);
   source.addEventListener('input',()=>{if(!key.dataset.touched)key.value=slugify(source.value);if(!display.dataset.touched)display.value=source.value});
   key.addEventListener('input',()=>{key.dataset.touched='1';key.value=slugify(key.value)});
   display.addEventListener('input',()=>{display.dataset.touched='1'});
   row.querySelector('button').onclick=()=>{if($('#newRaceRows').children.length>1)row.remove()};
   $('#newRaceRows').append(row);
 }
+function setNewEventMode(active){
+  $('#newEventCard').classList.toggle('hidden',!active);
+  const nav=document.querySelector('.tool-nav');nav.hidden=active;
+  for(const panel of document.querySelectorAll('.admin-panel')){
+    if(active)panel.hidden=true;
+    else{
+      const button=document.querySelector('[data-panel="'+panel.id+'"]');
+      panel.hidden=button?button.getAttribute('aria-pressed')!=='true':false;
+    }
+  }
+  $('#eventSelect').disabled=active;$('#refreshBtn').disabled=active;$('#newEventBtn').disabled=active;
+}
 function openNewEvent(){
-  newSlugTouched=false;$('#newEventCard').classList.remove('hidden');hideStatus($('#createEventStatus'));
-  for(const id of ['newEventName','newEventSlug','newEventDate','newEventLocation','newEventStart','newEventDistance'])$('#'+id).value='';
+  newSlugTouched=false;setNewEventMode(true);hideStatus($('#createEventStatus'));
+  for(const id of ['newEventName','newEventSlug','newEventDate','newEventLocation','newEventDistance'])$('#'+id).value='';
   $('#newEventTimezone').value='America/New_York';$('#newEventAccent').value='#b30f2b';$('#newEventPublic').checked=false;$('#newRaceRows').replaceChildren();addNewRaceRow();$('#newEventName').focus();
 }
-function closeNewEvent(){$('#newEventCard').classList.add('hidden');hideStatus($('#createEventStatus'))}
+function closeNewEvent(){setNewEventMode(false);hideStatus($('#createEventStatus'))}
 async function createEvent(){
   const st=$('#createEventStatus');hideStatus(st);
   const races=[...document.querySelectorAll('.race-create-row')].map(row=>({
     source_label:row.querySelector('[data-new-race="source"]').value.trim(),
     race_key:slugify(row.querySelector('[data-new-race="key"]').value),
-    display_label:row.querySelector('[data-new-race="display"]').value.trim()
+    display_label:row.querySelector('[data-new-race="display"]').value.trim(),
+    scheduled_start_time:row.querySelector('[data-new-race="start"]').value
   }));
   const name=$('#newEventName').value.trim(),slug=slugify($('#newEventSlug').value);
   if(!name){status(st,'Event name is required.',false);return}
   if(!slug){status(st,'Event slug is required.',false);return}
   if(races.some(r=>!r.source_label||!r.race_key||!r.display_label)){status(st,'Complete all race fields.',false);return}
-  const body={event:{name,slug,event_date:$('#newEventDate').value,location:$('#newEventLocation').value,start_time_label:$('#newEventStart').value,distance_label:$('#newEventDistance').value,is_public:$('#newEventPublic').checked},timezone:$('#newEventTimezone').value,accent_color:$('#newEventAccent').value,races};
+  const body={event:{name,slug,event_date:$('#newEventDate').value,location:$('#newEventLocation').value,distance_label:$('#newEventDistance').value,is_public:$('#newEventPublic').checked},timezone:$('#newEventTimezone').value,accent_color:$('#newEventAccent').value,races};
   if(!confirm('Create '+name+' as a clean revision-0 event with '+races.length+' race'+(races.length===1?'':'s')+'? No timing computer will receive access yet.'))return;
   try{
     const j=await req(API+'/admin-event-settings?action=create-event',{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});
@@ -450,7 +461,7 @@ async function loadEvent(){
   renderRaceNames(j.raceAliases||[]);
   renderRaceClocks(j.raceAliases||[]);
   $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
-  $('#eventStart').value=e.start_time_label||'';$('#eventDistance').value=e.distance_label||'';$('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
+  $('#eventDistance').value=e.distance_label||'';$('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
   $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
   $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showTeam').checked=s.show_team===true;
   $('#showGun').checked=s.show_gun_time!==false;$('#showChip').checked=s.show_chip_time!==false;$('#showPace').checked=s.show_pace!==false;$('#showRecent').checked=s.show_recent_finishers!==false;
@@ -467,10 +478,10 @@ async function save(){
   const context=eventMutationContext();if(!context)return;
   const st=$('#saveStatus');hideStatus(st);let awards;
   try{awards=JSON.parse($('#awardsJson').value)}catch{status(st,'Awards JSON is not valid.',false);return}
-  const raceAliases=[...document.querySelectorAll('[data-race-alias-id]')].map(row=>({id:Number(row.dataset.raceAliasId),display_label:row.querySelector('.race-name-input').value.trim()}));
+  const raceAliases=[...document.querySelectorAll('[data-race-alias-id]')].map(row=>({id:Number(row.dataset.raceAliasId),display_label:row.querySelector('.race-name-input').value.trim(),scheduled_start_time:row.querySelector('.race-start-input').value}));
   if(raceAliases.some(row=>!row.display_label)){status(st,'Every public race name must have a value.',false);return}
   const body={
-    event:{name:$('#eventName').value,location:$('#eventLocation').value,event_date:$('#eventDate').value,start_time_label:$('#eventStart').value,distance_label:$('#eventDistance').value,status:$('#eventStatus').value,is_public:$('#eventPublic').checked},
+    event:{name:$('#eventName').value,location:$('#eventLocation').value,event_date:$('#eventDate').value,distance_label:$('#eventDistance').value,status:$('#eventStatus').value,is_public:$('#eventPublic').checked},
     raceAliases,
     settings:{
       timezone:$('#timezone').value,accent_color:$('#accentColor').value,show_overall_place:$('#showOverall').checked,show_bib:$('#showBib').checked,show_name:$('#showName').checked,
