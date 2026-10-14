@@ -76,14 +76,13 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
   <p id="adminEventState" class="status" role="status" hidden></p>
   <section id="newEventCard" class="card hidden">
     <h2>Create New Event</h2>
-    <p class="sub">Creates a clean revision-0 Mercury event. Enter the event details, then define each race and its scheduled start. Scheduled starts are public schedule information only; they do not start a clock or affect MYLAPS timing.</p>
+    <p class="sub">Creates a clean revision-0 Mercury event. Enter the event details, then define each race, public race name, and scheduled start. Mercury derives the event's race/distance summary from those race rows automatically.</p>
     <div style="height:12px"></div>
     <div class="row">
       <div><label>Event name</label><input id="newEventName" maxlength="180"></div>
       <div><label>Event slug</label><input id="newEventSlug" maxlength="120" placeholder="example-race-2027"></div>
       <div><label>Date</label><input id="newEventDate" type="date"></div>
       <div><label>Location</label><input id="newEventLocation"></div>
-      <div><label>Distance label</label><input id="newEventDistance" placeholder="5K"></div>
       <div><label>Timezone</label><input id="newEventTimezone" value="America/New_York"></div>
       <div><label>Accent color</label><input id="newEventAccent" type="color" value="#b30f2b"></div>
     </div>
@@ -104,7 +103,6 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
       <div><label>Name</label><input id="eventName"></div>
       <div><label>Location</label><input id="eventLocation"></div>
       <div><label>Date</label><input id="eventDate" type="date"></div>
-      <div><label>Distance label</label><input id="eventDistance"></div>
       <div><label>Status</label><select id="eventStatus"><option>setup</option><option>shadow</option><option>live</option><option>final</option><option>finished</option><option>official</option><option>archived</option></select></div>
     </div>
     <div style="height:12px"></div>
@@ -261,7 +259,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R16 per-race scheduled start setup</div>
+  <div class="footer">Mercury Road Race Live Admin • R17 race-defined schedule and distance setup</div>
 </main>
 
 <script>
@@ -275,7 +273,7 @@ let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,ne
 
 function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
-  const ids='eventName eventLocation eventDate eventDistance eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone awardsJson scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
+  const ids='eventName eventLocation eventDate eventStatus eventPublic showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone awardsJson scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
   $('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
   $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
@@ -382,7 +380,7 @@ function setNewEventMode(active){
 }
 function openNewEvent(){
   newSlugTouched=false;setNewEventMode(true);hideStatus($('#createEventStatus'));
-  for(const id of ['newEventName','newEventSlug','newEventDate','newEventLocation','newEventDistance'])$('#'+id).value='';
+  for(const id of ['newEventName','newEventSlug','newEventDate','newEventLocation'])$('#'+id).value='';
   $('#newEventTimezone').value='America/New_York';$('#newEventAccent').value='#b30f2b';$('#newEventPublic').checked=false;$('#newRaceRows').replaceChildren();addNewRaceRow();$('#newEventName').focus();
 }
 function closeNewEvent(){setNewEventMode(false);hideStatus($('#createEventStatus'))}
@@ -398,7 +396,7 @@ async function createEvent(){
   if(!name){status(st,'Event name is required.',false);return}
   if(!slug){status(st,'Event slug is required.',false);return}
   if(races.some(r=>!r.source_label||!r.race_key||!r.display_label)){status(st,'Complete all race fields.',false);return}
-  const body={event:{name,slug,event_date:$('#newEventDate').value,location:$('#newEventLocation').value,distance_label:$('#newEventDistance').value,is_public:$('#newEventPublic').checked},timezone:$('#newEventTimezone').value,accent_color:$('#newEventAccent').value,races};
+  const body={event:{name,slug,event_date:$('#newEventDate').value,location:$('#newEventLocation').value,is_public:$('#newEventPublic').checked},timezone:$('#newEventTimezone').value,accent_color:$('#newEventAccent').value,races};
   if(!confirm('Create '+name+' as a clean revision-0 event with '+races.length+' race'+(races.length===1?'':'s')+'? No timing computer will receive access yet.'))return;
   try{
     const j=await req(API+'/admin-event-settings?action=create-event',{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});
@@ -461,7 +459,7 @@ async function loadEvent(){
   renderRaceNames(j.raceAliases||[]);
   renderRaceClocks(j.raceAliases||[]);
   $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
-  $('#eventDistance').value=e.distance_label||'';$('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
+  $('#eventStatus').value=e.status||'setup';$('#eventPublic').checked=e.is_public===true;
   $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
   $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showTeam').checked=s.show_team===true;
   $('#showGun').checked=s.show_gun_time!==false;$('#showChip').checked=s.show_chip_time!==false;$('#showPace').checked=s.show_pace!==false;$('#showRecent').checked=s.show_recent_finishers!==false;
@@ -481,7 +479,7 @@ async function save(){
   const raceAliases=[...document.querySelectorAll('[data-race-alias-id]')].map(row=>({id:Number(row.dataset.raceAliasId),display_label:row.querySelector('.race-name-input').value.trim(),scheduled_start_time:row.querySelector('.race-start-input').value}));
   if(raceAliases.some(row=>!row.display_label)){status(st,'Every public race name must have a value.',false);return}
   const body={
-    event:{name:$('#eventName').value,location:$('#eventLocation').value,event_date:$('#eventDate').value,distance_label:$('#eventDistance').value,status:$('#eventStatus').value,is_public:$('#eventPublic').checked},
+    event:{name:$('#eventName').value,location:$('#eventLocation').value,event_date:$('#eventDate').value,status:$('#eventStatus').value,is_public:$('#eventPublic').checked},
     raceAliases,
     settings:{
       timezone:$('#timezone').value,accent_color:$('#accentColor').value,show_overall_place:$('#showOverall').checked,show_bib:$('#showBib').checked,show_name:$('#showName').checked,
