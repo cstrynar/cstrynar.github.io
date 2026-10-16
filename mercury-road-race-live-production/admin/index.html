@@ -184,12 +184,12 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div style="height:12px"></div>
     <h3>Overall Awards</h3>
     <div class="row">
-      <div><label>Overall places awarded per gender</label><input id="overallPlaces" type="number" min="0" max="20" value="3"><p class="hint">Example: 3 = Top 3 Male + Top 3 Female overall.</p></div>
+      <div><label>Overall places awarded per gender</label><input id="overallPlaces" type="number" min="0" max="20" value="3" placeholder="Default (3)"><p class="hint">Example: 3 = Top 3 Male + Top 3 Female overall. Blank uses the default Top 3; 0 disables overall awards.</p></div>
     </div>
     <h3>Age Groups</h3>
     <div id="ageGroupOptions" class="row">
       <div class="switchline"><input id="removeOverallFromAgeGroups" type="checkbox" checked><label for="removeOverallFromAgeGroups">Remove overall winners from age-group awards</label></div>
-      <div class="switchline"><input id="separateGenderAgeGroups" type="checkbox" checked><label for="separateGenderAgeGroups">Separate Male and Female age-group awards</label></div>
+      <div class="switchline"><input id="separateGenderAgeGroups" type="checkbox" checked><label for="separateGenderAgeGroups">Separate Male and Female age-group awards (changing this applies to all rows)</label></div>
     </div>
     <div id="ageGroupEmpty" class="hint">No age groups configured yet. Use Mercury standard groups or add an age group.</div>
     <div id="ageGroupRows"></div>
@@ -397,6 +397,8 @@ function ageNumber(value){
 function addAgeGroupRow(seed={}){
   const row=document.createElement('div');row.className='age-group-row';row.dataset.ageGroupRow='1';
   row.innerHTML='<div><label>Label</label><input data-age="label" maxlength="60" placeholder="20–29"></div><div><label>Minimum age</label><input data-age="min" type="number" min="0" max="999"></div><div><label>Maximum age</label><input data-age="max" type="number" min="0" max="999" placeholder="No limit"></div><button type="button" class="danger small" aria-label="Remove age group">Remove</button>';
+  row.dataset.divisions=JSON.stringify(seed.divisions||($('#separateGenderAgeGroups').checked?['Male','Female']:['All']));
+  const scope=document.createElement('span');scope.className='hint';scope.dataset.ageScope='1';scope.textContent=JSON.parse(row.dataset.divisions).join(' + ');row.firstElementChild.append(scope);
   row.querySelector('[data-age="label"]').value=seed.label||'';
   row.querySelector('[data-age="min"]').value=seed.min??'';
   row.querySelector('[data-age="max"]').value=Number(seed.max)>=999?'':(seed.max??'');
@@ -410,14 +412,16 @@ function collapsedAgeGroups(groups){
     const min=ageNumber(g?.min??g?.min_age),max=ageNumber(g?.max??g?.max_age),label=String(g?.label??g?.name??'').trim();
     if(min===null||max===null||!label)continue;
     const key=min+'|'+max+'|'+label;
-    if(!byKey.has(key))byKey.set(key,{min,max,label});
+    if(!byKey.has(key))byKey.set(key,{min,max,label,divisions:[]});
+    const division=String(g?.division??g?.gender??'All').trim()||'All';
+    if(!byKey.get(key).divisions.includes(division))byKey.get(key).divisions.push(division);
   }
   return [...byKey.values()].sort((a,b)=>a.min-b.min||a.max-b.max||a.label.localeCompare(b.label));
 }
 function ageGroupsAreSeparate(groups){
   const list=Array.isArray(groups)?groups:[];
   if(!list.length)return true;
-  return list.some(g=>String(g?.division??g?.gender??'').trim()==='Male')&&list.some(g=>String(g?.division??g?.gender??'').trim()==='Female');
+  return list.some(g=>['Male','Female'].includes(String(g?.division??g?.gender??'').trim()));
 }
 function updateAgeGroupEmpty(){
   const hasGroups=$('#ageGroupRows').children.length>0;
@@ -428,7 +432,7 @@ function updateAgeGroupEmpty(){
 }
 function renderAwards(raw){
   const awards=raw&&typeof raw==='object'?raw:{};
-  $('#overallPlaces').value=String(Number.isInteger(Number(awards.overall_places))?Number(awards.overall_places):3);
+  $('#overallPlaces').value=awards.overall_places==null?'':String(awards.overall_places);
   $('#removeOverallFromAgeGroups').checked=awards.remove_overall_from_age_groups!==false;
   $('#separateGenderAgeGroups').checked=ageGroupsAreSeparate(awards.age_groups);
   preservedSpecialDivisions=Array.isArray(awards.special_divisions)?structuredClone(awards.special_divisions):[];
@@ -444,8 +448,9 @@ function useStandardAgeGroups(){
   $('#separateGenderAgeGroups').checked=true;$('#ageGroupRows').replaceChildren();for(const [min,max,label] of standards)addAgeGroupRow({min,max,label});updateAgeGroupEmpty();
 }
 function collectAwards(){
-  const overall=Number($('#overallPlaces').value);
-  if(!Number.isInteger(overall)||overall<0||overall>20)throw new Error('Overall award places must be a whole number from 0 to 20.');
+  const overallText=$('#overallPlaces').value.trim();
+  const overall=overallText===''?null:Number(overallText);
+  if(overall!==null&&(!Number.isInteger(overall)||overall<0||overall>20))throw new Error('Overall award places must be a whole number from 0 to 20.');
   const ageGroups=[];
   for(const [index,row] of [...document.querySelectorAll('[data-age-group-row]')].entries()){
     const label=row.querySelector('[data-age="label"]').value.trim();
@@ -456,7 +461,7 @@ function collectAwards(){
     if(min===null)throw new Error('Age group '+(index+1)+' needs a valid minimum age.');
     if(max===null)throw new Error('Age group '+(index+1)+' needs a valid maximum age.');
     if(min>max)throw new Error('Age group '+(index+1)+' has a minimum age greater than its maximum age.');
-    const divisions=$('#separateGenderAgeGroups').checked?['Male','Female']:['All'];
+    const divisions=JSON.parse(row.dataset.divisions);
     for(const d of divisions)ageGroups.push({min,max,label,division:d});
   }
   return {overall_places:overall,remove_overall_from_age_groups:$('#removeOverallFromAgeGroups').checked,age_groups:ageGroups,special_divisions:structuredClone(preservedSpecialDivisions)};
@@ -802,6 +807,8 @@ async function changePassword(){
   }catch(e){alert('Password change failed: '+e.message)}
 }
 
+// Only an explicit bulk-toggle change rewrites existing row divisions.
+$('#separateGenderAgeGroups').onchange=()=>{for(const row of document.querySelectorAll('[data-age-group-row]')){const divisions=$('#separateGenderAgeGroups').checked?['Male','Female']:['All'];row.dataset.divisions=JSON.stringify(divisions);row.querySelector('[data-age-scope]').textContent=divisions.join(' + ')}};
 $('#newEventBtn').onclick=openNewEvent;$('#cancelNewEventBtn').onclick=closeNewEvent;$('#addRaceBtn').onclick=()=>addNewRaceRow();$('#createEventBtn').onclick=createEvent;$('#addExistingRaceBtn').onclick=()=>setExistingRacePanel(true);$('#cancelExistingRaceBtn').onclick=()=>setExistingRacePanel(false);$('#saveExistingRaceBtn').onclick=addExistingRace;$('#standardAgeGroupsBtn').onclick=useStandardAgeGroups;$('#addAgeGroupBtn').onclick=()=>addAgeGroupRow();$('#clearAgeGroupsBtn').onclick=()=>{$('#ageGroupRows').replaceChildren();updateAgeGroupEmpty()};$('#newEventName').addEventListener('input',()=>{if(!newSlugTouched)$('#newEventSlug').value=slugify($('#newEventName').value)});$('#newEventSlug').addEventListener('input',()=>{newSlugTouched=true;$('#newEventSlug').value=slugify($('#newEventSlug').value)});
 $('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=closeRecovery;$('#recoverPasswordBtn').onclick=recoverPassword;$('#recoveryPasswordVisibility').onclick=()=>setRecoveryPasswordVisible($('#recoveryPassword').type==='password');
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
