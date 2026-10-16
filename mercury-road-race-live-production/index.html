@@ -313,9 +313,10 @@ async function loadEventList(epoch=eventEpoch){
  }catch(e){if(epoch===eventEpoch)showEventState('Unable to check this event','The event list could not be loaded. Retry when your connection is available.',true);return false}
 }
 async function loadTeamScores(slug=currentEventSlug,epoch=eventEpoch){
- try{const racePart=currentRaceKey?'&race='+encodeURIComponent(currentRaceKey):'';const next=await publicJSON('team-scores?slug='+encodeURIComponent(slug)+racePart);
-  if(epoch===eventEpoch&&slug===currentEventSlug&&next?.event?.slug===slug)teamSnapshot=next;
- }catch{if(epoch===eventEpoch)teamSnapshot={enabled:false,tabActive:false,divisions:[]}}
+ const raceKey=currentRaceKey;
+ try{const racePart=raceKey?'&race='+encodeURIComponent(raceKey):'';const next=await publicJSON('team-scores?slug='+encodeURIComponent(slug)+racePart);
+  if(epoch===eventEpoch&&slug===currentEventSlug&&raceKey===currentRaceKey&&next?.event?.slug===slug)teamSnapshot=next;
+ }catch{if(epoch===eventEpoch&&slug===currentEventSlug&&raceKey===currentRaceKey)teamSnapshot={enabled:false,tabActive:false,divisions:[]}}
 }
 async function loadSnapshot(){
  if(!eventReady||!currentEventSlug||snapshotPending===eventEpoch)return;
