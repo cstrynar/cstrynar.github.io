@@ -23,7 +23,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.status{font-size:12px;padding:8px 10px;border-radius:9px;background:var(--soft);color:#4a4e56}.status.ok{color:var(--ok);background:#ecfdf3}.status.bad{color:var(--bad);background:#fff1f0}
 .switchline{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fafbfc}.switchline input{width:auto;height:auto}.switchline label{margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)}
 .scoring{border:1px solid var(--line);background:#fff}.hint{font-size:11px;color:var(--muted);line-height:1.45}.sep{height:1px;background:var(--line);margin:18px 0}
-.topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}
+.topbar{display:flex;gap:12px;justify-content:space-between;align-items:end;margin-bottom:16px}.grow{flex:1}.hidden{display:none!important}.event-scope{margin:0 0 6px}.event-scope button[aria-pressed="true"]{background:#dce0e7;box-shadow:inset 0 0 0 1px #b7becb}
 .table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{text-align:left;border-bottom:1px solid #ececf0;padding:9px}.table th{font-size:10px;color:#70747d;text-transform:uppercase;letter-spacing:.05em}
 .pill{display:inline-block;border-radius:999px;padding:4px 8px;background:var(--soft);font-size:10px;font-weight:800}.race-create-row{display:grid;grid-template-columns:1.35fr .9fr 1.15fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}.age-group-row{display:grid;grid-template-columns:1.5fr .8fr .8fr auto;gap:8px;align-items:end;margin-bottom:8px}.age-group-row button{height:44px}.award-actions{margin-top:10px}.race-create-row button{height:44px}.grant-toggle{width:auto;height:auto;transform:scale(1.08);accent-color:var(--accent)}.access-cell{text-align:center!important;white-space:nowrap}.race-name-input{min-width:220px}.race-key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#565b65}
 .clock-list{display:grid;gap:10px;margin-top:14px}.clock-row{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(240px,1fr) minmax(330px,1.35fr);gap:12px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc}.clock-race strong{display:block;font-size:14px}.clock-race span{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.clock-row .actions{align-self:end}.clock-offset{font-variant-numeric:tabular-nums;font-weight:800}.clock-start{min-width:110px;font-size:15px;letter-spacing:.04em}.logo-preview{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfc;margin:8px 0 12px}.logo-preview img{width:120px;height:80px;object-fit:contain;background:#fff;border:1px solid #ececf0;border-radius:9px;padding:6px}.logo-preview strong{display:block;font-size:13px;margin-bottom:4px}.logo-preview p{margin:0}.operator-guide{border:1px solid #cfd5df;border-radius:12px;background:#f8fafc;padding:14px;margin:14px 0}.operator-guide h3{margin:0 0 8px}.operator-guide p{margin:5px 0;font-size:12px;line-height:1.5}.operator-guide strong{color:#24262a}.role-guide{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}.role-guide th,.role-guide td{text-align:left;vertical-align:top;border-top:1px solid #e3e7ee;padding:8px 7px}.role-guide th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#646a75}.role-badge{display:inline-block;margin-top:4px;border-radius:999px;padding:3px 7px;background:var(--soft);font-size:10px;font-weight:800;color:#555b66}
@@ -63,7 +63,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 
 <main id="appView" class="shell hidden">
   <div class="topbar">
-    <div class="grow"><label for="eventSelect">Event</label><select id="eventSelect"></select></div>
+    <div class="grow"><label for="eventSelect">Event</label><div class="actions event-scope" role="group" aria-label="Event list"><button type="button" class="secondary small" id="currentEventsBtn" aria-pressed="true">Current / Upcoming <span id="currentEventsCount"></span></button><button type="button" class="secondary small" id="pastEventsBtn" aria-pressed="false">Past / Archived <span id="pastEventsCount"></span></button></div><select id="eventSelect"></select></div>
     <div class="actions"><button class="primary" id="newEventBtn">New event</button><button class="secondary" id="refreshBtn">Refresh</button><button class="secondary" id="logoutBtn">Log out</button></div>
   </div>
 
@@ -319,7 +319,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R27 featured-race podium control</div>
+  <div class="footer">Mercury Road Race Live Admin • R28 current / past event lists</div>
 </main>
 
 <script>
@@ -330,7 +330,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let token=localStorage.getItem('mercuryAdminSession')||'';
 let currentSlug='';
 let loaded=null;
-let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,newSlugTouched=false,preservedSpecialDivisions=[];
+let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,newSlugTouched=false,preservedSpecialDivisions=[],eventCatalog=[],eventScope='current';
 
 function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
@@ -588,7 +588,7 @@ function setNewEventMode(active){
       panel.hidden=button?button.getAttribute('aria-pressed')!=='true':false;
     }
   }
-  $('#eventSelect').disabled=active;$('#refreshBtn').disabled=active;$('#newEventBtn').disabled=active;
+  $('#eventSelect').disabled=active;$('#refreshBtn').disabled=active;$('#newEventBtn').disabled=active;$('#currentEventsBtn').disabled=active;$('#pastEventsBtn').disabled=active;
 }
 function openNewEvent(){
   newSlugTouched=false;setNewEventMode(true);hideStatus($('#createEventStatus'));
@@ -646,16 +646,47 @@ async function logout(){
   localStorage.removeItem('mercuryAdminSession');token='';showLogin()
 }
 
+function adminTodayISO(){
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
+  return parts.year+'-'+parts.month+'-'+parts.day;
+}
+function eventIsCurrent(e){
+  if(String(e?.status||'')==='archived')return false;
+  const date=String(e?.event_date||'').trim();
+  return !date||date>=adminTodayISO();
+}
+function scopedEvents(){
+  const rows=eventCatalog.filter(e=>eventScope==='current'?eventIsCurrent(e):!eventIsCurrent(e));
+  rows.sort((a,b)=>{
+    const ad=String(a.event_date||''),bd=String(b.event_date||'');
+    if(eventScope==='current')return (ad||'9999-99-99').localeCompare(bd||'9999-99-99')||String(a.name||'').localeCompare(String(b.name||''));
+    return (bd||'').localeCompare(ad||'')||String(a.name||'').localeCompare(String(b.name||''));
+  });
+  return rows;
+}
+function renderEventList(){
+  const currentCount=eventCatalog.filter(eventIsCurrent).length,pastCount=eventCatalog.length-currentCount;
+  $('#currentEventsCount').textContent='('+currentCount+')';$('#pastEventsCount').textContent='('+pastCount+')';
+  $('#currentEventsBtn').setAttribute('aria-pressed',String(eventScope==='current'));$('#pastEventsBtn').setAttribute('aria-pressed',String(eventScope==='past'));
+  const rows=scopedEvents(),previous=currentSlug;
+  $('#eventSelect').innerHTML=rows.map(e=>'<option value="'+esc(e.slug)+'">'+esc(e.name+' — '+(e.event_date||'No date'))+'</option>').join('');
+  currentSlug=rows.some(e=>e.slug===previous)?previous:(rows[0]?.slug||'');
+  $('#eventSelect').value=currentSlug;
+  return rows;
+}
+async function setEventScope(scope){
+  eventScope=scope==='past'?'past':'current';
+  renderEventList();
+  if(currentSlug)await loadEvent();else{adminLoadEpoch++;clearEventSettings(eventScope==='current'?'No current/upcoming events.':'No past/archived events.');window.MercuryTools?.clear();}
+  await loadClients();
+}
 async function loadEvents(){
   const listEpoch=++adminListEpoch;
   const j=await req(API+'/admin-event-settings?action=events',{headers:authHeaders(false)});
   if(listEpoch!==adminListEpoch||!token)return;
-  const events=Array.isArray(j.events)?j.events:[];
-  const previous=currentSlug;
-  $('#eventSelect').innerHTML=events.map(e=>'<option value="'+esc(e.slug)+'">'+esc(e.name+' — '+(e.event_date||'No date'))+'</option>').join('');
-  currentSlug=events.some(e=>e.slug===previous)?previous:(events[0]?.slug||'');
-  $('#eventSelect').value=currentSlug;
-  if(currentSlug)await loadEvent();else{adminLoadEpoch++;clearEventSettings('No events available. Refresh to retry.');window.MercuryTools?.clear();}
+  eventCatalog=Array.isArray(j.events)?j.events:[];
+  renderEventList();
+  if(currentSlug)await loadEvent();else{adminLoadEpoch++;clearEventSettings(eventScope==='current'?'No current/upcoming events.':'No past/archived events.');window.MercuryTools?.clear();}
   await loadClients();
 }
 
@@ -827,7 +858,7 @@ $('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=clo
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#existingRaceSource').addEventListener('input',()=>{if(!$('#existingRaceKey').dataset.touched)$('#existingRaceKey').value=slugify($('#existingRaceSource').value);if(!$('#existingRaceDisplay').dataset.touched)$('#existingRaceDisplay').value=$('#existingRaceSource').value});$('#existingRaceKey').addEventListener('input',()=>{$('#existingRaceKey').dataset.touched='1';$('#existingRaceKey').value=slugify($('#existingRaceKey').value)});$('#existingRaceDisplay').addEventListener('input',()=>{$('#existingRaceDisplay').dataset.touched='1'});
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
-$('#refreshBtn').onclick=loadEvents;$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#eventStatus').onchange=renderStatusHelp;$('#showRetiredComputers').onchange=loadClients;$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
+$('#refreshBtn').onclick=loadEvents;$('#currentEventsBtn').onclick=()=>setEventScope('current');$('#pastEventsBtn').onclick=()=>setEventScope('past');$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#eventStatus').onchange=renderStatusHelp;$('#showRetiredComputers').onchange=loadClients;$('#saveBtn').onclick=save;$('#scoreEnabled').onchange=toggleScoring;
 $('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
 
 window.startMercuryAdmin=()=>{if(token){showApp();loadEvents().catch(()=>showLogin())}else showLogin()};
