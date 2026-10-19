@@ -163,8 +163,10 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
       <div class="switchline"><input id="showChip" type="checkbox"><label for="showChip">Chip time</label></div>
       <div class="switchline"><input id="showPace" type="checkbox"><label for="showPace">Pace</label></div>
       <div class="switchline"><input id="showRecent" type="checkbox"><label for="showRecent">Recent Finishers tab</label></div>
+      <div class="switchline"><input id="showEntries" type="checkbox"><label for="showEntries">Entries tab / pre-race entry list</label></div>
       <div><label>Recent default count</label><select id="recentCount"><option>5</option><option>10</option><option>15</option><option>20</option></select></div>
     </div>
+    <p class="hint">Entries tab uses the current MYLAPS entry roster before and during the event. Viewers can filter by race/sub-event and gender; Team / Club is also available when that display field is enabled. Entry sync is separate from result revisions.</p>
     <div class="actions section-save"><button type="button" class="primary small save-event-btn">Save changes</button></div>
   </section>
 
@@ -326,7 +328,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R29 race-day operator feedback fixes</div>
+  <div class="footer">Mercury Road Race Live Admin • R30 public entry-list control</div>
 </main>
 
 <script>
@@ -341,7 +343,7 @@ let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,ne
 
 function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;
-  const ids='eventName eventLocation eventDate eventStatus eventPublic featuredRaceKey showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent recentCount accentColor timezone overallPlaces removeOverallFromAgeGroups separateGenderAgeGroups scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
+  const ids='eventName eventLocation eventDate eventStatus eventPublic featuredRaceKey showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent showEntries recentCount accentColor timezone overallPlaces removeOverallFromAgeGroups separateGenderAgeGroups scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
   preservedSpecialDivisions=[];$('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();$('#ageGroupRows').replaceChildren();$('#addExistingRacePanel').classList.add('hidden');$('#raceStructureHint').textContent='';renderCurrentLogo(null,null);hideStatus($('#addRaceStatus'));hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
   $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
@@ -730,7 +732,7 @@ async function loadEvent(){
   if(raceStructureLocked)$('#addExistingRacePanel').classList.add('hidden');
   $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
   $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showTeam').checked=s.show_team===true;
-  $('#showGun').checked=s.show_gun_time!==false;$('#showChip').checked=s.show_chip_time!==false;$('#showPace').checked=s.show_pace!==false;$('#showRecent').checked=s.show_recent_finishers!==false;
+  $('#showGun').checked=s.show_gun_time!==false;$('#showChip').checked=s.show_chip_time!==false;$('#showPace').checked=s.show_pace!==false;$('#showRecent').checked=s.show_recent_finishers!==false;$('#showEntries').checked=s.show_entry_list===true;
   $('#recentCount').value=String(s.recent_finishers_default_count||10);$('#accentColor').value=s.accent_color||'#b30f2b';$('#timezone').value=s.timezone||'America/New_York';
   renderCurrentLogo(s,e);
   renderAwards(s.awards||{overall_places:3,remove_overall_from_age_groups:true,age_groups:[],special_divisions:[]});
@@ -753,7 +755,7 @@ async function save(){
     settings:{
       timezone:$('#timezone').value,accent_color:$('#accentColor').value,show_overall_place:$('#showOverall').checked,show_bib:$('#showBib').checked,show_name:$('#showName').checked,
       show_gender:$('#showGender').checked,show_age:$('#showAge').checked,show_age_group:$('#showAgeGroup').checked,show_team:$('#showTeam').checked,show_gun_time:$('#showGun').checked,
-      show_chip_time:$('#showChip').checked,show_pace:$('#showPace').checked,show_recent_finishers:$('#showRecent').checked,recent_finishers_default_count:Number($('#recentCount').value),featured_race_key:$('#featuredRaceKey').value,awards,
+      show_chip_time:$('#showChip').checked,show_pace:$('#showPace').checked,show_recent_finishers:$('#showRecent').checked,show_entry_list:$('#showEntries').checked,recent_finishers_default_count:Number($('#recentCount').value),featured_race_key:$('#featuredRaceKey').value,awards,
       team_scoring:{enabled:$('#scoreEnabled').checked,scorers_per_team:Number($('#scorersPerTeam').value),displacers_per_team:Number($('#displacersPerTeam').value),unattached_mode:$('#unattachedMode').value,division_mode:$('#divisionMode').value,tiebreaker:$('#tiebreaker').value}
     }
   };
