@@ -620,7 +620,7 @@ function openNewEvent(){
 function closeNewEvent(){setNewEventMode(false);hideStatus($('#createEventStatus'))}
 async function createEvent(){
   const st=$('#createEventStatus');hideStatus(st);
-  const races=[...document.querySelectorAll('.race-create-row')].map(row=>({
+  const races=[...document.querySelectorAll('#newRaceRows .race-create-row')].map(row=>({
     source_label:row.querySelector('[data-new-race="source"]').value.trim(),
     race_key:slugify(row.querySelector('[data-new-race="key"]').value),
     display_label:row.querySelector('[data-new-race="display"]').value.trim(),
