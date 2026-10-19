@@ -450,8 +450,8 @@ function renderEntries(){
  const teams=[...new Set(all.map(r=>r.team).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
  const rv=entryRaceFilter.value,gv=entryGenderFilter.value,tv=entryTeamFilter.value;
  entryRaceFilter.innerHTML='<option value="">All races / sub-events</option>'+races.map(v=>`<option value="${esc(v)}">${esc(raceDisplay(v))}</option>`).join("");entryRaceFilter.value=races.includes(rv)?rv:"";
- entryGenderFilter.innerHTML='<option value="">All genders</option>'+genders.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");entryGenderFilter.value=genders.includes(gv)?gv:"";
- entryTeamFilter.hidden=snapshot.display?.showTeam!==true;entryTeamFilter.innerHTML='<option value="">All teams / clubs</option>'+teams.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");entryTeamFilter.value=teams.includes(tv)?tv:"";
+ entryGenderFilter.hidden=snapshot.display?.showGender!==true;entryGenderFilter.innerHTML='<option value="">All genders</option>'+genders.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");entryGenderFilter.value=entryGenderFilter.hidden?"":(genders.includes(gv)?gv:"");
+ entryTeamFilter.hidden=snapshot.display?.showTeam!==true;entryTeamFilter.innerHTML='<option value="">All teams / clubs</option>'+teams.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");entryTeamFilter.value=entryTeamFilter.hidden?"":(teams.includes(tv)?tv:"");
  const rows=filteredEntries(),cols=entryColumns();
  $("#entriesTableHead").innerHTML=cols.map(c=>`<th>${esc(c[1])}</th>`).join("");
  entriesBody.innerHTML=rows.map(r=>'<tr>'+cols.map(c=>'<td>'+esc(c[2](r))+'</td>').join("")+'</tr>').join("");
