@@ -69,7 +69,7 @@ select{height:46px;border:1px solid var(--line);border-radius:10px;background:#f
 .view-tab.active{background:var(--accent);color:#fff}
 .view-tab[hidden]{display:none}
 .view-panel[hidden]{display:none!important}
-.recent-toolbar{display:flex;align-items:end;justify-content:space-between;gap:14px;background:#fff;border:1px solid var(--line);border-radius:15px 15px 0 0;padding:16px 18px}
+.entries-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 210px 170px 220px;gap:10px;background:#fff;padding:18px;border:1px solid var(--line);border-radius:15px 15px 0 0}.entries-summary{margin:12px 0 8px;color:var(--muted);font-size:12px}.recent-toolbar{display:flex;align-items:end;justify-content:space-between;gap:14px;background:#fff;border:1px solid var(--line);border-radius:15px 15px 0 0;padding:16px 18px}
 .recent-toolbar h2{margin:0;font-size:22px}.recent-toolbar p{margin:4px 0 0;color:var(--muted);font-size:12px}
 .recent-count-wrap{display:flex;align-items:center;gap:9px;white-space:nowrap}.recent-count-wrap label{font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;color:#686d76}.recent-count-wrap select{width:auto;min-width:96px}
 .recent-newest{font-size:10px;color:var(--accent);font-weight:850;text-transform:uppercase;letter-spacing:.07em}
@@ -138,7 +138,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
   .toolbar{grid-template-columns:1fr 1fr;padding:12px}.search-wrap{grid-column:1/-1}#raceFilter,#categoryFilter,#sortMode{grid-column:1/-1}
   select{min-width:0;width:100%}
   .view-tabs-row{align-items:stretch;flex-direction:column;margin:14px 0 10px}.view-tabs{display:flex;width:100%}.view-tab{flex:1;padding:10px 8px}
-  .recent-toolbar{align-items:stretch;flex-direction:column;padding:12px}.recent-count-wrap{justify-content:space-between}.recent-count-wrap select{width:110px}
+  .entries-toolbar{grid-template-columns:1fr;padding:12px}.recent-toolbar{align-items:stretch;flex-direction:column;padding:12px}.recent-count-wrap{justify-content:space-between}.recent-count-wrap select{width:110px}
   .team-toolbar{align-items:stretch;flex-direction:column;padding:12px}.team-division-wrap{min-width:0;width:100%}
   .team-card summary{grid-template-columns:44px minmax(120px,1fr) 70px;gap:7px;padding:12px}.team-card summary .team-time-total,.team-card summary .team-time-avg{display:none}.team-card summary:after{grid-column:4}
   .results-headline{align-items:flex-start;margin-top:18px}
@@ -209,6 +209,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
       <div class="view-tabs-row">
         <nav class="view-tabs" aria-label="Results views">
           <button class="view-tab active" id="resultsTab" type="button" aria-selected="true">Results</button>
+          <button class="view-tab" id="entriesTab" type="button" aria-selected="false" hidden>Entries</button>
           <button class="view-tab" id="recentTab" type="button" aria-selected="false">Recent Finishers</button>
           <button class="view-tab" id="teamTab" type="button" aria-selected="false" hidden>Team Scores</button>
         </nav>
@@ -238,6 +239,19 @@ dialog h3{font-size:28px;margin:0 0 20px}
         <div class="empty" id="emptyState" hidden><strong>No matching finishers</strong><span>Try clearing a filter or searching another name or bib.</span></div>
       </div>
 
+      <div class="view-panel" id="entriesPanel" hidden>
+        <div class="entries-toolbar">
+          <label class="search-wrap"><span class="sr-only">Search entries</span><input id="entrySearch" type="search" placeholder="Search entrant or bib" autocomplete="off"></label>
+          <select id="entryRaceFilter" aria-label="Filter entries by race"><option value="">All races / sub-events</option></select>
+          <select id="entryGenderFilter" aria-label="Filter entries by gender"><option value="">All genders</option></select>
+          <select id="entryTeamFilter" aria-label="Filter entries by team"><option value="">All teams / clubs</option></select>
+        </div>
+        <p class="entries-summary" id="entriesShownCount">Entry list loading…</p>
+        <div class="table-wrap" id="entriesTableWrap"><table><thead><tr id="entriesTableHead"></tr></thead><tbody id="entriesBody"></tbody></table></div>
+        <div id="entriesMobileResults" class="mobile-results"></div>
+        <div class="empty" id="entriesEmptyState" hidden><strong>No matching entries</strong><span>Try another race, gender, team, name, or bib.</span></div>
+      </div>
+
       <div class="view-panel" id="recentPanel" hidden>
         <div class="recent-toolbar">
           <div><h2>Recent Finishers</h2><p><span class="recent-newest">Newest first</span> · New finishers appear at the top automatically.</p></div>
@@ -263,13 +277,13 @@ dialog h3{font-size:28px;margin:0 0 20px}
     </div>
   </div>
 </main>
-<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.10 R29</span><span id="lastRevision">Feed revision 0</span></div></footer>
+<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.10 R30</span><span id="lastRevision">Feed revision 0</span></div></footer>
 <dialog id="runnerDialog"><button class="dialog-close" id="closeDialog" aria-label="Close">×</button><p class="eyebrow" style="color:var(--accent)">Runner Details</p><h3 id="dialogName"></h3><div id="dialogGrid" class="dialog-grid"></div></dialog>
 <script>
 const SUPABASE_URL="https://wajusbsyouyufpccixol.supabase.co";
-const fallback={schemaVersion:9,serverTime:null,revision:0,updatedAt:null,status:"setup",event:{slug:null,name:"Mercury Road Race Live",location:null,date:null,startTime:null,distance:null},branding:{eventLogoUrl:null,eventLogoAlt:null,accentColor:"#b30f2b"},display:{showOverallPlace:true,showBib:true,showName:true,showGender:true,showAge:false,showAgeGroup:true,showTeam:false,showGunTime:true,showChipTime:true,showPace:true,showRecentFinishers:true,recentFinishersDefaultCount:10},awards:{age_groups:[]},races:[],recentFinishers:[],results:[]};
+const fallback={schemaVersion:12,serverTime:null,revision:0,updatedAt:null,status:"setup",event:{slug:null,name:"Mercury Road Race Live",location:null,date:null,startTime:null,distance:null},branding:{eventLogoUrl:null,eventLogoAlt:null,accentColor:"#b30f2b"},display:{showOverallPlace:true,showBib:true,showName:true,showGender:true,showAge:false,showAgeGroup:true,showTeam:false,showGunTime:true,showChipTime:true,showPace:true,showRecentFinishers:true,showEntryList:false,recentFinishersDefaultCount:10},awards:{age_groups:[]},races:[],entriesUpdatedAt:null,entries:[],recentFinishers:[],results:[]};
 let snapshot=structuredClone(fallback),teamSnapshot={enabled:false,tabActive:false,divisions:[]},teamDivisionKey=null,currentRaceKey=null,currentEventSlug=new URL(location.href).searchParams.get("event")||null,publicEvents=[],lastServerTimestamp=null,serverClockOffsetMs=null,lastFetchOk=false,activeView="results",recentCountTouched=false,resultSortMode="gun";
-const $=s=>document.querySelector(s),body=$("#resultsBody"),mobile=$("#mobileResults"),recentBody=$("#recentResultsBody"),recentMobile=$("#recentMobileResults"),search=$("#search"),raceFilter=$("#raceFilter"),sexFilter=$("#sexFilter"),ageFilter=$("#ageFilter"),categoryFilter=$("#categoryFilter"),sortMode=$("#sortMode"),empty=$("#emptyState"),recentEmpty=$("#recentEmptyState"),recentCount=$("#recentCount"),eventSwitcher=$("#eventSwitcher"),eventSelect=$("#eventSelect"),teamDivision=$("#teamDivision");
+const $=s=>document.querySelector(s),body=$("#resultsBody"),mobile=$("#mobileResults"),recentBody=$("#recentResultsBody"),recentMobile=$("#recentMobileResults"),search=$("#search"),raceFilter=$("#raceFilter"),sexFilter=$("#sexFilter"),ageFilter=$("#ageFilter"),categoryFilter=$("#categoryFilter"),sortMode=$("#sortMode"),entrySearch=$("#entrySearch"),entryRaceFilter=$("#entryRaceFilter"),entryGenderFilter=$("#entryGenderFilter"),entryTeamFilter=$("#entryTeamFilter"),entriesBody=$("#entriesBody"),entriesMobile=$("#entriesMobileResults"),entriesEmpty=$("#entriesEmptyState"),recentEmpty=$("#recentEmptyState"),recentCount=$("#recentCount"),eventSwitcher=$("#eventSwitcher"),eventSelect=$("#eventSelect"),teamDivision=$("#teamDivision");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 function nameOf(r){return `${r.firstName||""} ${r.lastName||""}`.trim()}
 function shown(flag){return snapshot.display?.[flag]===true}
@@ -290,7 +304,7 @@ async function publicJSON(path){
 function clearEventData(){
  snapshot=structuredClone(fallback);teamSnapshot={enabled:false,tabActive:false,divisions:[]};teamDivisionKey=null;currentRaceKey=null;
  lastServerTimestamp=null;serverClockOffsetMs=null;lastFetchOk=false;activeView='results';recentCountTouched=false;resultSortMode='gun';
- search.value='';raceFilter.value='';sexFilter.value='';ageFilter.value='';categoryFilter.value='';sortMode.value='gun';
+ search.value='';raceFilter.value='';sexFilter.value='';ageFilter.value='';categoryFilter.value='';sortMode.value='gun';entrySearch.value='';entryRaceFilter.value='';entryGenderFilter.value='';entryTeamFilter.value='';
  $('#runnerDialog').close();$('#eventLogo').removeAttribute('src');render();
  $('#eventContent').hidden=true;$('#eventNotice').hidden=true;$('#lastRevision').hidden=true;
 }
@@ -408,6 +422,44 @@ function recentRows(){const n=[5,10,15,20].includes(Number(recentCount.value))?N
 function renderConnection(){$("#feedDot").style.background=lastFetchOk?"#1d9b61":"#f79009";$("#feedText").textContent=lastFetchOk?"Mercury feed connected":"Last check failed"}
 function runnerCards(rows){return rows.map(r=>{const preferred=resultSortMode==='chip'&&shown('showChipTime')&&r.chipTime?['Chip',r.chipTime]:resultSortMode==='gun'&&shown('showGunTime')&&r.gunTime?['Gun',r.gunTime]:null;const time=preferred||(shown('showChipTime')&&r.chipTime?['Chip',r.chipTime]:shown('showGunTime')&&r.gunTime?['Gun',r.gunTime]:null);const meta=columns().filter(c=>['sex','age','ageGroup','team','pace'].includes(c[0]));return `<article class="runner-card" data-runner="${runnerTarget(r)}" tabindex="0"><div class="runner-card-top"><div>${shown('showOverallPlace')?`<div class="place">#${esc(r.overall??'')}</div>`:''}<div class="runner-name">${esc(shown('showName')?nameOf(r):'Runner')}</div>${shown('showBib')?`<div class="bib">Bib ${esc(r.bib??'')}</div>`:''}</div>${time?`<div class="chip-big"><span>${time[0]}</span><strong>${esc(time[1])}</strong></div>`:''}</div><div class="runner-meta">${meta.map(c=>`<div><span>${esc(c[1])}</span><strong>${esc(c[2](r))}</strong></div>`).join('')}</div></article>`}).join('')}
 function renderTable(rows,headEl,bodyEl,mobileEl){const cols=columns();headEl.innerHTML=cols.map(c=>`<th>${esc(c[1])}</th>`).join("");bodyEl.innerHTML=rows.map(r=>`<tr data-runner="${runnerTarget(r)}">${cols.map(c=>`<td class="${c[3]}">${esc(c[2](r))}</td>`).join("")}</tr>`).join("");mobileEl.innerHTML=runnerCards(rows)}
+function entryColumns(){
+ const d=snapshot.display||{},cols=[];
+ if(d.showBib===true)cols.push(["bib","Bib",r=>r.bib??""]);
+ if(d.showName===true)cols.push(["name","Name",r=>nameOf(r)]);
+ if((snapshot.races||[]).length>1)cols.push(["race","Race / Sub-event",r=>raceDisplay(r.race)]);
+ if(d.showGender===true)cols.push(["sex","Gender",r=>r.sex??""]);
+ if(d.showAge===true)cols.push(["age","Age",r=>r.age??""]);
+ if(d.showAgeGroup===true)cols.push(["ageGroup","Age Group",r=>r.ageGroup??""]);
+ if(d.showTeam===true)cols.push(["team","Team / Club",r=>r.team??""]);
+ return cols;
+}
+function entryRows(){return Array.isArray(snapshot.entries)?snapshot.entries:[]}
+function filteredEntries(){
+ const q=entrySearch.value.trim().toLowerCase(),race=entryRaceFilter.value,gender=entryGenderFilter.value,team=entryTeamFilter.value;
+ return entryRows().filter(r=>{
+   const hay=[r.bib,nameOf(r),r.team].filter(Boolean).join(" ").toLowerCase();
+   return (!q||hay.includes(q))&&(!race||r.race===race)&&(!gender||r.sex===gender)&&(!team||r.team===team);
+ }).sort((a,b)=>String(a.race||"").localeCompare(String(b.race||""))||String(a.team||"").localeCompare(String(b.team||""))||String(a.lastName||"").localeCompare(String(b.lastName||""))||String(a.firstName||"").localeCompare(String(b.firstName||""))||String(a.bib||"").localeCompare(String(b.bib||""),undefined,{numeric:true}));
+}
+function renderEntries(){
+ const enabled=snapshot.display?.showEntryList===true;
+ $("#entriesTab").hidden=!enabled;
+ if(!enabled){if(activeView==="entries")activeView="results";return}
+ const all=entryRows(),races=[...new Set(all.map(r=>r.race).filter(Boolean))].sort((a,b)=>raceDisplay(a).localeCompare(raceDisplay(b)));
+ const genders=[...new Set(all.map(r=>r.sex).filter(Boolean))].sort();
+ const teams=[...new Set(all.map(r=>r.team).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
+ const rv=entryRaceFilter.value,gv=entryGenderFilter.value,tv=entryTeamFilter.value;
+ entryRaceFilter.innerHTML='<option value="">All races / sub-events</option>'+races.map(v=>`<option value="${esc(v)}">${esc(raceDisplay(v))}</option>`).join("");entryRaceFilter.value=races.includes(rv)?rv:"";
+ entryGenderFilter.innerHTML='<option value="">All genders</option>'+genders.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");entryGenderFilter.value=genders.includes(gv)?gv:"";
+ entryTeamFilter.hidden=snapshot.display?.showTeam!==true;entryTeamFilter.innerHTML='<option value="">All teams / clubs</option>'+teams.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");entryTeamFilter.value=teams.includes(tv)?tv:"";
+ const rows=filteredEntries(),cols=entryColumns();
+ $("#entriesTableHead").innerHTML=cols.map(c=>`<th>${esc(c[1])}</th>`).join("");
+ entriesBody.innerHTML=rows.map(r=>'<tr>'+cols.map(c=>'<td>'+esc(c[2](r))+'</td>').join("")+'</tr>').join("");
+ entriesMobile.innerHTML=rows.map(r=>'<article class="runner-card"><div class="runner-name">'+esc(snapshot.display?.showName===true?nameOf(r):'Entrant')+'</div><div class="runner-meta">'+cols.filter(c=>c[0]!=="name").map(c=>'<div><span>'+esc(c[1])+'</span><strong>'+esc(c[2](r))+'</strong></div>').join("")+'</div></article>').join("");
+ entriesEmpty.hidden=rows.length!==0;$("#entriesTableWrap").hidden=rows.length===0;
+ const updated=snapshot.entriesUpdatedAt?(' · Updated '+new Date(snapshot.entriesUpdatedAt).toLocaleString()):'';
+ $("#entriesShownCount").textContent=all.length?('Showing '+rows.length+' of '+all.length+' entries'+updated):'No entry roster has been synced yet. Start/arm Mercury Bridge with the MYLAPS entry export to populate this page.';
+}
 function renderTeamScores(){
  const visible=teamAllowed();
  $("#teamTab").hidden=!visible;
@@ -437,13 +489,13 @@ function renderTeamScores(){
  $("#teamScoresBody").innerHTML=`<div class="team-board">${cards}</div>${incomplete}`;
 }
 function switchView(view){
- const recentAllowed=snapshot.display?.showRecentFinishers===true;
+ const recentAllowed=snapshot.display?.showRecentFinishers===true,entriesAllowed=snapshot.display?.showEntryList===true;
  const teamsVisible=teamAllowed();
- activeView=view==="team"&&teamsVisible?"team":view==="recent"&&recentAllowed?"recent":"results";
- const isRecent=activeView==="recent",isTeam=activeView==="team",isResults=activeView==="results";
- $("#resultsPanel").hidden=!isResults;$("#recentPanel").hidden=!isRecent;$("#teamPanel").hidden=!isTeam;
- $("#resultsTab").classList.toggle("active",isResults);$("#recentTab").classList.toggle("active",isRecent);$("#teamTab").classList.toggle("active",isTeam);
- $("#resultsTab").setAttribute("aria-selected",String(isResults));$("#recentTab").setAttribute("aria-selected",String(isRecent));$("#teamTab").setAttribute("aria-selected",String(isTeam));
+ activeView=view==="team"&&teamsVisible?"team":view==="entries"&&entriesAllowed?"entries":view==="recent"&&recentAllowed?"recent":"results";
+ const isRecent=activeView==="recent",isEntries=activeView==="entries",isTeam=activeView==="team",isResults=activeView==="results";
+ $("#resultsPanel").hidden=!isResults;$("#entriesPanel").hidden=!isEntries;$("#recentPanel").hidden=!isRecent;$("#teamPanel").hidden=!isTeam;
+ $("#resultsTab").classList.toggle("active",isResults);$("#entriesTab").classList.toggle("active",isEntries);$("#recentTab").classList.toggle("active",isRecent);$("#teamTab").classList.toggle("active",isTeam);
+ $("#resultsTab").setAttribute("aria-selected",String(isResults));$("#entriesTab").setAttribute("aria-selected",String(isEntries));$("#recentTab").setAttribute("aria-selected",String(isRecent));$("#teamTab").setAttribute("aria-selected",String(isTeam));
 }
 function bindRunnerClicks(){document.querySelectorAll('[data-runner]').forEach(el=>{el.onclick=()=>showRunner(Number(el.dataset.runner));el.onkeydown=e=>{if(e.key==='Enter')showRunner(Number(el.dataset.runner))}})}
 function render(){
@@ -472,12 +524,12 @@ function render(){
  const categories=[...new Set((shown("showAgeGroup")?raceScoped:[]).map(r=>String(r.category||"").trim()).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));const cv=categoryFilter.value;categoryFilter.innerHTML=`<option value="">All categories</option>`+categories.map(c=>`<option ${c===cv?"selected":""}>${esc(c)}</option>`).join("");categoryFilter.disabled=categories.length===0;
  const rows=sortedResults(filtered());$("#shownCount").textContent=`Showing ${rows.length} of ${raceScoped.length} finishers · Sorted by ${resultSortMode==='chip'?'Chip':'Gun'} time`;empty.hidden=rows.length!==0;$("#tableWrap").hidden=rows.length===0;renderTable(rows,$("#tableHead"),body,mobile);
  const rr=recentEnabled?recentRows():[];recentEmpty.hidden=rr.length!==0;$("#recentTableWrap").hidden=rr.length===0;renderTable(rr,$("#recentTableHead"),recentBody,recentMobile);
- renderTeamScores();switchView(activeView);bindRunnerClicks();renderConnection();
+ renderEntries();renderTeamScores();switchView(activeView);bindRunnerClicks();renderConnection();
 }
 function showRunner(index){const r=runnerTargets[index];if(!r)return;$('#dialogName').textContent=shown('showName')?nameOf(r):'Runner Details';const details=columns().filter(c=>c[0]!=='name').map(c=>[c[1],c[2](r)]);if(raceCatalog().length>1&&r.race)details.push(['Race',raceDisplay(r.race)]);if(shown('showAgeGroup')&&r.category)details.push(['Category',r.category]);$('#dialogGrid').innerHTML=details.map(([k,v])=>`<div class="detail"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');$('#runnerDialog').showModal()}
 
-$("#closeDialog").onclick=()=>$("#runnerDialog").close();[search,sexFilter,ageFilter,categoryFilter].forEach(el=>el.addEventListener("input",render));sortMode.onchange=()=>{resultSortMode=sortMode.value==='chip'?'chip':'gun';render()};raceFilter.onchange=async()=>{currentRaceKey=raceFilter.value||null;teamSnapshot={enabled:false,tabActive:false,divisions:[]};teamDivisionKey=null;render();if(eventReady){await loadTeamScores(currentEventSlug,eventEpoch);render()}};
-$("#resultsTab").onclick=()=>switchView("results");$("#recentTab").onclick=()=>switchView("recent");$("#teamTab").onclick=()=>switchView("team");recentCount.onchange=()=>{recentCountTouched=true;render()};teamDivision.onchange=()=>{teamDivisionKey=teamDivision.value;renderTeamScores()};
+$("#closeDialog").onclick=()=>$("#runnerDialog").close();[search,sexFilter,ageFilter,categoryFilter].forEach(el=>el.addEventListener("input",render));[entrySearch,entryRaceFilter,entryGenderFilter,entryTeamFilter].forEach(el=>el.addEventListener("input",render));sortMode.onchange=()=>{resultSortMode=sortMode.value==='chip'?'chip':'gun';render()};raceFilter.onchange=async()=>{currentRaceKey=raceFilter.value||null;teamSnapshot={enabled:false,tabActive:false,divisions:[]};teamDivisionKey=null;render();if(eventReady){await loadTeamScores(currentEventSlug,eventEpoch);render()}};
+$("#resultsTab").onclick=()=>switchView("results");$("#entriesTab").onclick=()=>switchView("entries");$("#recentTab").onclick=()=>switchView("recent");$("#teamTab").onclick=()=>switchView("team");recentCount.onchange=()=>{recentCountTouched=true;render()};teamDivision.onchange=()=>{teamDivisionKey=teamDivision.value;renderTeamScores()};
 eventSelect.onchange=()=>selectPublicEvent(eventSelect.value||null);
 $("#retryEvent").onclick=refreshPublicEvent;
 $("#chooseEvent").onclick=()=>{eventSwitcher.hidden=false;eventSelect.focus();eventSwitcher.scrollIntoView({block:"center"})};
