@@ -394,6 +394,7 @@ function toggleScoring(){
   for(const el of $('#customScoringOptions').querySelectorAll('input,select'))el.disabled=!enabled;
   $('#scoreRuleset').disabled=!enabled;
   if(usatf)$('#tiebreaker').value='usatf_last_scorer';
+  $('#tiebreaker').disabled=!enabled||usatf;
 }
 function renderStatusHelp(){
   const value=$('#eventStatus').value;
