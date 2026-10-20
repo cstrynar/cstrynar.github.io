@@ -50,7 +50,7 @@ h1{font-size:clamp(34px,5vw,58px);line-height:1.02;margin:0;letter-spacing:-.035
 .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
 .stat strong{display:block;font-size:27px;margin-top:3px;letter-spacing:-.025em}
 .finishers-stat{grid-area:finishers}.male-podium{grid-area:male}.female-podium{grid-area:female}.leader-stat{grid-area:leader;background:#f8ecef;border-color:#e7bcc6}
-.podium-stat{padding:14px 15px}
+.podium-stat{padding:14px 15px}.podium-stat[hidden]{display:none!important}
 .podium-list{display:grid;gap:6px;margin-top:9px}
 .podium-row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:31px;padding:5px 8px;border-radius:9px;background:#f7f8fa}
 .podium-medal{font-size:17px;line-height:1}
@@ -519,7 +519,10 @@ function render(){
  const races=syncRaceFilter(),raceScoped=raceRows();
  const overallPlaces=overallAwardPlaces(),podiumVisible=snapshot.display?.showPodium===true&&shown('showGender')&&shown('showOverallPlace')&&overallPlaces>0;
  const featuredKey=featuredRaceKey(races),featuredRace=races.find(r=>r.key===featuredKey),podiumSuffix=races.length>1&&featuredRace?' · '+raceDisplay(featuredRace.label||featuredRace.key):'';
- $('.male-podium').hidden=!podiumVisible;$('.female-podium').hidden=!podiumVisible;$("#summaryGrid").classList.toggle("podiums-off",!podiumVisible);
+ const malePodiumCard=$('.male-podium'),femalePodiumCard=$('.female-podium');
+ malePodiumCard.hidden=!podiumVisible;femalePodiumCard.hidden=!podiumVisible;
+ malePodiumCard.style.display=podiumVisible?'':'none';femalePodiumCard.style.display=podiumVisible?'':'none';
+ $("#summaryGrid").classList.toggle("podiums-off",!podiumVisible);
  $('#malePodiumLabel').textContent='Male Top '+overallPlaces+podiumSuffix;$('#femalePodiumLabel').textContent='Female Top '+overallPlaces+podiumSuffix;
  $('.leader-stat').hidden=!shown('showOverallPlace');
  sexFilter.hidden=!shown('showGender');sexFilter.disabled=!shown('showGender');if(sexFilter.disabled)sexFilter.value='';
