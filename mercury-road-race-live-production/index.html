@@ -498,6 +498,7 @@ function renderCourseRecords(){
  list.innerHTML=records.map(r=>'<div class="course-record-row-public"><div><span class="course-record-label">Race</span><strong>'+esc(raceMap.get(String(r.raceKey||""))||raceDisplay(r.raceKey||""))+'</strong></div><div><span class="course-record-label">Athlete</span><strong>'+esc(r.name||"")+'</strong></div><div><span class="course-record-label">Gender</span>'+esc(r.gender||"")+'</div><div><span class="course-record-label">Record</span><strong>'+esc(r.time||"")+'</strong></div><div><span class="course-record-label">Year</span>'+esc(r.year||"")+'</div><div><span class="course-record-label">Team / School</span>'+esc(r.team||"")+'</div></div>').join("");
 }
 function renderTeamScores(){
+ const openTeams=new Set([...document.querySelectorAll('#teamScoresBody details.team-card[open]')].map(el=>el.dataset.teamName||''));
  const visible=teamAllowed();
  $("#teamTab").hidden=!visible;
  if(!visible){if(activeView==="team")activeView="results";$("#teamScoresBody").innerHTML="";teamDivision.innerHTML="";teamDivisionKey=null;$("#teamScoringSummary").textContent="";return}
@@ -523,10 +524,11 @@ function renderTeamScores(){
  }
  const cards=(d.standings||[]).map(t=>{
   const rows=[...(t.scorers||[]),...(t.displacers||[])].map(r=>`<tr><td><span class="role-pill ${r.role==="scorer"?"role-scorer":"role-displacer"}">${esc(r.role)}</span></td>${shown("showName")?`<td>${esc(r.name)}</td>`:""}${shown("showBib")?`<td>${esc(r.bib)}</td>`:""}${shown("showOverallPlace")?`<td>${esc(r.overallPlace??"")}</td>`:""}<td>${esc(r.scoringPlace??"")}</td><td>${esc(r.points??"—")}</td>${teamTimeAllowed()?`<td>${esc(r.scoringTime||"-")}</td>`:""}</tr>`).join("");
-  return `<details class="team-card"><summary><div class="team-rank">#${esc(t.rank)}</div><div class="team-name">${esc(t.team)}</div><div class="team-metric"><small>Score</small><strong>${esc(t.score)}</strong></div>${teamTimeAllowed()?`<div class="team-metric team-time-total"><small>Total scorer time</small><strong>${esc(t.totalTime||"—")}</strong></div><div class="team-metric team-time-avg"><small>Average scorer time</small><strong>${esc(t.averageTime||"—")}</strong></div>`:""}</summary><div class="team-detail"><div style="overflow:auto"><table class="team-runner-table"><thead><tr><th>Role</th>${shown("showName")?"<th>Runner</th>":""}${shown("showBib")?"<th>Bib</th>":""}${shown("showOverallPlace")?"<th>Overall</th>":""}<th>Scoring Place</th><th>Points</th>${teamTimeAllowed()?"<th>Time</th>":""}</tr></thead><tbody>${rows}</tbody></table></div></div></details>`;
+  return `<details class="team-card" data-team-name="${esc(t.team)}"><summary><div class="team-rank">#${esc(t.rank)}</div><div class="team-name">${esc(t.team)}</div><div class="team-metric"><small>Score</small><strong>${esc(t.score)}</strong></div>${teamTimeAllowed()?`<div class="team-metric team-time-total"><small>Total scorer time</small><strong>${esc(t.totalTime||"—")}</strong></div><div class="team-metric team-time-avg"><small>Average scorer time</small><strong>${esc(t.averageTime||"—")}</strong></div>`:""}</summary><div class="team-detail"><div style="overflow:auto"><table class="team-runner-table"><thead><tr><th>Role</th>${shown("showName")?"<th>Runner</th>":""}${shown("showBib")?"<th>Bib</th>":""}${shown("showOverallPlace")?"<th>Overall</th>":""}<th>Scoring Place</th><th>Points</th>${teamTimeAllowed()?"<th>Time</th>":""}</tr></thead><tbody>${rows}</tbody></table></div></div></details>`;
  }).join("");
  const incomplete=(d.incompleteTeams||[]).length?`<div class="incomplete-wrap"><h3>Incomplete Teams</h3><div class="incomplete-list">${d.incompleteTeams.map(t=>`<div class="incomplete-row"><strong>${esc(t.team)}</strong><span>${esc(t.status)}</span></div>`).join("")}</div></div>`:"";
  $("#teamScoresBody").innerHTML=`<div class="team-board">${cards}</div>${incomplete}`;
+ for(const el of document.querySelectorAll('#teamScoresBody details.team-card'))if(openTeams.has(el.dataset.teamName||''))el.open=true;
 }
 function switchView(view){
  const recentAllowed=snapshot.display?.showRecentFinishers===true,entriesAllowed=snapshot.display?.showEntryList===true;
