@@ -398,10 +398,15 @@ function showApp(){$('#loginView').classList.add('hidden');$('#appView').classLi
 function toggleScoring(){
   const enabled=$('#scoreEnabled').checked,usatf=$('#scoreRuleset').value==='usatf';
   $('#scoringOptions').style.opacity=enabled?'1':'.55';$('#usatfScoringGuide').classList.toggle('hidden',!usatf);
-  for(const el of $('#customScoringOptions').querySelectorAll('input,select'))el.disabled=!enabled;
+  for(const el of $('#customScoringOptions').querySelectorAll('input,select')){el.disabled=!enabled;el.readOnly=false}
   $('#scoreRuleset').disabled=!enabled;
   if(usatf)$('#tiebreaker').value='usatf_last_scorer';
   $('#tiebreaker').disabled=!enabled||usatf;
+}
+function changeScoringRuleset(){
+  const scorers=$('#scorersPerTeam').value,displacers=$('#displacersPerTeam').value,unattached=$('#unattachedMode').value,division=$('#divisionMode').value;
+  toggleScoring();
+  $('#scorersPerTeam').value=scorers;$('#displacersPerTeam').value=displacers;$('#unattachedMode').value=unattached;$('#divisionMode').value=division;
 }
 function renderStatusHelp(){
   const value=$('#eventStatus').value;
@@ -970,7 +975,7 @@ $('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=clo
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#existingRaceSource').addEventListener('input',()=>{if(!$('#existingRaceKey').dataset.touched)$('#existingRaceKey').value=slugify($('#existingRaceSource').value);if(!$('#existingRaceDisplay').dataset.touched)$('#existingRaceDisplay').value=$('#existingRaceSource').value});$('#existingRaceKey').addEventListener('input',()=>{$('#existingRaceKey').dataset.touched='1';$('#existingRaceKey').value=slugify($('#existingRaceKey').value)});$('#existingRaceDisplay').addEventListener('input',()=>{$('#existingRaceDisplay').dataset.touched='1'});
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
-$('#refreshBtn').onclick=loadEvents;$('#currentEventsBtn').onclick=()=>setEventScope('current');$('#pastEventsBtn').onclick=()=>setEventScope('past');$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#eventStatus').onchange=renderStatusHelp;$('#showRetiredComputers').onchange=loadClients;document.querySelectorAll('.save-event-btn').forEach(b=>b.onclick=save);$('#scoreEnabled').onchange=toggleScoring;$('#scoreRuleset').onchange=toggleScoring;$('#podiumMode').onchange=togglePodiumMode;$('#showGrade').onchange=toggleGradeSource;$('#addPodiumConfigBtn').onclick=()=>addPodiumConfigRow();$('#addCourseRecordBtn').onclick=()=>addCourseRecordRow();
+$('#refreshBtn').onclick=loadEvents;$('#currentEventsBtn').onclick=()=>setEventScope('current');$('#pastEventsBtn').onclick=()=>setEventScope('past');$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#eventStatus').onchange=renderStatusHelp;$('#showRetiredComputers').onchange=loadClients;document.querySelectorAll('.save-event-btn').forEach(b=>b.onclick=save);$('#scoreEnabled').onchange=toggleScoring;$('#scoreRuleset').onchange=changeScoringRuleset;$('#podiumMode').onchange=togglePodiumMode;$('#showGrade').onchange=toggleGradeSource;$('#addPodiumConfigBtn').onclick=()=>addPodiumConfigRow();$('#addCourseRecordBtn').onclick=()=>addCourseRecordRow();
 $('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
 
 setInterval(updateAdminClockDisplays,1000);
