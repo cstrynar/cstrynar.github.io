@@ -285,7 +285,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
 <dialog id="runnerDialog"><button class="dialog-close" id="closeDialog" aria-label="Close">×</button><p class="eyebrow" style="color:var(--accent)">Runner Details</p><h3 id="dialogName"></h3><div id="dialogGrid" class="dialog-grid"></div></dialog>
 <script>
 const SUPABASE_URL="https://wajusbsyouyufpccixol.supabase.co";
-const fallback={schemaVersion:13,serverTime:null,revision:0,updatedAt:null,status:"setup",event:{slug:null,name:"Mercury Road Race Live",location:null,date:null,startTime:null,distance:null},branding:{eventLogoUrl:null,eventLogoAlt:null,accentColor:"#b30f2b"},display:{showOverallPlace:true,showBib:true,showName:true,showGender:true,showAge:false,showAgeGroup:true,showGrade:false,gradeSource:"grade",showTeam:false,showGunTime:true,showChipTime:true,showPace:true,showRecentFinishers:true,showEntryList:false,showPodium:true,podiumMode:"featured",recentFinishersDefaultCount:10},awards:{age_groups:[]},courseRecords:[],podiumConfigs:[],races:[],entriesUpdatedAt:null,entries:[],recentFinishers:[],results:[]};
+const fallback={schemaVersion:15,serverTime:null,revision:0,updatedAt:null,status:"setup",event:{slug:null,name:"Mercury Road Race Live",location:null,date:null,startTime:null,distance:null},branding:{eventLogoUrl:null,eventLogoAlt:null,accentColor:"#b30f2b"},display:{showOverallPlace:true,showBib:true,showName:true,showGender:true,showAge:false,showAgeGroup:true,showGrade:false,gradeSource:"grade",showTeam:false,teamScoringEnabled:false,showGunTime:true,showChipTime:true,showPace:true,showRecentFinishers:true,showEntryList:false,showPodium:true,podiumMode:"featured",recentFinishersDefaultCount:10},awards:{age_groups:[]},courseRecords:[],podiumConfigs:[],races:[],entriesUpdatedAt:null,entries:[],recentFinishers:[],results:[]};
 let snapshot=structuredClone(fallback),teamSnapshot={enabled:false,tabActive:false,divisions:[]},teamDivisionKey=null,currentRaceKey=null,currentEventSlug=new URL(location.href).searchParams.get("event")||null,publicEvents=[],lastServerTimestamp=null,serverClockOffsetMs=null,lastFetchOk=false,activeView="results",recentCountTouched=false,resultSortMode="gun";
 const $=s=>document.querySelector(s),body=$("#resultsBody"),mobile=$("#mobileResults"),recentBody=$("#recentResultsBody"),recentMobile=$("#recentMobileResults"),search=$("#search"),raceFilter=$("#raceFilter"),sexFilter=$("#sexFilter"),ageFilter=$("#ageFilter"),categoryFilter=$("#categoryFilter"),gradeFilter=$("#gradeFilter"),sortMode=$("#sortMode"),entrySearch=$("#entrySearch"),entryRaceFilter=$("#entryRaceFilter"),entryGenderFilter=$("#entryGenderFilter"),entryGradeFilter=$("#entryGradeFilter"),entryTeamFilter=$("#entryTeamFilter"),entriesBody=$("#entriesBody"),entriesMobile=$("#entriesMobileResults"),entriesEmpty=$("#entriesEmptyState"),empty=$("#emptyState"),recentEmpty=$("#recentEmptyState"),recentCount=$("#recentCount"),eventSwitcher=$("#eventSwitcher"),eventSelect=$("#eventSelect"),teamDivision=$("#teamDivision");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -293,7 +293,8 @@ function nameOf(r){return `${r.firstName||""} ${r.lastName||""}`.trim()}
 function shown(flag){return snapshot.display?.[flag]===true}
 let runnerTargets=[];
 function runnerTarget(r){return runnerTargets.push(r)-1}
-function teamAllowed(){return shown('showTeam')&&shown('showGender')&&shown('showAgeGroup')&&teamSnapshot?.enabled===true&&teamSnapshot?.tabActive===true}
+function teamConfigured(){return snapshot.display?.teamScoringEnabled===true}
+function teamScoresActive(){return teamConfigured()&&teamSnapshot?.enabled===true&&teamSnapshot?.tabActive===true}
 function teamTimeAllowed(){return shown('showGunTime')&&shown('showChipTime')}
 // An explicit event link must never resolve to a different event.
 let eventEpoch=0,eventReady=false,snapshotPending=null;
@@ -499,11 +500,18 @@ function renderCourseRecords(){
 }
 function renderTeamScores(){
  const openTeams=new Set([...document.querySelectorAll('#teamScoresBody details.team-card[open]')].map(el=>el.dataset.teamName||''));
- const visible=teamAllowed();
- $("#teamTab").hidden=!visible;
- if(!visible){if(activeView==="team")activeView="results";$("#teamScoresBody").innerHTML="";teamDivision.innerHTML="";teamDivisionKey=null;$("#teamScoringSummary").textContent="";return}
+ const configured=teamConfigured();
+ $("#teamTab").hidden=!configured;
+ if(!configured){if(activeView==="team")activeView="results";$("#teamScoresBody").innerHTML="";teamDivision.innerHTML="";teamDivisionKey=null;$("#teamScoringSummary").textContent="";return}
+ const cfg=teamSnapshot.config||{};
+ const required=Math.max(1,Number(cfg.scorers_per_team||5));
  const divisions=Array.isArray(teamSnapshot.divisions)?teamSnapshot.divisions:[];
- if(!divisions.length){$("#teamScoresBody").innerHTML="";teamDivision.innerHTML="";return}
+ if(!teamSnapshot?.enabled||!divisions.length){
+   teamDivision.innerHTML="";teamDivisionKey=null;$("#teamDivisionWrap").hidden=true;
+   $("#teamScoringSummary").textContent=required+" scorers required per team";
+   $("#teamScoresBody").innerHTML=`<div class="team-waiting"><strong>Team scores will appear once the first team has ${required} required scorers finish in this race / division.</strong><div style="margin-top:6px">Standings will then update automatically as new results arrive.</div></div>`;
+   return;
+ }
  if(!teamDivisionKey||!divisions.some(d=>d.key===teamDivisionKey)){
   teamDivisionKey=(divisions.find(d=>d.active&&!d.reviewRequired)||divisions[0])?.key||null;
  }
@@ -511,7 +519,6 @@ function renderTeamScores(){
  teamDivision.innerHTML=divisions.map(d=>`<option value="${esc(d.key)}" ${d.key===prior?"selected":""}>${esc(d.label)}${d.active?"":" — waiting"}</option>`).join("");
  $("#teamDivisionWrap").hidden=divisions.length<=1;
  const d=divisions.find(x=>x.key===teamDivisionKey)||divisions[0];
- const cfg=teamSnapshot.config||{};
  $("#teamScoringSummary").textContent=cfg.ruleset==="usatf"
    ? `USATF tie-break · ${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · lowest score wins · last scorer breaks ties`
    : `${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · lowest score wins`;
@@ -520,7 +527,8 @@ function renderTeamScores(){
   $("#teamScoresBody").innerHTML=`<div class="team-review"><strong>Team scoring needs review.</strong><div style="margin-top:5px">${esc(review)}</div></div>`;return;
  }
  if(!d.active){
-  $("#teamScoresBody").innerHTML=`<div class="team-waiting"><strong>Team scoring will appear when the first complete team finishes.</strong></div>`;return;
+  const divisionRequired=Math.max(1,Number(d.scorersRequired||cfg.scorers_per_team||5));
+  $("#teamScoresBody").innerHTML=`<div class="team-waiting"><strong>Team scores will appear once the first team has ${divisionRequired} required scorers finish in this race / division.</strong><div style="margin-top:6px">Standings will then update automatically as new results arrive.</div></div>`;return;
  }
  const cards=(d.standings||[]).map(t=>{
   const rows=[...(t.scorers||[]),...(t.displacers||[])].map(r=>`<tr><td><span class="role-pill ${r.role==="scorer"?"role-scorer":"role-displacer"}">${esc(r.role)}</span></td>${shown("showName")?`<td>${esc(r.name)}</td>`:""}${shown("showBib")?`<td>${esc(r.bib)}</td>`:""}${shown("showOverallPlace")?`<td>${esc(r.overallPlace??"")}</td>`:""}<td>${esc(r.scoringPlace??"")}</td><td>${esc(r.points??"—")}</td>${teamTimeAllowed()?`<td>${esc(r.scoringTime||"-")}</td>`:""}</tr>`).join("");
@@ -532,7 +540,7 @@ function renderTeamScores(){
 }
 function switchView(view){
  const recentAllowed=snapshot.display?.showRecentFinishers===true,entriesAllowed=snapshot.display?.showEntryList===true;
- const teamsVisible=teamAllowed();
+ const teamsVisible=teamConfigured();
  activeView=view==="team"&&teamsVisible?"team":view==="entries"&&entriesAllowed?"entries":view==="recent"&&recentAllowed?"recent":"results";
  const isRecent=activeView==="recent",isEntries=activeView==="entries",isTeam=activeView==="team",isResults=activeView==="results";
  $("#resultsPanel").hidden=!isResults;$("#entriesPanel").hidden=!isEntries;$("#recentPanel").hidden=!isRecent;$("#teamPanel").hidden=!isTeam;
