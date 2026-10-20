@@ -373,9 +373,21 @@ function selectPublicEvent(slug){
  slug?url.searchParams.set('event',slug):url.searchParams.delete('event');history.replaceState(null,'',url);
  return refreshPublicEvent();
 }
+function scoringPlaceMap(){
+ const map=new Map();
+ if(snapshot.display?.teamScoringEnabled!==true||!shown('showOverallPlace'))return map;
+ for(const division of (Array.isArray(teamSnapshot?.divisions)?teamSnapshot.divisions:[])){
+  for(const row of (Array.isArray(division?.scoringSequence)?division.scoringSequence:[])){
+   const overall=Number(row?.overallPlace),scoring=Number(row?.scoringPlace);
+   if(Number.isFinite(overall)&&Number.isFinite(scoring))map.set(overall,scoring);
+  }
+ }
+ return map;
+}
 function columns(){
- const d=snapshot.display||{}, cols=[];
+ const d=snapshot.display||{}, cols=[],scorePlaces=scoringPlaceMap();
  if(d.showOverallPlace===true)cols.push(["overall","Overall",r=>r.overall??"","place-cell"]);
+ if(d.teamScoringEnabled===true&&d.showOverallPlace===true)cols.push(["scoringPlace","Scoring Place",r=>scorePlaces.get(Number(r.overall))??"—","place-cell"]);
  if(d.showBib===true)cols.push(["bib","Bib",r=>r.bib??"",""]);
  if(d.showName===true)cols.push(["name","Name",r=>nameOf(r),"name-cell"]);
  if(d.showGender===true)cols.push(["sex","Gender",r=>r.sex??"",""]);
@@ -449,7 +461,7 @@ function renderCustomPodiums(races){
 }
 function recentRows(){const n=[5,10,15,20].includes(Number(recentCount.value))?Number(recentCount.value):10;return raceRows(Array.isArray(snapshot.recentFinishers)?snapshot.recentFinishers:[]).slice(0,n)}
 function renderConnection(){$("#feedDot").style.background=lastFetchOk?"#1d9b61":"#f79009";$("#feedText").textContent=lastFetchOk?"Mercury feed connected":"Last check failed"}
-function runnerCards(rows){return rows.map(r=>{const preferred=resultSortMode==='chip'&&shown('showChipTime')&&r.chipTime?['Chip',r.chipTime]:resultSortMode==='gun'&&shown('showGunTime')&&r.gunTime?['Gun',r.gunTime]:null;const time=preferred||(shown('showChipTime')&&r.chipTime?['Chip',r.chipTime]:shown('showGunTime')&&r.gunTime?['Gun',r.gunTime]:null);const meta=columns().filter(c=>['sex','age','ageGroup','grade','team','pace'].includes(c[0]));return `<article class="runner-card" data-runner="${runnerTarget(r)}" tabindex="0"><div class="runner-card-top"><div>${shown('showOverallPlace')?`<div class="place">#${esc(r.overall??'')}</div>`:''}<div class="runner-name">${esc(shown('showName')?nameOf(r):'Runner')}</div>${shown('showBib')?`<div class="bib">Bib ${esc(r.bib??'')}</div>`:''}</div>${time?`<div class="chip-big"><span>${time[0]}</span><strong>${esc(time[1])}</strong></div>`:''}</div><div class="runner-meta">${meta.map(c=>`<div><span>${esc(c[1])}</span><strong>${esc(c[2](r))}</strong></div>`).join('')}</div></article>`}).join('')}
+function runnerCards(rows){return rows.map(r=>{const preferred=resultSortMode==='chip'&&shown('showChipTime')&&r.chipTime?['Chip',r.chipTime]:resultSortMode==='gun'&&shown('showGunTime')&&r.gunTime?['Gun',r.gunTime]:null;const time=preferred||(shown('showChipTime')&&r.chipTime?['Chip',r.chipTime]:shown('showGunTime')&&r.gunTime?['Gun',r.gunTime]:null);const meta=columns().filter(c=>['scoringPlace','sex','age','ageGroup','grade','team','pace'].includes(c[0]));return `<article class="runner-card" data-runner="${runnerTarget(r)}" tabindex="0"><div class="runner-card-top"><div>${shown('showOverallPlace')?`<div class="place">#${esc(r.overall??'')}</div>`:''}<div class="runner-name">${esc(shown('showName')?nameOf(r):'Runner')}</div>${shown('showBib')?`<div class="bib">Bib ${esc(r.bib??'')}</div>`:''}</div>${time?`<div class="chip-big"><span>${time[0]}</span><strong>${esc(time[1])}</strong></div>`:''}</div><div class="runner-meta">${meta.map(c=>`<div><span>${esc(c[1])}</span><strong>${esc(c[2](r))}</strong></div>`).join('')}</div></article>`}).join('')}
 function renderTable(rows,headEl,bodyEl,mobileEl){const cols=columns();headEl.innerHTML=cols.map(c=>`<th>${esc(c[1])}</th>`).join("");bodyEl.innerHTML=rows.map(r=>`<tr data-runner="${runnerTarget(r)}">${cols.map(c=>`<td class="${c[3]}">${esc(c[2](r))}</td>`).join("")}</tr>`).join("");mobileEl.innerHTML=runnerCards(rows)}
 function entryColumns(){
  const d=snapshot.display||{},cols=[];
