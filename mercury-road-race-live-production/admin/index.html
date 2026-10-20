@@ -199,7 +199,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
         <p><strong>Masters:</strong> M60+ and all women's Masters divisions use 3 scorers out of up to 5 declared runners.</p>
         <p><strong>Scoring sequence:</strong> Unattached runners and runners from incomplete/non-scoring teams are removed before team places are assigned.</p>
         <p><strong>Ties:</strong> The team whose last scoring member finishes nearest to first place wins the tie.</p>
-        <p class="hint">USATF mode uses Gender + Category divisions so Category can identify Open/Masters/M60+ divisions. If more than the allowed declared-team limit appears for one team, Mercury stops that division for review rather than guessing which athletes were declared.</p>
+        <p class="hint">USATF mode uses Gender + Category divisions so Category can identify Open/Masters/M60+ divisions. Selecting it also enables the Gender, Age Group, and Team / Club display fields required to publish those team divisions. If more than the allowed declared-team limit appears for one team, Mercury stops that division for review rather than guessing which athletes were declared.</p>
       </div>
       <div id="customScoringOptions" class="row">
         <div><label>Scorers per team</label><input id="scorersPerTeam" type="number" min="1" max="20"></div>
@@ -395,7 +395,7 @@ function toggleScoring(){
   $('#scoringOptions').style.opacity=enabled?'1':'.55';$('#usatfScoringGuide').classList.toggle('hidden',!usatf);
   for(const el of $('#customScoringOptions').querySelectorAll('input,select'))el.disabled=!enabled||usatf;
   $('#scoreRuleset').disabled=!enabled;
-  if(usatf){$('#scorersPerTeam').value='5';$('#displacersPerTeam').value='3';$('#unattachedMode').value='skip_compress';$('#divisionMode').value='gender_category';$('#tiebreaker').value='usatf_last_scorer'}
+  if(usatf){$('#scorersPerTeam').value='5';$('#displacersPerTeam').value='3';$('#unattachedMode').value='skip_compress';$('#divisionMode').value='gender_category';$('#tiebreaker').value='usatf_last_scorer';$('#showGender').checked=true;$('#showAgeGroup').checked=true;$('#showTeam').checked=true}
 }
 function renderStatusHelp(){
   const value=$('#eventStatus').value;
