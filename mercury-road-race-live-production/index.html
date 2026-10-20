@@ -348,7 +348,10 @@ async function loadSnapshot(){
   const cur=snapshot.event?.slug===slug?Number(snapshot.revision):-1;
   if(Number(next.revision)<cur)throw new Error('Older revision received');
   const serverStamp=Date.parse(next.serverTime);serverClockOffsetMs=Number.isFinite(serverStamp)?serverStamp-Date.now():null;
-  snapshot=next;teamSnapshot={enabled:false,tabActive:false,divisions:[]};render();lastFetchOk=true;
+  const preserveTeamView=activeView==='team';
+  snapshot=next;teamSnapshot={enabled:false,tabActive:false,divisions:[]};
+  if(!preserveTeamView)render();
+  lastFetchOk=true;
   const stamp=Date.parse(next.updatedAt);lastServerTimestamp=Number.isFinite(stamp)&&stamp<=Date.now()?stamp:null;
   await loadTeamScores(slug,epoch);if(epoch!==eventEpoch)return;
   render();$('#eventState').hidden=true;$('#eventContent').hidden=false;$('#eventNotice').hidden=true;$('#lastRevision').hidden=false;
