@@ -45,7 +45,7 @@ h1{font-size:clamp(34px,5vw,58px);line-height:1.02;margin:0;letter-spacing:-.035
 .pulse{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.6);animation:pulse 1.8s infinite}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
 .updated{font-size:11px;color:#d5d6da}
-.summary-grid{display:grid;grid-template-columns:minmax(140px,.75fr) minmax(265px,1.45fr) minmax(265px,1.45fr) minmax(160px,.9fr);grid-template-areas:"finishers male female leader";gap:12px;margin:16px 0 20px}
+.summary-grid{display:grid;grid-template-columns:minmax(140px,.75fr) minmax(265px,1.45fr) minmax(265px,1.45fr) minmax(160px,.9fr);grid-template-areas:"finishers male female leader";gap:12px;margin:16px 0 20px}.summary-grid.podiums-off{grid-template-columns:minmax(140px,.75fr) minmax(160px,.9fr);grid-template-areas:"finishers leader"}
 .stat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px 18px;box-shadow:0 5px 16px rgba(20,20,25,.05)}
 .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
 .stat strong{display:block;font-size:27px;margin-top:3px;letter-spacing:-.025em}
@@ -69,7 +69,7 @@ select{height:46px;border:1px solid var(--line);border-radius:10px;background:#f
 .view-tab.active{background:var(--accent);color:#fff}
 .view-tab[hidden]{display:none}
 .view-panel[hidden]{display:none!important}
-.entries-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 210px 170px 220px;gap:10px;background:#fff;padding:18px;border:1px solid var(--line);border-radius:15px 15px 0 0}.entries-summary{margin:12px 0 8px;color:var(--muted);font-size:12px}.recent-toolbar{display:flex;align-items:end;justify-content:space-between;gap:14px;background:#fff;border:1px solid var(--line);border-radius:15px 15px 0 0;padding:16px 18px}
+.entries-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 210px 170px 170px 220px;gap:10px;background:#fff;padding:18px;border:1px solid var(--line);border-radius:15px 15px 0 0}.entries-summary{margin:12px 0 8px;color:var(--muted);font-size:12px}.recent-toolbar{display:flex;align-items:end;justify-content:space-between;gap:14px;background:#fff;border:1px solid var(--line);border-radius:15px 15px 0 0;padding:16px 18px}
 .recent-toolbar h2{margin:0;font-size:22px}.recent-toolbar p{margin:4px 0 0;color:var(--muted);font-size:12px}
 .recent-count-wrap{display:flex;align-items:center;gap:9px;white-space:nowrap}.recent-count-wrap label{font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;color:#686d76}.recent-count-wrap select{width:auto;min-width:96px}
 .recent-newest{font-size:10px;color:var(--accent);font-weight:850;text-transform:uppercase;letter-spacing:.07em}
@@ -85,7 +85,7 @@ select{height:46px;border:1px solid var(--line);border-radius:10px;background:#f
 .team-runner-table{width:100%;border-collapse:collapse;min-width:680px}.team-runner-table th{font-size:9px}.team-runner-table td{padding:9px 10px;font-size:12px}
 .role-pill{display:inline-block;border-radius:999px;padding:4px 7px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}.role-scorer{background:#f4e4e8;color:var(--accent)}.role-displacer{background:#edf0f4;color:#525762}
 .team-waiting,.team-review{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px 18px;text-align:center;color:var(--muted)}
-.team-review{border-color:#f6c7c2;background:#fff7f6;color:#8f241b}
+.team-review{border-color:#f6c7c2;background:#fff7f6;color:#8f241b}.course-records-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px 18px;margin:0 0 20px;box-shadow:0 5px 16px rgba(20,20,25,.05)}.course-records-card h2{margin:0 0 10px;font-size:18px}.course-records-list{display:grid;gap:8px}.course-record-row-public{display:grid;grid-template-columns:150px minmax(170px,1.4fr) 100px 120px 100px minmax(160px,1fr);gap:10px;align-items:center;padding:10px 12px;background:#f7f8fa;border-radius:10px;font-size:12px}.course-record-row-public strong{font-size:13px}.course-record-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:2px}
 .incomplete-wrap{margin-top:16px}.incomplete-wrap h3{font-size:14px;margin:0 0 8px}.incomplete-list{display:grid;gap:7px}.incomplete-row{display:flex;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px}.incomplete-row strong{font-size:12px}.incomplete-row span{color:var(--muted)}
 .results-headline{display:flex;align-items:end;justify-content:space-between;margin:22px 0 10px;gap:14px}
 .results-headline h2{margin:0;font-size:22px}
@@ -132,13 +132,13 @@ dialog h3{font-size:28px;margin:0 0 20px}
   .live-card{margin-left:0}
   .race-clock-card{min-width:210px}
   .event-meta{font-size:13px;line-height:1.5}
-  .summary-grid{grid-template-columns:repeat(2,1fr);grid-template-areas:"finishers leader" "male male" "female female";gap:8px;margin-top:12px}
+  .summary-grid{grid-template-columns:repeat(2,1fr);grid-template-areas:"finishers leader" "male male" "female female";gap:8px;margin-top:12px}.summary-grid.podiums-off{grid-template-columns:repeat(2,1fr);grid-template-areas:"finishers leader"}
   .stat{padding:14px;min-height:76px}.stat strong{font-size:23px}
   .podium-stat{min-height:0}.podium-row{grid-template-columns:26px minmax(0,1fr) auto;padding:7px 9px}.podium-name,.podium-time{font-size:12.5px}
   .toolbar{grid-template-columns:1fr 1fr;padding:12px}.search-wrap{grid-column:1/-1}#raceFilter,#categoryFilter,#sortMode{grid-column:1/-1}
   select{min-width:0;width:100%}
   .view-tabs-row{align-items:stretch;flex-direction:column;margin:14px 0 10px}.view-tabs{display:flex;width:100%}.view-tab{flex:1;padding:10px 8px}
-  .entries-toolbar{grid-template-columns:1fr;padding:12px}.recent-toolbar{align-items:stretch;flex-direction:column;padding:12px}.recent-count-wrap{justify-content:space-between}.recent-count-wrap select{width:110px}
+  .entries-toolbar{grid-template-columns:1fr;padding:12px}.course-record-row-public{grid-template-columns:1fr 1fr}.recent-toolbar{align-items:stretch;flex-direction:column;padding:12px}.recent-count-wrap{justify-content:space-between}.recent-count-wrap select{width:110px}
   .team-toolbar{align-items:stretch;flex-direction:column;padding:12px}.team-division-wrap{min-width:0;width:100%}
   .team-card summary{grid-template-columns:44px minmax(120px,1fr) 70px;gap:7px;padding:12px}.team-card summary .team-time-total,.team-card summary .team-time-avg{display:none}.team-card summary:after{grid-column:4}
   .results-headline{align-items:flex-start;margin-top:18px}
@@ -199,12 +199,13 @@ dialog h3{font-size:28px;margin:0 0 20px}
         </div>
       </div>
     </section>
-    <div class="summary-grid">
+    <div class="summary-grid" id="summaryGrid">
       <article class="stat finishers-stat"><span class="stat-label">Finishers</span><strong id="finishers">0</strong></article>
       <article class="stat podium-stat male-podium"><span class="stat-label" id="malePodiumLabel">Male Top 3</span><div class="podium-list" id="malePodium"></div></article>
       <article class="stat podium-stat female-podium"><span class="stat-label" id="femalePodiumLabel">Female Top 3</span><div class="podium-list" id="femalePodium"></div></article>
       <article class="stat leader-stat"><span class="stat-label">Leader</span><strong id="leaderTime">—</strong></article>
     </div>
+    <section id="courseRecordsCard" class="course-records-card" hidden><h2>Course Records</h2><div id="courseRecordsList" class="course-records-list"></div></section>
     <section>
       <div class="view-tabs-row">
         <nav class="view-tabs" aria-label="Results views">
@@ -244,6 +245,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
           <label class="search-wrap"><span class="sr-only">Search entries</span><input id="entrySearch" type="search" placeholder="Search entrant or bib" autocomplete="off"></label>
           <select id="entryRaceFilter" aria-label="Filter entries by race"><option value="">All races / sub-events</option></select>
           <select id="entryGenderFilter" aria-label="Filter entries by gender"><option value="">All genders</option></select>
+          <select id="entryGradeFilter" aria-label="Filter entries by grade"><option value="">All grades</option></select>
           <select id="entryTeamFilter" aria-label="Filter entries by team"><option value="">All teams / clubs</option></select>
         </div>
         <p class="entries-summary" id="entriesShownCount">Entry list loading…</p>
@@ -277,13 +279,13 @@ dialog h3{font-size:28px;margin:0 0 20px}
     </div>
   </div>
 </main>
-<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.10 R30</span><span id="lastRevision">Feed revision 0</span></div></footer>
+<footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.11 R31</span><span id="lastRevision">Feed revision 0</span></div></footer>
 <dialog id="runnerDialog"><button class="dialog-close" id="closeDialog" aria-label="Close">×</button><p class="eyebrow" style="color:var(--accent)">Runner Details</p><h3 id="dialogName"></h3><div id="dialogGrid" class="dialog-grid"></div></dialog>
 <script>
 const SUPABASE_URL="https://wajusbsyouyufpccixol.supabase.co";
-const fallback={schemaVersion:12,serverTime:null,revision:0,updatedAt:null,status:"setup",event:{slug:null,name:"Mercury Road Race Live",location:null,date:null,startTime:null,distance:null},branding:{eventLogoUrl:null,eventLogoAlt:null,accentColor:"#b30f2b"},display:{showOverallPlace:true,showBib:true,showName:true,showGender:true,showAge:false,showAgeGroup:true,showTeam:false,showGunTime:true,showChipTime:true,showPace:true,showRecentFinishers:true,showEntryList:false,recentFinishersDefaultCount:10},awards:{age_groups:[]},races:[],entriesUpdatedAt:null,entries:[],recentFinishers:[],results:[]};
+const fallback={schemaVersion:13,serverTime:null,revision:0,updatedAt:null,status:"setup",event:{slug:null,name:"Mercury Road Race Live",location:null,date:null,startTime:null,distance:null},branding:{eventLogoUrl:null,eventLogoAlt:null,accentColor:"#b30f2b"},display:{showOverallPlace:true,showBib:true,showName:true,showGender:true,showAge:false,showAgeGroup:true,showGrade:false,gradeSource:"grade",showTeam:false,showGunTime:true,showChipTime:true,showPace:true,showRecentFinishers:true,showEntryList:false,showPodium:true,recentFinishersDefaultCount:10},awards:{age_groups:[]},courseRecords:[],races:[],entriesUpdatedAt:null,entries:[],recentFinishers:[],results:[]};
 let snapshot=structuredClone(fallback),teamSnapshot={enabled:false,tabActive:false,divisions:[]},teamDivisionKey=null,currentRaceKey=null,currentEventSlug=new URL(location.href).searchParams.get("event")||null,publicEvents=[],lastServerTimestamp=null,serverClockOffsetMs=null,lastFetchOk=false,activeView="results",recentCountTouched=false,resultSortMode="gun";
-const $=s=>document.querySelector(s),body=$("#resultsBody"),mobile=$("#mobileResults"),recentBody=$("#recentResultsBody"),recentMobile=$("#recentMobileResults"),search=$("#search"),raceFilter=$("#raceFilter"),sexFilter=$("#sexFilter"),ageFilter=$("#ageFilter"),categoryFilter=$("#categoryFilter"),sortMode=$("#sortMode"),entrySearch=$("#entrySearch"),entryRaceFilter=$("#entryRaceFilter"),entryGenderFilter=$("#entryGenderFilter"),entryTeamFilter=$("#entryTeamFilter"),entriesBody=$("#entriesBody"),entriesMobile=$("#entriesMobileResults"),entriesEmpty=$("#entriesEmptyState"),empty=$("#emptyState"),recentEmpty=$("#recentEmptyState"),recentCount=$("#recentCount"),eventSwitcher=$("#eventSwitcher"),eventSelect=$("#eventSelect"),teamDivision=$("#teamDivision");
+const $=s=>document.querySelector(s),body=$("#resultsBody"),mobile=$("#mobileResults"),recentBody=$("#recentResultsBody"),recentMobile=$("#recentMobileResults"),search=$("#search"),raceFilter=$("#raceFilter"),sexFilter=$("#sexFilter"),ageFilter=$("#ageFilter"),categoryFilter=$("#categoryFilter"),sortMode=$("#sortMode"),entrySearch=$("#entrySearch"),entryRaceFilter=$("#entryRaceFilter"),entryGenderFilter=$("#entryGenderFilter"),entryGradeFilter=$("#entryGradeFilter"),entryTeamFilter=$("#entryTeamFilter"),entriesBody=$("#entriesBody"),entriesMobile=$("#entriesMobileResults"),entriesEmpty=$("#entriesEmptyState"),empty=$("#emptyState"),recentEmpty=$("#recentEmptyState"),recentCount=$("#recentCount"),eventSwitcher=$("#eventSwitcher"),eventSelect=$("#eventSelect"),teamDivision=$("#teamDivision");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 function nameOf(r){return `${r.firstName||""} ${r.lastName||""}`.trim()}
 function shown(flag){return snapshot.display?.[flag]===true}
@@ -304,7 +306,7 @@ async function publicJSON(path){
 function clearEventData(){
  snapshot=structuredClone(fallback);teamSnapshot={enabled:false,tabActive:false,divisions:[]};teamDivisionKey=null;currentRaceKey=null;
  lastServerTimestamp=null;serverClockOffsetMs=null;lastFetchOk=false;activeView='results';recentCountTouched=false;resultSortMode='gun';
- search.value='';raceFilter.value='';sexFilter.value='';ageFilter.value='';categoryFilter.value='';sortMode.value='gun';entrySearch.value='';entryRaceFilter.value='';entryGenderFilter.value='';entryTeamFilter.value='';
+ search.value='';raceFilter.value='';sexFilter.value='';ageFilter.value='';categoryFilter.value='';sortMode.value='gun';entrySearch.value='';entryRaceFilter.value='';entryGenderFilter.value='';entryGradeFilter.value='';entryTeamFilter.value='';
  $('#runnerDialog').close();$('#eventLogo').removeAttribute('src');render();
  $('#eventContent').hidden=true;$('#eventNotice').hidden=true;$('#lastRevision').hidden=true;
 }
@@ -430,15 +432,16 @@ function entryColumns(){
  if(d.showGender===true)cols.push(["sex","Gender",r=>r.sex??""]);
  if(d.showAge===true)cols.push(["age","Age",r=>r.age??""]);
  if(d.showAgeGroup===true)cols.push(["ageGroup","Age Group",r=>r.ageGroup??""]);
+ if(d.showGrade===true)cols.push(["grade","Grade",r=>r.grade??""]);
  if(d.showTeam===true)cols.push(["team","Team / Club",r=>r.team??""]);
  return cols;
 }
 function entryRows(){return Array.isArray(snapshot.entries)?snapshot.entries:[]}
 function filteredEntries(){
- const q=entrySearch.value.trim().toLowerCase(),race=entryRaceFilter.value,gender=entryGenderFilter.value,team=entryTeamFilter.value;
+ const q=entrySearch.value.trim().toLowerCase(),race=entryRaceFilter.value,gender=entryGenderFilter.value,grade=entryGradeFilter.value,team=entryTeamFilter.value;
  return entryRows().filter(r=>{
-   const hay=[r.bib,nameOf(r),r.team].filter(Boolean).join(" ").toLowerCase();
-   return (!q||hay.includes(q))&&(!race||r.race===race)&&(!gender||r.sex===gender)&&(!team||r.team===team);
+   const hay=[r.bib,nameOf(r),r.grade,r.team].filter(Boolean).join(" ").toLowerCase();
+   return (!q||hay.includes(q))&&(!race||r.race===race)&&(!gender||r.sex===gender)&&(!grade||String(r.grade??'')===grade)&&(!team||r.team===team);
  }).sort((a,b)=>String(a.race||"").localeCompare(String(b.race||""))||String(a.team||"").localeCompare(String(b.team||""))||String(a.lastName||"").localeCompare(String(b.lastName||""))||String(a.firstName||"").localeCompare(String(b.firstName||""))||String(a.bib||"").localeCompare(String(b.bib||""),undefined,{numeric:true}));
 }
 function renderEntries(){
@@ -447,10 +450,12 @@ function renderEntries(){
  if(!enabled){if(activeView==="entries")activeView="results";return}
  const all=entryRows(),races=[...new Set(all.map(r=>r.race).filter(Boolean))].sort((a,b)=>raceDisplay(a).localeCompare(raceDisplay(b)));
  const genders=[...new Set(all.map(r=>r.sex).filter(Boolean))].sort();
+ const grades=[...new Set(all.map(r=>String(r.grade??'').trim()).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
  const teams=[...new Set(all.map(r=>r.team).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
- const rv=entryRaceFilter.value,gv=entryGenderFilter.value,tv=entryTeamFilter.value;
+ const rv=entryRaceFilter.value,gv=entryGenderFilter.value,grv=entryGradeFilter.value,tv=entryTeamFilter.value;
  entryRaceFilter.innerHTML='<option value="">All races / sub-events</option>'+races.map(v=>`<option value="${esc(v)}">${esc(raceDisplay(v))}</option>`).join("");entryRaceFilter.value=races.includes(rv)?rv:"";
  entryGenderFilter.hidden=snapshot.display?.showGender!==true;entryGenderFilter.innerHTML='<option value="">All genders</option>'+genders.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");entryGenderFilter.value=entryGenderFilter.hidden?"":(genders.includes(gv)?gv:"");
+ entryGradeFilter.hidden=snapshot.display?.showGrade!==true;entryGradeFilter.innerHTML='<option value="">All grades</option>'+grades.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");entryGradeFilter.value=entryGradeFilter.hidden?"":(grades.includes(grv)?grv:"");entryGradeFilter.disabled=grades.length===0;
  entryTeamFilter.hidden=snapshot.display?.showTeam!==true;entryTeamFilter.innerHTML='<option value="">All teams / clubs</option>'+teams.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");entryTeamFilter.value=entryTeamFilter.hidden?"":(teams.includes(tv)?tv:"");
  const rows=filteredEntries(),cols=entryColumns();
  $("#entriesTableHead").innerHTML=cols.map(c=>`<th>${esc(c[1])}</th>`).join("");
@@ -459,6 +464,12 @@ function renderEntries(){
  entriesEmpty.hidden=rows.length!==0;$("#entriesTableWrap").hidden=rows.length===0;
  const updated=snapshot.entriesUpdatedAt?(' · Updated '+new Date(snapshot.entriesUpdatedAt).toLocaleString()):'';
  $("#entriesShownCount").textContent=all.length?('Showing '+rows.length+' of '+all.length+' entries'+updated):'No entry roster has been synced yet. Start/arm Mercury Bridge with the MYLAPS entry export to populate this page.';
+}
+function renderCourseRecords(){
+ const card=$("#courseRecordsCard"),list=$("#courseRecordsList"),records=Array.isArray(snapshot.courseRecords)?snapshot.courseRecords:[];
+ card.hidden=records.length===0;if(!records.length){list.innerHTML="";return}
+ const raceMap=new Map((snapshot.races||[]).map(r=>[String(r.key||""),raceDisplay(r.label||r.key)]));
+ list.innerHTML=records.map(r=>'<div class="course-record-row-public"><div><span class="course-record-label">Race</span><strong>'+esc(raceMap.get(String(r.raceKey||""))||raceDisplay(r.raceKey||""))+'</strong></div><div><span class="course-record-label">Athlete</span><strong>'+esc(r.name||"")+'</strong></div><div><span class="course-record-label">Gender</span>'+esc(r.gender||"")+'</div><div><span class="course-record-label">Record</span><strong>'+esc(r.time||"")+'</strong></div><div><span class="course-record-label">Year</span>'+esc(r.year||"")+'</div><div><span class="course-record-label">Team / School</span>'+esc(r.team||"")+'</div></div>').join("");
 }
 function renderTeamScores(){
  const visible=teamAllowed();
@@ -501,9 +512,9 @@ function bindRunnerClicks(){document.querySelectorAll('[data-runner]').forEach(e
 function render(){
  runnerTargets=[];$('#runnerDialog').close();$('#dialogName').textContent='';$('#dialogGrid').innerHTML='';
  const races=syncRaceFilter(),raceScoped=raceRows();
- const overallPlaces=overallAwardPlaces(),podiumVisible=shown('showGender')&&shown('showOverallPlace')&&overallPlaces>0;
+ const overallPlaces=overallAwardPlaces(),podiumVisible=snapshot.display?.showPodium===true&&shown('showGender')&&shown('showOverallPlace')&&overallPlaces>0;
  const featuredKey=featuredRaceKey(races),featuredRace=races.find(r=>r.key===featuredKey),podiumSuffix=races.length>1&&featuredRace?' · '+raceDisplay(featuredRace.label||featuredRace.key):'';
- $('.male-podium').hidden=!podiumVisible;$('.female-podium').hidden=!podiumVisible;
+ $('.male-podium').hidden=!podiumVisible;$('.female-podium').hidden=!podiumVisible;$("#summaryGrid").classList.toggle("podiums-off",!podiumVisible);
  $('#malePodiumLabel').textContent='Male Top '+overallPlaces+podiumSuffix;$('#femalePodiumLabel').textContent='Female Top '+overallPlaces+podiumSuffix;
  $('.leader-stat').hidden=!shown('showOverallPlace');
  sexFilter.hidden=!shown('showGender');sexFilter.disabled=!shown('showGender');if(sexFilter.disabled)sexFilter.value='';
@@ -524,11 +535,11 @@ function render(){
  const categories=[...new Set((shown("showAgeGroup")?raceScoped:[]).map(r=>String(r.category||"").trim()).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));const cv=categoryFilter.value;categoryFilter.innerHTML=`<option value="">All categories</option>`+categories.map(c=>`<option ${c===cv?"selected":""}>${esc(c)}</option>`).join("");categoryFilter.disabled=categories.length===0;
  const rows=sortedResults(filtered());$("#shownCount").textContent=`Showing ${rows.length} of ${raceScoped.length} finishers · Sorted by ${resultSortMode==='chip'?'Chip':'Gun'} time`;empty.hidden=rows.length!==0;$("#tableWrap").hidden=rows.length===0;renderTable(rows,$("#tableHead"),body,mobile);
  const rr=recentEnabled?recentRows():[];recentEmpty.hidden=rr.length!==0;$("#recentTableWrap").hidden=rr.length===0;renderTable(rr,$("#recentTableHead"),recentBody,recentMobile);
- renderEntries();renderTeamScores();switchView(activeView);bindRunnerClicks();renderConnection();
+ renderEntries();renderCourseRecords();renderTeamScores();switchView(activeView);bindRunnerClicks();renderConnection();
 }
 function showRunner(index){const r=runnerTargets[index];if(!r)return;$('#dialogName').textContent=shown('showName')?nameOf(r):'Runner Details';const details=columns().filter(c=>c[0]!=='name').map(c=>[c[1],c[2](r)]);if(raceCatalog().length>1&&r.race)details.push(['Race',raceDisplay(r.race)]);if(shown('showAgeGroup')&&r.category)details.push(['Category',r.category]);$('#dialogGrid').innerHTML=details.map(([k,v])=>`<div class="detail"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');$('#runnerDialog').showModal()}
 
-$("#closeDialog").onclick=()=>$("#runnerDialog").close();[search,sexFilter,ageFilter,categoryFilter].forEach(el=>el.addEventListener("input",render));[entrySearch,entryRaceFilter,entryGenderFilter,entryTeamFilter].forEach(el=>el.addEventListener("input",render));sortMode.onchange=()=>{resultSortMode=sortMode.value==='chip'?'chip':'gun';render()};raceFilter.onchange=async()=>{currentRaceKey=raceFilter.value||null;teamSnapshot={enabled:false,tabActive:false,divisions:[]};teamDivisionKey=null;render();if(eventReady){await loadTeamScores(currentEventSlug,eventEpoch);render()}};
+$("#closeDialog").onclick=()=>$("#runnerDialog").close();[search,sexFilter,ageFilter,categoryFilter].forEach(el=>el.addEventListener("input",render));[entrySearch,entryRaceFilter,entryGenderFilter,entryGradeFilter,entryTeamFilter].forEach(el=>el.addEventListener("input",render));sortMode.onchange=()=>{resultSortMode=sortMode.value==='chip'?'chip':'gun';render()};raceFilter.onchange=async()=>{currentRaceKey=raceFilter.value||null;teamSnapshot={enabled:false,tabActive:false,divisions:[]};teamDivisionKey=null;render();if(eventReady){await loadTeamScores(currentEventSlug,eventEpoch);render()}};
 $("#resultsTab").onclick=()=>switchView("results");$("#entriesTab").onclick=()=>switchView("entries");$("#recentTab").onclick=()=>switchView("recent");$("#teamTab").onclick=()=>switchView("team");recentCount.onchange=()=>{recentCountTouched=true;render()};teamDivision.onchange=()=>{teamDivisionKey=teamDivision.value;renderTeamScores()};
 eventSelect.onchange=()=>selectPublicEvent(eventSelect.value||null);
 $("#retryEvent").onclick=refreshPublicEvent;
