@@ -210,10 +210,11 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
       <div id="customScoringOptions" class="row">
         <div><label>Scorers per team</label><input id="scorersPerTeam" type="number" min="1" max="20"></div>
         <div><label>Displacers per team</label><input id="displacersPerTeam" type="number" min="0" max="20"></div>
+        <div><label>Complete teams before publishing scores</label><input id="minCompleteTeamsToPublish" type="number" min="1" max="50" value="3"><p class="hint" style="margin:6px 0 0">Default 3. Team standings and Scoring Place stay hidden until this many teams have the required scorers finished.</p></div>
         <div><label>Unattached / no-team athletes</label><select id="unattachedMode"><option value="skip_compress">Skip and compress scoring places (standard)</option><option value="count_in_sequence">Keep in scoring sequence</option></select></div>
         <div><label>Scoring divisions</label><select id="divisionMode"><option value="all">All athletes together</option><option value="gender">Separate by gender</option><option value="category">Separate by race / category</option><option value="gender_category">Separate by gender + race / category</option></select></div>
       </div>
-      <p class="hint">When team scoring is enabled, the Team Scores tab is visible immediately. Before the first complete team finishes, it shows a waiting message with the required scorer count. Once active, standings update automatically and incomplete teams are listed without rank, score, total time, or average time. The Results table also shows a Scoring Place column next to Overall Place; it uses the same compressed scoring sequence that calculates team points.</p>
+      <p class="hint">When team scoring is enabled, the Team Scores tab is visible immediately. Scores are withheld until the configured minimum number of complete teams has finished; the default is 3. Before that threshold, the tab shows a waiting message and the Results-table Scoring Place column stays blank. Once the threshold is reached, standings and Scoring Place update automatically, while incomplete teams remain excluded from scoring.</p>
     </div>
     <div class="actions section-save"><button type="button" class="primary small save-event-btn">Save changes</button></div>
   </section>
@@ -823,7 +824,7 @@ async function loadEvent(){
   $('#recentCount').value=String(s.recent_finishers_default_count||10);$('#accentColor').value=s.accent_color||'#b30f2b';$('#timezone').value=s.timezone||'America/New_York';
   renderCurrentLogo(s,e);
   renderAwards(s.awards||{overall_places:3,remove_overall_from_age_groups:true,age_groups:[],special_divisions:[]});
-  $('#scoreEnabled').checked=ts.enabled===true;$('#scoreRuleset').value=ts.ruleset==='usatf'?'usatf':'custom';$('#scorersPerTeam').value=String(ts.scorers_per_team||5);$('#displacersPerTeam').value=String(ts.displacers_per_team??2);
+  $('#scoreEnabled').checked=ts.enabled===true;$('#scoreRuleset').value=ts.ruleset==='usatf'?'usatf':'custom';$('#scorersPerTeam').value=String(ts.scorers_per_team||5);$('#displacersPerTeam').value=String(ts.displacers_per_team??2);$('#minCompleteTeamsToPublish').value=String(ts.min_complete_teams_to_publish||3);
   $('#unattachedMode').value=ts.unattached_mode||'skip_compress';$('#divisionMode').value=ts.division_mode||'all';$('#tiebreaker').value=ts.tiebreaker||'ncaa_head_to_head';toggleScoring();
   hideStatus($('#saveStatus'));
   window.MercuryTools?.eventChanged(currentSlug,loaded);
@@ -845,7 +846,7 @@ async function save(){
       timezone:$('#timezone').value,accent_color:$('#accentColor').value,show_overall_place:$('#showOverall').checked,show_bib:$('#showBib').checked,show_name:$('#showName').checked,
       show_gender:$('#showGender').checked,show_age:$('#showAge').checked,show_age_group:$('#showAgeGroup').checked,show_grade:$('#showGrade').checked,grade_source:$('#gradeSource').value,show_team:$('#showTeam').checked,show_gun_time:$('#showGun').checked,
       show_chip_time:$('#showChip').checked,show_pace:$('#showPace').checked,show_recent_finishers:$('#showRecent').checked,show_entry_list:$('#showEntries').checked,recent_finishers_default_count:Number($('#recentCount').value),show_podium:$('#podiumMode').value!=='off',podium_mode:$('#podiumMode').value,podium_configs:podiumConfigs,featured_race_key:$('#featuredRaceKey').value,course_records:courseRecords,awards,
-      team_scoring:{enabled:$('#scoreEnabled').checked,ruleset:$('#scoreRuleset').value,scorers_per_team:Number($('#scorersPerTeam').value),displacers_per_team:Number($('#displacersPerTeam').value),unattached_mode:$('#unattachedMode').value,division_mode:$('#divisionMode').value,tiebreaker:$('#tiebreaker').value}
+      team_scoring:{enabled:$('#scoreEnabled').checked,ruleset:$('#scoreRuleset').value,scorers_per_team:Number($('#scorersPerTeam').value),displacers_per_team:Number($('#displacersPerTeam').value),min_complete_teams_to_publish:Number($('#minCompleteTeamsToPublish').value),unattached_mode:$('#unattachedMode').value,division_mode:$('#divisionMode').value,tiebreaker:$('#tiebreaker').value}
     }
   };
   const buttons=[...document.querySelectorAll('.save-event-btn')];buttons.forEach(b=>b.disabled=true);
