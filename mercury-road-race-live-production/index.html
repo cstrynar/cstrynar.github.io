@@ -516,12 +516,12 @@ function renderTeamScores(){
  $("#teamTab").hidden=!configured;
  if(!configured){if(activeView==="team")activeView="results";$("#teamScoresBody").innerHTML="";teamDivision.innerHTML="";teamDivisionKey=null;$("#teamScoringSummary").textContent="";return}
  const cfg=teamSnapshot.config||{};
- const required=Math.max(1,Number(cfg.scorers_per_team||5));
+ const required=Math.max(1,Number(cfg.scorers_per_team||5)),publishTeams=Math.max(1,Number(cfg.min_complete_teams_to_publish||3));
  const divisions=Array.isArray(teamSnapshot.divisions)?teamSnapshot.divisions:[];
  if(!teamSnapshot?.enabled||!divisions.length){
    teamDivision.innerHTML="";teamDivisionKey=null;$("#teamDivisionWrap").hidden=true;
-   $("#teamScoringSummary").textContent=required+" scorers required per team";
-   $("#teamScoresBody").innerHTML=`<div class="team-waiting"><strong>Team scores will appear once the first team has ${required} required scorers finish in this race / division.</strong><div style="margin-top:6px">Standings will then update automatically as new results arrive.</div></div>`;
+   $("#teamScoringSummary").textContent=required+" scorers per team · publish after "+publishTeams+" complete teams";
+   $("#teamScoresBody").innerHTML=`<div class="team-waiting"><strong>Team scores will appear once ${publishTeams} complete team${publishTeams===1?"":"s"} ${publishTeams===1?"has":"have"} ${required} required scorer${required===1?"":"s"} finished in this race / division.</strong><div style="margin-top:6px">Scoring Place will remain blank until then. Standings will update automatically once the threshold is reached.</div></div>`;
    return;
  }
  if(!teamDivisionKey||!divisions.some(d=>d.key===teamDivisionKey)){
@@ -532,15 +532,16 @@ function renderTeamScores(){
  $("#teamDivisionWrap").hidden=divisions.length<=1;
  const d=divisions.find(x=>x.key===teamDivisionKey)||divisions[0];
  $("#teamScoringSummary").textContent=cfg.ruleset==="usatf"
-   ? `USATF tie-break · ${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · lowest score wins · last scorer breaks ties`
-   : `${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · lowest score wins`;
+   ? `USATF tie-break · ${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · publish after ${publishTeams} complete teams · lowest score wins · last scorer breaks ties`
+   : `${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · publish after ${publishTeams} complete teams · lowest score wins`;
  if(d.reviewRequired){
   const review="Duplicate overall places were detected, so Mercury will not publish standings for this division.";
   $("#teamScoresBody").innerHTML=`<div class="team-review"><strong>Team scoring needs review.</strong><div style="margin-top:5px">${esc(review)}</div></div>`;return;
  }
  if(!d.active){
   const divisionRequired=Math.max(1,Number(d.scorersRequired||cfg.scorers_per_team||5));
-  $("#teamScoresBody").innerHTML=`<div class="team-waiting"><strong>Team scores will appear once the first team has ${divisionRequired} required scorers finish in this race / division.</strong><div style="margin-top:6px">Standings will then update automatically as new results arrive.</div></div>`;return;
+  const message=String(d.waitingMessage||`Team scores will appear once ${publishTeams} complete teams have ${divisionRequired} required scorers finished in this race / division.`);
+  $("#teamScoresBody").innerHTML=`<div class="team-waiting"><strong>${esc(message)}</strong><div style="margin-top:6px">Scoring Place will remain blank until then. Standings will update automatically once the threshold is reached.</div></div>`;return;
  }
  const cards=(d.standings||[]).map(t=>{
   const rows=[...(t.scorers||[]),...(t.displacers||[])].map(r=>`<tr><td><span class="role-pill ${r.role==="scorer"?"role-scorer":"role-displacer"}">${esc(r.role)}</span></td>${shown("showName")?`<td>${esc(r.name)}</td>`:""}${shown("showBib")?`<td>${esc(r.bib)}</td>`:""}${shown("showOverallPlace")?`<td>${esc(r.overallPlace??"")}</td>`:""}<td>${esc(r.scoringPlace??"")}</td><td>${esc(r.points??"—")}</td>${teamTimeAllowed()?`<td>${esc(r.scoringTime||"-")}</td>`:""}</tr>`).join("");
