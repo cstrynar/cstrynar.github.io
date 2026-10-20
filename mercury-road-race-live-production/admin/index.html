@@ -191,11 +191,22 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div id="scoringOptions">
       <div style="height:14px"></div>
       <div class="row">
+        <div><label for="scoreRuleset">Scoring rules</label><select id="scoreRuleset"><option value="custom">Mercury custom / NCAA / NFHS</option><option value="usatf">USATF Cross Country</option></select></div>
+      </div>
+      <div id="usatfScoringGuide" class="operator-guide hidden">
+        <h3>USATF Cross Country preset</h3>
+        <p><strong>Open / standard divisions:</strong> Top 5 score; up to 8 declared runners. All declared runners after the scorers displace.</p>
+        <p><strong>Masters:</strong> M60+ and all women's Masters divisions use 3 scorers out of up to 5 declared runners.</p>
+        <p><strong>Scoring sequence:</strong> Unattached runners and runners from incomplete/non-scoring teams are removed before team places are assigned.</p>
+        <p><strong>Ties:</strong> The team whose last scoring member finishes nearest to first place wins the tie.</p>
+        <p class="hint">USATF mode uses Gender + Category divisions so Category can identify Open/Masters/M60+ divisions. If more than the allowed declared-team limit appears for one team, Mercury stops that division for review rather than guessing which athletes were declared.</p>
+      </div>
+      <div id="customScoringOptions" class="row">
         <div><label>Scorers per team</label><input id="scorersPerTeam" type="number" min="1" max="20"></div>
         <div><label>Displacers per team</label><input id="displacersPerTeam" type="number" min="0" max="20"></div>
         <div><label>Unattached / no-team athletes</label><select id="unattachedMode"><option value="skip_compress">Skip and compress scoring places (standard)</option><option value="count_in_sequence">Keep in scoring sequence</option></select></div>
         <div><label>Scoring divisions</label><select id="divisionMode"><option value="all">All athletes together</option><option value="gender">Separate by gender</option><option value="category">Separate by race / category</option><option value="gender_category">Separate by gender + race / category</option></select></div>
-        <div><label>Tie-breaker</label><select id="tiebreaker"><option value="ncaa_head_to_head">NCAA-style head-to-head scorers</option><option value="nfhs_next_runner">NFHS-style next runner</option><option value="aggregate_time">Aggregate scorer time</option></select></div>
+        <div><label>Tie-breaker</label><select id="tiebreaker"><option value="ncaa_head_to_head">NCAA-style head-to-head scorers</option><option value="nfhs_next_runner">NFHS-style next runner</option><option value="aggregate_time">Aggregate scorer time</option><option value="usatf_last_scorer">USATF last scoring member</option></select></div>
       </div>
       <p class="hint">The Team Scores tab stays hidden until the first team in a scoring division has all required scorers finished. Once active, incomplete teams are listed without rank, score, total time, or average time.</p>
     </div>
@@ -379,7 +390,13 @@ async function req(url,opt={}){const r=await fetch(url,{cache:'no-store',...opt}
 function setPasswordVisible(visible){const input=$('#password'),button=$('#passwordVisibility');input.type=visible?'text':'password';button.textContent=visible?'Hide':'Show';button.setAttribute('aria-label',visible?'Hide password':'Show password');button.setAttribute('aria-pressed',String(visible))}
 function showLogin(){setPasswordVisible(false);closeRecovery();adminLoadEpoch++;adminListEpoch++;adminClientEpoch++;currentSlug='';$('#eventSelect').replaceChildren();clearEventSettings('Sign in to load an event.');window.MercuryTools?.clear();$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden')}
 function showApp(){$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden')}
-function toggleScoring(){$('#scoringOptions').style.opacity=$('#scoreEnabled').checked?'1':'.55'}
+function toggleScoring(){
+  const enabled=$('#scoreEnabled').checked,usatf=$('#scoreRuleset').value==='usatf';
+  $('#scoringOptions').style.opacity=enabled?'1':'.55';$('#usatfScoringGuide').classList.toggle('hidden',!usatf);
+  for(const el of $('#customScoringOptions').querySelectorAll('input,select'))el.disabled=!enabled||usatf;
+  $('#scoreRuleset').disabled=!enabled;
+  if(usatf){$('#scorersPerTeam').value='5';$('#displacersPerTeam').value='3';$('#unattachedMode').value='skip_compress';$('#divisionMode').value='gender_category';$('#tiebreaker').value='usatf_last_scorer'}
+}
 function renderStatusHelp(){
   const value=$('#eventStatus').value;
   const help={
@@ -769,7 +786,7 @@ async function loadEvent(){
   $('#recentCount').value=String(s.recent_finishers_default_count||10);$('#accentColor').value=s.accent_color||'#b30f2b';$('#timezone').value=s.timezone||'America/New_York';
   renderCurrentLogo(s,e);
   renderAwards(s.awards||{overall_places:3,remove_overall_from_age_groups:true,age_groups:[],special_divisions:[]});
-  $('#scoreEnabled').checked=ts.enabled===true;$('#scorersPerTeam').value=String(ts.scorers_per_team||5);$('#displacersPerTeam').value=String(ts.displacers_per_team??2);
+  $('#scoreEnabled').checked=ts.enabled===true;$('#scoreRuleset').value=ts.ruleset==='usatf'?'usatf':'custom';$('#scorersPerTeam').value=String(ts.scorers_per_team||5);$('#displacersPerTeam').value=String(ts.displacers_per_team??2);
   $('#unattachedMode').value=ts.unattached_mode||'skip_compress';$('#divisionMode').value=ts.division_mode||'all';$('#tiebreaker').value=ts.tiebreaker||'ncaa_head_to_head';toggleScoring();
   hideStatus($('#saveStatus'));
   window.MercuryTools?.eventChanged(currentSlug,loaded);
@@ -790,7 +807,7 @@ async function save(){
       timezone:$('#timezone').value,accent_color:$('#accentColor').value,show_overall_place:$('#showOverall').checked,show_bib:$('#showBib').checked,show_name:$('#showName').checked,
       show_gender:$('#showGender').checked,show_age:$('#showAge').checked,show_age_group:$('#showAgeGroup').checked,show_grade:$('#showGrade').checked,grade_source:$('#gradeSource').value,show_team:$('#showTeam').checked,show_gun_time:$('#showGun').checked,
       show_chip_time:$('#showChip').checked,show_pace:$('#showPace').checked,show_recent_finishers:$('#showRecent').checked,show_entry_list:$('#showEntries').checked,recent_finishers_default_count:Number($('#recentCount').value),show_podium:$('#podiumMode').value!=='off',featured_race_key:$('#featuredRaceKey').value,course_records:courseRecords,awards,
-      team_scoring:{enabled:$('#scoreEnabled').checked,scorers_per_team:Number($('#scorersPerTeam').value),displacers_per_team:Number($('#displacersPerTeam').value),unattached_mode:$('#unattachedMode').value,division_mode:$('#divisionMode').value,tiebreaker:$('#tiebreaker').value}
+      team_scoring:{enabled:$('#scoreEnabled').checked,ruleset:$('#scoreRuleset').value,scorers_per_team:Number($('#scorersPerTeam').value),displacers_per_team:Number($('#displacersPerTeam').value),unattached_mode:$('#unattachedMode').value,division_mode:$('#divisionMode').value,tiebreaker:$('#tiebreaker').value}
     }
   };
   const buttons=[...document.querySelectorAll('.save-event-btn')];buttons.forEach(b=>b.disabled=true);
@@ -920,7 +937,7 @@ $('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=clo
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#existingRaceSource').addEventListener('input',()=>{if(!$('#existingRaceKey').dataset.touched)$('#existingRaceKey').value=slugify($('#existingRaceSource').value);if(!$('#existingRaceDisplay').dataset.touched)$('#existingRaceDisplay').value=$('#existingRaceSource').value});$('#existingRaceKey').addEventListener('input',()=>{$('#existingRaceKey').dataset.touched='1';$('#existingRaceKey').value=slugify($('#existingRaceKey').value)});$('#existingRaceDisplay').addEventListener('input',()=>{$('#existingRaceDisplay').dataset.touched='1'});
 $('#loginBtn').onclick=login;$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#logoutBtn').onclick=logout;
-$('#refreshBtn').onclick=loadEvents;$('#currentEventsBtn').onclick=()=>setEventScope('current');$('#pastEventsBtn').onclick=()=>setEventScope('past');$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#eventStatus').onchange=renderStatusHelp;$('#showRetiredComputers').onchange=loadClients;document.querySelectorAll('.save-event-btn').forEach(b=>b.onclick=save);$('#scoreEnabled').onchange=toggleScoring;$('#podiumMode').onchange=togglePodiumMode;$('#showGrade').onchange=toggleGradeSource;$('#addCourseRecordBtn').onclick=()=>addCourseRecordRow();
+$('#refreshBtn').onclick=loadEvents;$('#currentEventsBtn').onclick=()=>setEventScope('current');$('#pastEventsBtn').onclick=()=>setEventScope('past');$('#eventSelect').onchange=async()=>{await loadEvent();await loadClients()};$('#eventStatus').onchange=renderStatusHelp;$('#showRetiredComputers').onchange=loadClients;document.querySelectorAll('.save-event-btn').forEach(b=>b.onclick=save);$('#scoreEnabled').onchange=toggleScoring;$('#scoreRuleset').onchange=toggleScoring;$('#podiumMode').onchange=togglePodiumMode;$('#showGrade').onchange=toggleGradeSource;$('#addCourseRecordBtn').onclick=()=>addCourseRecordRow();
 $('#uploadLogoBtn').onclick=uploadLogo;$('#removeLogoBtn').onclick=removeLogo;$('#createClientBtn').onclick=createClient;$('#activityBtn').onclick=loadActivity;$('#changePasswordBtn').onclick=changePassword;
 
 setInterval(updateAdminClockDisplays,1000);
