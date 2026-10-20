@@ -191,16 +191,13 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div id="scoringOptions">
       <div style="height:14px"></div>
       <div class="row">
-        <div><label for="scoreRuleset">Scoring rules</label><select id="scoreRuleset"><option value="custom">Mercury custom / NCAA / NFHS</option><option value="usatf">USATF Cross Country — no roster cap</option></select></div>
+        <div><label for="scoreRuleset">Scoring rules</label><select id="scoreRuleset"><option value="custom">Mercury custom / NCAA / NFHS</option><option value="usatf">USATF Cross Country — last-scorer tie-break</option></select></div>
       </div>
       <div id="usatfScoringGuide" class="operator-guide hidden">
-        <h3>USATF Cross Country preset — no roster cap</h3>
-        <p>Mercury applies the USATF scoring and tie rules but does <strong>not</strong> enforce roster-size limits. Everyone entered in MYLAPS for the team may run.</p>
-        <p><strong>Open / standard divisions:</strong> Top 5 score. Every additional MYLAPS-entered team runner after the scorers acts as a displacer.</p>
-        <p><strong>Masters:</strong> M60+ and all women's Masters divisions use 3 scorers. Every additional MYLAPS-entered team runner after the scorers acts as a displacer.</p>
-        <p><strong>Scoring sequence:</strong> Unattached runners and runners from incomplete/non-scoring teams are removed before team places are assigned.</p>
-        <p><strong>Ties:</strong> The team whose last scoring member finishes nearest to first place wins the tie.</p>
-        <p class="hint">USATF mode treats every athlete entered for that team in MYLAPS as declared. It uses Gender + Category divisions so Category can identify Open/Masters/M60+ divisions, and it enables the Gender, Age Group, and Team / Club display fields required to publish those team divisions.</p>
+        <h3>USATF Cross Country tie-break</h3>
+        <p><strong>Ties:</strong> the team whose last scoring member finishes nearest to first place wins the tie.</p>
+        <p>Scorers per team, displacers, unattached-runner handling, and scoring divisions remain fully adjustable below. Mercury does not enforce roster-size limits; everyone entered in MYLAPS for the team may run.</p>
+        <p class="hint">Selecting USATF sets the tie-breaker to USATF last scoring member. All other team-scoring controls stay operator-configurable so the same meet can use USATF-style ties with its own local scoring format.</p>
       </div>
       <div id="customScoringOptions" class="row">
         <div><label>Scorers per team</label><input id="scorersPerTeam" type="number" min="1" max="20"></div>
@@ -394,9 +391,9 @@ function showApp(){$('#loginView').classList.add('hidden');$('#appView').classLi
 function toggleScoring(){
   const enabled=$('#scoreEnabled').checked,usatf=$('#scoreRuleset').value==='usatf';
   $('#scoringOptions').style.opacity=enabled?'1':'.55';$('#usatfScoringGuide').classList.toggle('hidden',!usatf);
-  for(const el of $('#customScoringOptions').querySelectorAll('input,select'))el.disabled=!enabled||usatf;
+  for(const el of $('#customScoringOptions').querySelectorAll('input,select'))el.disabled=!enabled;
   $('#scoreRuleset').disabled=!enabled;
-  if(usatf){$('#scorersPerTeam').value='5';$('#displacersPerTeam').value='3';$('#unattachedMode').value='skip_compress';$('#divisionMode').value='gender_category';$('#tiebreaker').value='usatf_last_scorer';$('#showGender').checked=true;$('#showAgeGroup').checked=true;$('#showTeam').checked=true}
+  if(usatf)$('#tiebreaker').value='usatf_last_scorer';
 }
 function renderStatusHelp(){
   const value=$('#eventStatus').value;
