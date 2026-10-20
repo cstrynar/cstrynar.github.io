@@ -488,7 +488,7 @@ function renderTeamScores(){
  const d=divisions.find(x=>x.key===teamDivisionKey)||divisions[0];
  const cfg=teamSnapshot.config||{};
  $("#teamScoringSummary").textContent=cfg.ruleset==="usatf"
-   ? `USATF · ${d.scorersRequired||5} scorers · all additional MYLAPS team runners displace · lowest score wins · last scorer breaks ties`
+   ? `USATF tie-break · ${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · lowest score wins · last scorer breaks ties`
    : `${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · lowest score wins`;
  if(d.reviewRequired){
   const review="Duplicate overall places were detected, so Mercury will not publish standings for this division.";
