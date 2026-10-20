@@ -176,10 +176,10 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
       <div class="switchline"><input id="showPace" type="checkbox"><label for="showPace">Pace</label></div>
       <div class="switchline"><input id="showRecent" type="checkbox"><label for="showRecent">Recent Finishers tab</label></div>
       <div class="switchline"><input id="showEntries" type="checkbox"><label for="showEntries">Entries tab / pre-race entry list</label></div>
-      <div><label for="gradeSource">Grade source</label><select id="gradeSource"><option value="grade">Dedicated Grade field</option><option value="category">MYLAPS Category</option><option value="age">MYLAPS Age</option><option value="city">MYLAPS City</option></select></div>
+      <div><label for="gradeSource">Grade source</label><select id="gradeSource"><option value="category">MYLAPS Category — current Bridge</option><option value="age">MYLAPS Age — current Bridge</option><option value="grade" disabled>Dedicated Grade field — future Bridge parser</option><option value="city" disabled>MYLAPS City — future Bridge parser</option></select></div>
       <div><label>Recent default count</label><select id="recentCount"><option>5</option><option>10</option><option>15</option><option>20</option></select></div>
     </div>
-    <p class="hint">Entries tab uses the current MYLAPS entry roster before and during the event. Viewers can filter by race/sub-event, gender, Grade (when enabled and populated), and Team / Club. Grade source can use a dedicated field or an existing MYLAPS field; dedicated City/Grade values require an entry-sync Bridge that sends that field. Entry sync is separate from result revisions.</p>
+    <p class="hint">Entries tab uses the current MYLAPS entry roster before and during the event. Viewers can filter by race/sub-event, gender, Grade (when enabled and populated), and Team / Club. With the current signed Bridge, use MYLAPS Category (recommended) or Age as the Grade source. Dedicated Grade/City transport is reserved for a future Bridge parser so the operator is not asked to use a field the installed Bridge does not send. Entry sync is separate from result revisions.</p>
     <div class="actions section-save"><button type="button" class="primary small save-event-btn">Save changes</button></div>
   </section>
 
@@ -764,7 +764,7 @@ async function loadEvent(){
   $('#raceStructureHint').textContent=raceStructureLocked?'Race structure is locked after results are published or the event leaves setup/shadow status.':'Add another race/distance before the event begins.';
   if(raceStructureLocked)$('#addExistingRacePanel').classList.add('hidden');
   $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
-  $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showGrade').checked=s.show_grade===true;$('#gradeSource').value=['grade','category','age','city'].includes(s.grade_source)?s.grade_source:'grade';toggleGradeSource();$('#showTeam').checked=s.show_team===true;
+  $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showGrade').checked=s.show_grade===true;$('#gradeSource').value=['category','age'].includes(s.grade_source)?s.grade_source:'category';toggleGradeSource();$('#showTeam').checked=s.show_team===true;
   $('#showGun').checked=s.show_gun_time!==false;$('#showChip').checked=s.show_chip_time!==false;$('#showPace').checked=s.show_pace!==false;$('#showRecent').checked=s.show_recent_finishers!==false;$('#showEntries').checked=s.show_entry_list===true;
   $('#recentCount').value=String(s.recent_finishers_default_count||10);$('#accentColor').value=s.accent_color||'#b30f2b';$('#timezone').value=s.timezone||'America/New_York';
   renderCurrentLogo(s,e);
