@@ -487,9 +487,14 @@ function renderTeamScores(){
  $("#teamDivisionWrap").hidden=divisions.length<=1;
  const d=divisions.find(x=>x.key===teamDivisionKey)||divisions[0];
  const cfg=teamSnapshot.config||{};
- $("#teamScoringSummary").textContent=`${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · lowest score wins`;
+ $("#teamScoringSummary").textContent=cfg.ruleset==="usatf"
+   ? `USATF · ${d.scorersRequired||5} scorers · ${d.maxDeclared||8} max declared · lowest score wins · last scorer breaks ties`
+   : `${cfg.scorers_per_team||5} scorers · ${cfg.displacers_per_team||0} displacers · lowest score wins`;
  if(d.reviewRequired){
-  $("#teamScoresBody").innerHTML=`<div class="team-review"><strong>Team scoring needs review.</strong><div style="margin-top:5px">Duplicate overall places were detected, so Mercury will not publish standings for this division.</div></div>`;return;
+  const review=d.reviewReason==="usatf_declaration_limit_exceeded"
+    ? "A team exceeds the USATF declared-runner limit for this division, so Mercury will not guess which athletes were declared."
+    : "Duplicate overall places were detected, so Mercury will not publish standings for this division.";
+  $("#teamScoresBody").innerHTML=`<div class="team-review"><strong>Team scoring needs review.</strong><div style="margin-top:5px">${esc(review)}</div></div>`;return;
  }
  if(!d.active){
   $("#teamScoresBody").innerHTML=`<div class="team-waiting"><strong>Team scoring will appear when the first complete team finishes.</strong></div>`;return;
