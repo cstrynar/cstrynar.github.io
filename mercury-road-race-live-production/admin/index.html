@@ -115,6 +115,11 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <h2>Race Setup</h2>
     <p class="sub">Mercury's internal race key stays fixed, while the MYLAPS source label may be corrected through Live status if the race-day export uses a different label. Capitalization, spacing, underscore, and dash differences are normalized automatically. Single-race events bind automatically to the sole Mercury race even when MYLAPS uses a different name. Scheduled starts are informational only and never start the unofficial clock.</p>
     <div style="height:12px"></div>
+    <div id="raceMappingPanel" class="operator-guide hidden">
+      <h3>MYLAPS Race Connection</h3>
+      <p id="raceMappingSummary">Waiting for MYLAPS race data.</p>
+      <div id="raceMappingList" class="hint"></div>
+    </div>
     <div id="raceNamesEmpty" class="hint">No configured race aliases for this event.</div>
     <div id="raceNamesTableWrap" style="overflow:auto" hidden>
       <table class="table">
@@ -358,7 +363,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R31 adaptive MYLAPS race mapping</div>
+  <div class="footer">Mercury Road Race Live Admin • R32 MYLAPS race connection assistant</div>
 </main>
 
 <script>
@@ -441,6 +446,25 @@ function renderCurrentLogo(settings,event){
   remove.disabled=false;
   img.onerror=()=>{img.hidden=true;title.textContent='Logo is saved';meta.textContent='The logo is attached to this event, but the thumbnail could not be loaded.'};
 }
+function renderRaceMappingStatus(mapping){
+  const panel=$('#raceMappingPanel'),summary=$('#raceMappingSummary'),list=$('#raceMappingList');
+  const detected=Array.isArray(mapping?.detectedRaces)?mapping.detectedRaces:[];
+  const unmapped=Array.isArray(mapping?.unmappedRaces)?mapping.unmappedRaces:[];
+  panel.classList.remove('hidden');
+  if(!detected.length){
+    summary.textContent='Waiting for MYLAPS race data. No action is required yet.';
+    list.textContent='';
+    return;
+  }
+  if(!unmapped.length){
+    summary.textContent='Connected — all detected MYLAPS race identities are recognized by Mercury.';
+    list.textContent=detected.map(r=>String(r.label||'')+' ('+Number(r.count||0)+')').join(' · ');
+    return;
+  }
+  summary.textContent='Mapping required — Mercury received race identities that are not connected to a configured Mercury race.';
+  list.textContent='Detected: '+unmapped.map(r=>String(r.label||'')+' ('+Number(r.count||0)+')').join(' · ')+' — update the MYLAPS source field below, then Save changes. Incoming data is preserved.';
+}
+
 function renderRaceNames(rows,sourceEditable=false){
   const aliases=Array.isArray(rows)?rows:[];
   $('#raceNamesBody').innerHTML=aliases.map(row=>'<tr data-race-alias-id="'+esc(row.id)+'"><td><input class="race-source-input" maxlength="160" aria-label="MYLAPS source label for '+esc(row.display_label||row.race_key||'race')+'" value="'+esc(row.source_label||'')+'" '+(sourceEditable?'':'disabled')+'></td><td><span class="race-key">'+esc(row.race_key||'')+'</span></td><td><input class="race-name-input" maxlength="80" aria-label="Public race name for '+esc(row.source_label||row.race_key||'race')+'" value="'+esc(row.display_label||row.race_key||'')+'"></td><td><input class="race-start-input" type="time" aria-label="Scheduled start for '+esc(row.display_label||row.race_key||'race')+'" value="'+esc(String(row.scheduled_start_time||'').slice(0,5))+'"></td></tr>').join('');
@@ -811,6 +835,7 @@ async function loadEvent(){
   const raceStructureLocked=Number(e.current_revision||0)!==0||!!e.last_published_at||!['setup','shadow'].includes(String(e.status||''));
   const sourceLabelEditable=['setup','shadow','live'].includes(String(e.status||''));
   renderRaceNames(j.raceAliases||[],sourceLabelEditable);
+  renderRaceMappingStatus(j.raceMapping||{});
   renderPodiumSettings(j.raceAliases||[],s);
   renderCourseRecords(s.course_records||[]);
   renderRaceClocks(j.raceAliases||[]);
