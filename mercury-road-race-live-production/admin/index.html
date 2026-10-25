@@ -451,9 +451,9 @@ function renderRaceMappingStatus(mapping){
   const detected=Array.isArray(mapping?.detectedRaces)?mapping.detectedRaces:[];
   const unmapped=Array.isArray(mapping?.unmappedRaces)?mapping.unmappedRaces:[];
   panel.classList.remove('hidden');
+  list.replaceChildren();
   if(!detected.length){
     summary.textContent='Waiting for MYLAPS race data. No action is required yet.';
-    list.textContent='';
     return;
   }
   if(!unmapped.length){
@@ -461,8 +461,25 @@ function renderRaceMappingStatus(mapping){
     list.textContent=detected.map(r=>String(r.label||'')+' ('+Number(r.count||0)+')').join(' · ');
     return;
   }
-  summary.textContent='Mapping required — Mercury received race identities that are not connected to a configured Mercury race.';
-  list.textContent='Detected: '+unmapped.map(r=>String(r.label||'')+' ('+Number(r.count||0)+')').join(' · ')+' — update the MYLAPS source field below, then Save changes. Incoming data is preserved.';
+  summary.textContent='Mapping required — Mercury preserved the incoming results. Choose the Mercury race for each unmatched MYLAPS identity.';
+  const aliases=Array.isArray(loaded?.raceAliases)?loaded.raceAliases:[];
+  for(const item of unmapped){
+    const row=document.createElement('div');row.className='actions';row.style.marginTop='8px';
+    const label=document.createElement('span');label.className='status';label.textContent=String(item.label||'')+' · '+Number(item.count||0)+' rows';
+    const select=document.createElement('select');select.style.maxWidth='360px';select.innerHTML='<option value="">Choose Mercury race</option>'+aliases.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.display_label||a.race_key||'Race')+' · '+esc(a.race_key||'')+'</option>').join('');
+    const button=document.createElement('button');button.type='button';button.className='primary small';button.textContent='Connect';
+    button.onclick=()=>connectRaceSource(String(item.label||''),select.value);
+    row.append(label,select,button);list.append(row);
+  }
+  const note=document.createElement('p');note.className='hint';note.textContent='Connecting changes only the MYLAPS source mapping. Mercury race keys and result data remain unchanged.';list.append(note);
+}
+async function connectRaceSource(sourceLabel,raceAliasId){
+  const context=eventMutationContext();if(!context)return;
+  if(!raceAliasId){showToast('Choose the Mercury race first.',false);return}
+  try{
+    await req(API+'/admin-event-settings?action=race-source-map&slug='+encodeURIComponent(context.slug),{method:'POST',headers:authHeaders(),body:JSON.stringify({raceAliasId:Number(raceAliasId),sourceLabel})});
+    if(eventContextCurrent(context)){showToast('MYLAPS race connected successfully.');await loadEvent();await loadActivity()}
+  }catch(e){if(eventContextCurrent(context))showToast('Race mapping failed: '+e.message,false)}
 }
 
 function renderRaceNames(rows,sourceEditable=false){
