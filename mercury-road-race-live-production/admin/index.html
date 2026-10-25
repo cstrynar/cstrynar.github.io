@@ -90,7 +90,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div style="height:12px"></div>
     <div class="switchline"><input id="newEventPublic" type="checkbox"><label for="newEventPublic">Make public immediately — spectators can see the UPCOMING revision-0 page</label></div>
     <h3>Races</h3>
-    <p class="hint">Enter the exact MYLAPS source label, a stable Mercury key, the spectator-facing public name, and the scheduled start time. Scheduled start may be left blank if it is not known yet.</p>
+    <p class="hint">Define the Mercury race, public name, and scheduled start in advance. The MYLAPS source label is an expected label only; Mercury normalizes harmless formatting differences and a single-race event automatically binds to whatever race label MYLAPS actually sends. Scheduled start may be left blank if it is not known yet.</p>
     <div id="newRaceRows"></div>
     <div class="actions"><button type="button" class="secondary small" id="addRaceBtn">Add race</button></div>
     <div class="sep"></div>
@@ -113,7 +113,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 
   <section class="card">
     <h2>Race Setup</h2>
-    <p class="sub">Change spectator-facing race names and scheduled start times. Before the first result revision, you may also correct a MYLAPS source label if it does not exactly match the live export. Mercury's internal race key remains fixed. Scheduled starts are informational only and never start the unofficial clock.</p>
+    <p class="sub">Mercury's internal race key stays fixed, while the MYLAPS source label may be corrected through Live status if the race-day export uses a different label. Capitalization, spacing, underscore, and dash differences are normalized automatically. Single-race events bind automatically to the sole Mercury race even when MYLAPS uses a different name. Scheduled starts are informational only and never start the unofficial clock.</p>
     <div style="height:12px"></div>
     <div id="raceNamesEmpty" class="hint">No configured race aliases for this event.</div>
     <div id="raceNamesTableWrap" style="overflow:auto" hidden>
@@ -358,7 +358,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div>
   </section>
 
-  <div class="footer">Mercury Road Race Live Admin • R30 public entry-list control</div>
+  <div class="footer">Mercury Road Race Live Admin • R31 adaptive MYLAPS race mapping</div>
 </main>
 
 <script>
@@ -809,14 +809,15 @@ async function loadEvent(){
   $('#settingsPanel').inert=false;$('#adminEventState').hidden=true;
   loaded=j;const e=j.event||{},s=j.settings||{},ts=s.team_scoring||{};
   const raceStructureLocked=Number(e.current_revision||0)!==0||!!e.last_published_at||!['setup','shadow'].includes(String(e.status||''));
-  renderRaceNames(j.raceAliases||[],!raceStructureLocked);
+  const sourceLabelEditable=['setup','shadow','live'].includes(String(e.status||''));
+  renderRaceNames(j.raceAliases||[],sourceLabelEditable);
   renderPodiumSettings(j.raceAliases||[],s);
   renderCourseRecords(s.course_records||[]);
   renderRaceClocks(j.raceAliases||[]);
   $('#eventName').value=e.name||'';$('#eventLocation').value=e.location||'';$('#eventDate').value=e.event_date||'';
   $('#eventStatus').value=e.status||'setup';renderStatusHelp();$('#eventPublic').checked=e.is_public===true;
   $('#addExistingRaceBtn').disabled=raceStructureLocked;
-  $('#raceStructureHint').textContent=raceStructureLocked?'Race structure is locked after results are published or the event leaves setup/shadow status.':'Add another race/distance before the event begins.';
+  $('#raceStructureHint').textContent=raceStructureLocked?'Race structure is locked, but the MYLAPS source label may still be corrected while the event is Live.':'Add another race/distance before the event begins.';
   if(raceStructureLocked)$('#addExistingRacePanel').classList.add('hidden');
   $('#showOverall').checked=s.show_overall_place!==false;$('#showBib').checked=s.show_bib!==false;$('#showName').checked=s.show_name!==false;
   $('#showGender').checked=s.show_gender!==false;$('#showAge').checked=s.show_age===true;$('#showAgeGroup').checked=s.show_age_group!==false;$('#showGrade').checked=s.show_grade===true;$('#gradeSource').value=['category','age'].includes(s.grade_source)?s.grade_source:'category';toggleGradeSource();$('#showTeam').checked=s.show_team===true;
