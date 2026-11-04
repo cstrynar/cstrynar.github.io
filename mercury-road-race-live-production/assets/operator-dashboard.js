@@ -5,11 +5,20 @@
   const permitted=clients.filter(c=>c.active===true&&c.grant?.active===true&&c.grant.can_publish===true);
   const expiry=Date.parse(access.lease?.expires_at),held=Number.isFinite(expiry)&&expiry>now;
   const stamp=value=>{const t=Date.parse(value);return !value?'Not yet reported':!Number.isFinite(t)||t>now+60000?'Timestamp unavailable':new Date(t).toLocaleString()};
+  const mapping=data.raceMapping,detected=mapping?.detectedRaces,unmapped=mapping?.unmappedRaces;
+  const validRows=rows=>Array.isArray(rows)&&rows.every(r=>r&&typeof r.label==='string'&&r.label.trim()&&Number.isSafeInteger(r.count)&&r.count>0);
+  const mappingKnown=validRows(detected)&&detected.length>0&&validRows(unmapped)&&
+   new Set(detected.map(r=>r.label)).size===detected.length&&new Set(unmapped.map(r=>r.label)).size===unmapped.length&&
+   unmapped.every(r=>detected.some(d=>d.label===r.label&&d.count===r.count));
+  const labeledRows=mappingKnown?detected.reduce((sum,r)=>sum+r.count,0):null;
+  const countsKnown=mappingKnown&&Number.isSafeInteger(labeledRows);
   const cards=[
    ['Selected event',e.name,e.status+' · '+(e.is_public?'Public':'Private')],
    ['Publishing permission',closed?'Closed to Bridge publishing':permitted.length+' authorized computer'+(permitted.length===1?'':'s'),permitted.map(c=>c.name).join(', ')||'No active publishing grants'],
    ['Writer lease',held?(access.lease.client_name||'Assigned timing computer'):'No active writer lease',held?'Expires '+stamp(access.lease.expires_at)+'. This is a publishing reservation, not proof of current uploads.':access.policy?.require_lease?'An exclusive lease is required to publish.':'This event does not require an exclusive lease.'],
    ['Latest cloud publication',stamp(e.last_published_at),'Saved revision '+Number(e.current_revision||0)+'. An old timestamp does not prove a connection failure.'],
+   ['Saved race data',countsKnown?labeledRows.toLocaleString()+' rows with race labels':'Not confirmed',countsKnown?'From saved revision '+Number(e.current_revision||0)+'. Excludes rows without a race label; this is not a finisher or participant total.':'No complete race-count report is available. This does not establish that the event has zero results.'],
+   ['Race mappings',countsKnown?(unmapped.length?unmapped.length+' need mapping':detected.length+' recognized'):'Not confirmed',countsKnown?detected.map(r=>r.label+': '+r.count.toLocaleString()+' rows'+(unmapped.some(u=>u.label===r.label)?' — mapping required':' — recognized')).join(' · '):'Mapping readiness cannot be established from the current report.'],
    ['Bridge connection','Not reported','The current cloud interface has no dedicated Bridge heartbeat. A lease or prior computer activity does not establish an online connection.'],
    ['MYLAPS export freshness','Not reported','The cloud cannot currently confirm the age or readability of the local export. Check the Bridge on the timing computer.'],
    ['Waiting / blocked uploads','Not reported','Local queue depth, paused work and rejected uploads are not currently reported to this dashboard. Check the Bridge for these details.']
@@ -19,9 +28,8 @@
   if(!closed&&!permitted.length)alerts.push('No timing computer has publishing access. Enable the intended computer in Event settings when ready.');
   if(e.status==='live'&&access.policy?.require_lease&&!held)alerts.push('The event is Live but has no active writer lease. Check the intended publishing computer.');
   if(!e.is_public)alerts.push('This event is private; spectators cannot open its results.');
-  const unmapped=data.raceMapping?.unmappedRaces;
-  if(Array.isArray(unmapped)&&unmapped.length)alerts.push('Review MYLAPS race mappings in Event settings: '+unmapped.map(r=>r.label).join(', '));
-  else if(!data.raceMapping?.detectedRaces?.length)alerts.push('No detected race identities are available from the current cloud snapshot; mapping readiness is not confirmed.');
+  if(validRows(unmapped)&&unmapped.length)alerts.push('Review MYLAPS race mappings in Event settings: '+unmapped.map(r=>r.label).join(', '));
+  else if(!countsKnown)alerts.push('No detected race identities are available from the current cloud snapshot; mapping readiness is not confirmed.');
   if(!alerts.length)alerts.push('No issue found in the cloud status checks shown here. Local Bridge, source and queue health are not verified.');
   return {cards,alerts};
  }

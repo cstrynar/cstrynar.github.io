@@ -27,3 +27,13 @@ targeted validation; V1 does not claim it exists.
 Validation: six model tests cover unknown telemetry, lease expiry, closed-event
 access, inactive credentials/grants, private/mapping alerts and invalid timestamps;
 existing event-history/closeout/duplication/deletion checks remain applicable.
+
+## Cloud race summary — November 4
+
+The dashboard now summarizes detected race identities and race-labeled row counts
+from the saved revision, using the existing authenticated mapping response. Counts
+are explicitly not finisher/participant totals and exclude rows without race labels.
+Each identity is marked recognized or mapping required. Empty, malformed, duplicate
+or inconsistent reports remain Not confirmed; the existing API can return empty
+detection after a snapshot-read failure, so empty never means zero results.
+No backend, Bridge, publishing or event-data changes are required.
