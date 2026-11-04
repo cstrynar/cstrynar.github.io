@@ -70,11 +70,13 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
   </div>
 
   <nav class="tool-nav" aria-label="Admin views">
+    <button type="button" data-panel="operatorPanel" aria-pressed="false">Operator dashboard</button>
     <button type="button" data-panel="settingsPanel" aria-pressed="true">Event settings</button>
     <button type="button" data-panel="sharePanel" aria-pressed="false">QR &amp; share</button>
     <button type="button" data-panel="sponsorPanel" aria-pressed="false">Sponsors</button>
     <button type="button" data-panel="supportPanel" aria-pressed="false">Support</button>
   </nav>
+  <section id="operatorPanel" class="card" hidden aria-labelledby="operatorTitle"><div class="actions"><h2 id="operatorTitle">Operator dashboard</h2><button id="refreshOperator" class="secondary" type="button">Refresh status</button></div><p id="operatorState" role="status">Choose an event.</p><div id="operatorCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px"></div><h3>Attention needed</h3><ul id="operatorAlerts"></ul><p class="hint">Status refreshes every 30 seconds while this dashboard is visible. Refreshing status does not change event settings or publish results.</p></section>
   <details class="card"><summary>Event history</summary><div id="adminHistoryList"></div></details>
   <section class="card" aria-label="Event closeout summary" id="eventCloseout" hidden></section>
   <p id="adminEventState" class="status" role="status" hidden></p>
@@ -427,7 +429,7 @@ let loaded=null;
 let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,newSlugTouched=false,preservedSpecialDivisions=[],eventCatalog=[],eventScope='current';
 
 function clearEventSettings(message){
-  loaded=null;$('#settingsPanel').inert=true;window.MercuryAdminHistory?.clear();
+  loaded=null;$('#settingsPanel').inert=true;window.MercuryAdminHistory?.clear();window.MercuryOperator?.clear();
   const ids='eventName eventLocation eventDate eventStatus eventPublic featuredRaceKey showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent showEntries recentCount accentColor timezone overallPlaces removeOverallFromAgeGroups separateGenderAgeGroups scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
   preservedSpecialDivisions=[];$('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();$('#ageGroupRows').replaceChildren();$('#addExistingRacePanel').classList.add('hidden');$('#raceStructureHint').textContent='';renderCurrentLogo(null,null);hideStatus($('#addRaceStatus'));hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
@@ -950,7 +952,7 @@ async function loadEvent(){
   $('#scoreEnabled').checked=ts.enabled===true;$('#scoreRuleset').value=ts.ruleset==='usatf'?'usatf':'custom';$('#scorersPerTeam').value=String(ts.scorers_per_team||5);$('#displacersPerTeam').value=String(ts.displacers_per_team??2);$('#minCompleteTeamsToPublish').value=String(ts.min_complete_teams_to_publish||3);
   $('#unattachedMode').value=ts.unattached_mode||'skip_compress';$('#divisionMode').value=ts.division_mode||'all';$('#tiebreaker').value=ts.tiebreaker||'ncaa_head_to_head';toggleScoring();
   hideStatus($('#saveStatus'));
-  window.MercuryTools?.eventChanged(currentSlug,loaded);
+  window.MercuryTools?.eventChanged(currentSlug,loaded);window.MercuryOperator?.selected();
   await loadActivity();
 }
 
@@ -1111,6 +1113,7 @@ window.startMercuryAdmin=()=>{if(token){showApp();loadEvents().catch(()=>showLog
 <script src="../assets/duplicate-event.js"></script>
 <script src="../assets/delete-event.js"></script>
 <script src="../assets/admin-history.js"></script>
+<script src="../assets/operator-dashboard.js"></script>
 <script>startMercuryAdmin();</script>
 </body>
 </html>
