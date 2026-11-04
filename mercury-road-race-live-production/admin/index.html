@@ -282,6 +282,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div style="height:12px"></div>
     <h3>Overall Awards</h3>
     <div class="row">
+      <div><label for="ageGroupPlaces">Places awarded per age group</label><input id="ageGroupPlaces" type="number" min="0" max="20" placeholder="Default (3)"><p class="hint">Blank uses Top 3; 0 disables age-group awards. Overall winners always remain in age-group rankings.</p></div>
       <div><label>Overall places awarded per gender</label><input id="overallPlaces" type="number" min="0" max="20" value="3" placeholder="Default (3)"><p class="hint">Example: 3 = Top 3 Male + Top 3 Female overall. Blank uses the default Top 3; 0 disables overall awards.</p></div>
     </div>
     <h3>Age Groups</h3>
@@ -430,7 +431,7 @@ let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,ne
 
 function clearEventSettings(message){
   loaded=null;$('#settingsPanel').inert=true;window.MercuryAdminHistory?.clear();window.MercuryOperator?.clear();
-  const ids='eventName eventLocation eventDate eventStatus eventPublic featuredRaceKey showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent showEntries recentCount accentColor timezone overallPlaces removeOverallFromAgeGroups separateGenderAgeGroups scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
+  const ids='eventName eventLocation eventDate eventStatus eventPublic featuredRaceKey showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent showEntries recentCount accentColor timezone overallPlaces ageGroupPlaces removeOverallFromAgeGroups separateGenderAgeGroups scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
   preservedSpecialDivisions=[];$('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();$('#ageGroupRows').replaceChildren();$('#addExistingRacePanel').classList.add('hidden');$('#raceStructureHint').textContent='';renderCurrentLogo(null,null);hideStatus($('#addRaceStatus'));hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
   $('#adminEventState').hidden=false;$('#adminEventState').textContent=message;
@@ -637,6 +638,7 @@ function updateAgeGroupEmpty(){
 }
 function renderAwards(raw){
   const awards=raw&&typeof raw==='object'?raw:{};
+  $('#ageGroupPlaces').value=awards.age_group_places==null?'':String(awards.age_group_places);
   $('#overallPlaces').value=awards.overall_places==null?'':String(awards.overall_places);
   $('#removeOverallFromAgeGroups').checked=awards.remove_overall_from_age_groups!==false;
   $('#separateGenderAgeGroups').checked=ageGroupsAreSeparate(awards.age_groups);
@@ -653,6 +655,8 @@ function useStandardAgeGroups(){
   $('#separateGenderAgeGroups').checked=true;$('#ageGroupRows').replaceChildren();for(const [min,max,label] of standards)addAgeGroupRow({min,max,label});updateAgeGroupEmpty();
 }
 function collectAwards(){
+  const ageText=$('#ageGroupPlaces').value.trim(),agePlaces=ageText===''?null:Number(ageText);
+  if(agePlaces!==null&&(!Number.isInteger(agePlaces)||agePlaces<0||agePlaces>20))throw new Error('Age-group award places must be a whole number from 0 to 20.');
   const overallText=$('#overallPlaces').value.trim();
   const overall=overallText===''?null:Number(overallText);
   if(overall!==null&&(!Number.isInteger(overall)||overall<0||overall>20))throw new Error('Overall award places must be a whole number from 0 to 20.');
@@ -669,7 +673,7 @@ function collectAwards(){
     const divisions=JSON.parse(row.dataset.divisions);
     for(const d of divisions)ageGroups.push({min,max,label,division:d});
   }
-  return {overall_places:overall,remove_overall_from_age_groups:$('#removeOverallFromAgeGroups').checked,age_groups:ageGroups,special_divisions:structuredClone(preservedSpecialDivisions)};
+  return {age_group_places:agePlaces,overall_places:overall,remove_overall_from_age_groups:$('#removeOverallFromAgeGroups').checked,age_groups:ageGroups,special_divisions:structuredClone(preservedSpecialDivisions)};
 }
 
 function parseElapsedOffset(value){
