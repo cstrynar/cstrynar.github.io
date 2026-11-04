@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {handler,validReport} from '../functions/bridge-status/handler.ts';
+const body={eventSlug:'test-race',sessionId:'a'.repeat(32),sequence:1,version:'0.3.4-rc1',state:'watching',sourceAgeSeconds:10,pending:false,staged:false,correction:false};
+test('strict allowlist rejects unexpected data and bad observations',()=>{
+ assert.ok(validReport(body));
+ for(const bad of [{...body,results:[]},{...body,state:'healthy'},{...body,pending:1},{...body,sourceAgeSeconds:-1},{...body,sequence:NaN},{...body,eventSlug:'a&slug=eq.b'}])assert.ok(!validReport(bad));
+});
+function setup(replies){let calls=[];return {calls,run:handler('https://example.test','server-secret',async(url,init)=>{calls.push({url,init});assert.equal(init.headers.Authorization,'Bearer server-secret');const next=replies.shift();if(next===undefined)throw Error('unexpected call');return Response.json(next)})}}
+test('anonymous request cannot read any database rows',async()=>{const {run,calls}=setup([]);assert.equal((await run(new Request('https://api.test/?slug=test-race'))).status,401);assert.equal(calls.length,0)});
+test('invalid Bridge credential never reaches event or write',async()=>{const {run,calls}=setup([[]]);assert.equal((await run(new Request('https://api.test/',{method:'POST',headers:{'x-mercury-key':'x'.repeat(32)},body:JSON.stringify(body)}))).status,401);assert.equal(calls.length,1)});
+test('revoked grant cannot report and raw server errors are hidden',async()=>{const {run}=setup([[{id:'client'}],[{id:'event'}],null]);const r=await run(new Request('https://api.test/',{method:'POST',headers:{'x-mercury-key':'x'.repeat(32)},body:JSON.stringify(body)}));assert.equal(r.status,403);assert.ok(!(await r.text()).includes('secret'))});
+test('out of order report is not marked accepted',async()=>{const {run}=setup([[{id:'client'}],[{id:'event'}],false]);const r=await run(new Request('https://api.test/',{method:'POST',headers:{'x-mercury-key':'x'.repeat(32)},body:JSON.stringify(body)}));assert.deepEqual(await r.json(),{ok:true,accepted:false})});
+test('disabled admin cannot read reports',async()=>{const {run,calls}=setup([[{admin_client_id:'admin'}],[]]);assert.equal((await run(new Request('https://api.test/?slug=test-race',{headers:{authorization:'Bearer session'}}))).status,401);assert.equal(calls.length,2)});
+test('admin sees only reports with active read grants',async()=>{const {run}=setup([[{admin_client_id:'admin'}],[{id:'admin'}],[{id:'event',slug:'test-race'}],[{client_id:'c1',bridge_clients:{name:'Primary'}},{client_id:'c2',bridge_clients:{name:'Revoked'}}],[{bridge_client_id:'c1'}]]);const r=await run(new Request('https://api.test/?slug=test-race',{headers:{authorization:'Bearer session'}}));const data=await r.json();assert.equal(data.reports.length,1);assert.equal(data.reports[0].client_name,'Primary');assert.ok(!JSON.stringify(data).includes('Revoked'))});
+test('oversized body rejected before parsing',async()=>{const {run,calls}=setup([[{id:'client'}]]);assert.equal((await run(new Request('https://api.test/',{method:'POST',headers:{'x-mercury-key':'x'.repeat(32)},body:'x'.repeat(2049)}))).status,413);assert.equal(calls.length,1)});

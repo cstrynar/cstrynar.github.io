@@ -27,3 +27,8 @@ test('empty, missing, malformed and inconsistent mapping reports never imply zer
   assert.equal(v.cards.find(c=>c[0]==='Race mappings')[1],'Not confirmed');
  }
 });
+const reportingAccess={...access,clients:[{id:'c1',name:'Primary',active:true,grant:{active:true,can_read:true,can_publish:true}}]};
+const report={client_id:'c1',client_name:'Primary',session_id:'session',state:'watching',source_age_seconds:15,pending:false,staged:false,correction:false,received_at:'2026-11-04T13:59:50Z'};
+test('fresh report conveys state, advancing export age and waiting flags',()=>{const v=model(data,reportingAccess,now,{reports:[{...report,pending:true}]});assert.match(v.cards[6][1],/recent/);assert.match(v.cards[7][2],/25 seconds/);assert.equal(v.cards[8][1],'Attention needed');assert.match(v.cards[8][2],/pending request/)});
+test('stale, revoked and malformed reports never imply health',()=>{for(const r of [{...report,received_at:'2026-11-04T13:57:00Z'},{...report,client_id:'revoked'},{...report,received_at:'2027-01-01'},{...report,pending:'false'}]){const v=model(data,reportingAccess,now,{reports:[r]});assert.ok(!v.cards[6][1].includes('recent'));assert.equal(v.cards[7][1],'Not confirmed');assert.equal(v.cards[8][1],'Not confirmed')}});
+test('multiple recent sessions are explicit, including paused reports',()=>{const v=model(data,reportingAccess,now,{reports:[report,{...report,session_id:'other',state:'paused'}]});assert.equal(v.cards[6][1],'2 recent session reports');assert.match(v.cards[6][2],/paused/)});
