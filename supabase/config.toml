@@ -1,0 +1,3 @@
+# Dedicated endpoint validates the existing opaque Mercury Admin session itself.
+[functions.admin-duplicate-event]
+verify_jwt = false
