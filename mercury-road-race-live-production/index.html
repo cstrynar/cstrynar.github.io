@@ -171,7 +171,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
 <main>
   <div class="shell">
     <div class="event-switcher" id="eventSwitcher" hidden>
-      <label for="eventSelect">Event</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><label>Browse <select id="historyScope"><option value="current">Current / Upcoming</option><option value="past">Past Results</option><option value="all">All events</option></select></label><label>Find event <input id="historySearch" type="search" placeholder="Event name or year"></label></div><p id="historyCount" role="status"></p><label for="eventSelect">Event</label>
       <select id="eventSelect" aria-label="Choose event"></select>
     </div>
     <section id="eventState" class="event-state" role="status" aria-live="polite">
@@ -288,6 +288,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
 </main>
 <footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.11 R31</span><span id="lastRevision">Feed revision 0</span></div></footer>
 <dialog id="runnerDialog"><button class="dialog-close" id="closeDialog" aria-label="Close">×</button><p class="eyebrow" style="color:var(--accent)">Runner Details</p><h3 id="dialogName"></h3><div id="dialogGrid" class="dialog-grid"></div></dialog>
+<script src="assets/event-history.js"></script>
 <script>
 const SUPABASE_URL="https://wajusbsyouyufpccixol.supabase.co";
 const fallback={schemaVersion:15,serverTime:null,revision:0,updatedAt:null,status:"setup",event:{slug:null,name:"Mercury Road Race Live",location:null,date:null,startTime:null,distance:null},branding:{eventLogoUrl:null,eventLogoAlt:null,accentColor:"#b30f2b"},display:{showOverallPlace:true,showBib:true,showName:true,showGender:true,showAge:false,showAgeGroup:true,showGrade:false,gradeSource:"grade",showTeam:false,teamScoringEnabled:false,showGunTime:true,showChipTime:true,showPace:true,showRecentFinishers:true,showEntryList:false,showPodium:true,podiumMode:"featured",recentFinishersDefaultCount:10},awards:{age_groups:[]},courseRecords:[],podiumConfigs:[],races:[],entriesUpdatedAt:null,entries:[],recentFinishers:[],results:[]};
@@ -324,13 +325,23 @@ function showEventState(title,message,retry=false){
  $('#requestedEvent').textContent=currentEventSlug?'Requested event: '+currentEventSlug:'';
  $('#retryEvent').hidden=!retry;$('#chooseEvent').hidden=!currentEventSlug||publicEvents.length===0;
 }
+let historyInitialized=false;
+function renderPublicHistory(){
+ const rows=MercuryHistory.filter(publicEvents,$('#historyScope').value,$('#historySearch').value);
+ eventSelect.replaceChildren(new Option(rows.length?'Choose an event':'No matching events',''));
+ for(const e of rows)eventSelect.append(new Option([e.name,e.date,e.status==='shadow'?'Demo / rehearsal':''].filter(Boolean).join(' / '),e.slug));
+ eventSelect.value=rows.some(e=>e.slug===currentEventSlug)?currentEventSlug:'';
+ $('#historyCount').textContent=rows.length+' matching event'+(rows.length===1?'':'s');
+}
+$('#historyScope').onchange=renderPublicHistory;
+$('#historySearch').oninput=renderPublicHistory;
 async function loadEventList(epoch=eventEpoch){
  try{
   const data=await publicJSON('live-events');if(epoch!==eventEpoch)return false;
   if(!Array.isArray(data?.events))throw new Error('Invalid event list');
   publicEvents=data.events.filter(e=>typeof e?.slug==='string'&&e.slug&&typeof e.name==='string');
-  eventSelect.innerHTML='<option value="">Choose an event</option>'+publicEvents.map(e=>`<option value="${esc(e.slug)}">${esc([e.name,e.date].filter(Boolean).join(' / '))}</option>`).join('');
-  eventSelect.value=publicEvents.some(e=>e.slug===currentEventSlug)?currentEventSlug:'';
+  if(!historyInitialized){const selected=publicEvents.find(e=>e.slug===currentEventSlug);$('#historyScope').value=selected?(MercuryHistory.isPast(selected)?'past':'current'):(publicEvents.some(e=>!MercuryHistory.isPast(e))?'current':'past');historyInitialized=true;}
+  renderPublicHistory();
   eventSwitcher.hidden=publicEvents.length===0;
   if(!currentEventSlug){showEventState(publicEvents.length?'Choose an event':'No public events available',publicEvents.length?'Select the race whose results you want to view.':'Please check back later.',!publicEvents.length);return false}
   if(!publicEvents.some(e=>e.slug===currentEventSlug)){clearEventData();showEventState('Event unavailable','We could not find a public event for this link. It may be incorrect or no longer available.',true);return false}

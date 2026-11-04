@@ -75,6 +75,8 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <button type="button" data-panel="sponsorPanel" aria-pressed="false">Sponsors</button>
     <button type="button" data-panel="supportPanel" aria-pressed="false">Support</button>
   </nav>
+  <details class="card"><summary>Event history</summary><div id="adminHistoryList"></div></details>
+  <section class="card" aria-label="Event closeout summary" id="eventCloseout" hidden></section>
   <p id="adminEventState" class="status" role="status" hidden></p>
   <section id="newEventChoice" class="card hidden" aria-labelledby="newEventChoiceTitle">
     <h2 id="newEventChoiceTitle" tabindex="-1">New event</h2>
@@ -425,7 +427,7 @@ let loaded=null;
 let adminLoadEpoch=0,adminListEpoch=0,adminActivityEpoch=0,adminClientEpoch=0,newSlugTouched=false,preservedSpecialDivisions=[],eventCatalog=[],eventScope='current';
 
 function clearEventSettings(message){
-  loaded=null;$('#settingsPanel').inert=true;
+  loaded=null;$('#settingsPanel').inert=true;window.MercuryAdminHistory?.clear();
   const ids='eventName eventLocation eventDate eventStatus eventPublic featuredRaceKey showOverall showBib showName showGender showAge showAgeGroup showTeam showGun showChip showPace showRecent showEntries recentCount accentColor timezone overallPlaces removeOverallFromAgeGroups separateGenderAgeGroups scoreEnabled scorersPerTeam displacersPerTeam unattachedMode divisionMode tiebreaker logoFile';
   for(const id of ids.split(' ')){const n=$('#'+id);if(n.type==='checkbox')n.checked=false;else if(n.tagName==='SELECT')n.selectedIndex=-1;else n.value='';}
   preservedSpecialDivisions=[];$('#activityBody').replaceChildren();$('#raceNamesBody').replaceChildren();$('#raceNamesTableWrap').hidden=true;$('#raceNamesEmpty').hidden=false;$('#raceClockRows').replaceChildren();$('#ageGroupRows').replaceChildren();$('#addExistingRacePanel').classList.add('hidden');$('#raceStructureHint').textContent='';renderCurrentLogo(null,null);hideStatus($('#addRaceStatus'));hideStatus($('#raceClockStatus'));hideStatus($('#saveStatus'));
@@ -878,7 +880,7 @@ function adminTodayISO(){
   return parts.year+'-'+parts.month+'-'+parts.day;
 }
 function eventIsCurrent(e){
-  if(String(e?.status||'')==='archived')return false;
+  if(['finished','official','archived'].includes(String(e?.status||'')))return false;
   const date=String(e?.event_date||'').trim();
   return !date||date>=adminTodayISO();
 }
@@ -899,6 +901,7 @@ function renderEventList(){
   $('#eventSelect').innerHTML=rows.map(e=>'<option value="'+esc(e.slug)+'">'+esc(e.name+' — '+(e.event_date||'No date'))+'</option>').join('');
   currentSlug=rows.some(e=>e.slug===previous)?previous:(rows[0]?.slug||'');
   $('#eventSelect').value=currentSlug;
+  window.MercuryAdminHistory?.list();
   return rows;
 }
 async function setEventScope(scope){
@@ -925,7 +928,7 @@ async function loadEvent(){
   if(epoch!==adminLoadEpoch||slug!==currentSlug)return;
   if(j.event?.slug!==slug){$('#adminEventState').textContent='Event response does not match the selection. Refresh to retry.';return;}
   $('#settingsPanel').inert=false;$('#adminEventState').hidden=true;
-  loaded=j;const e=j.event||{},s=j.settings||{},ts=s.team_scoring||{};
+  loaded=j;eventCatalog=eventCatalog.map(row=>row.slug===j.event.slug?{...row,...j.event}:row);window.MercuryAdminHistory?.list();window.MercuryAdminHistory?.summary();const e=j.event||{},s=j.settings||{},ts=s.team_scoring||{};
   const raceStructureLocked=Number(e.current_revision||0)!==0||!!e.last_published_at||!['setup','shadow'].includes(String(e.status||''));
   const sourceLabelEditable=['setup','shadow','live'].includes(String(e.status||''));
   renderRaceNames(j.raceAliases||[],sourceLabelEditable);
@@ -972,7 +975,7 @@ async function save(){
   const buttons=[...document.querySelectorAll('.save-event-btn')];buttons.forEach(b=>b.disabled=true);
   try{
     await req(API+'/admin-event-settings?slug='+encodeURIComponent(context.slug),{method:'PUT',headers:authHeaders(),body:JSON.stringify(body)});
-    if(eventContextCurrent(context)){await loadEvent();status($('#saveStatus'),'Saved.');showToast('Event settings saved successfully.')}
+    if(eventContextCurrent(context)){await loadEvent();await loadClients();status($('#saveStatus'),'Saved.');showToast('Event settings saved successfully.')}
   }catch(e){
     if(eventContextCurrent(context)){status(st,'Save failed: '+e.message,false);showToast('Save failed: '+e.message,false)}
   }finally{buttons.forEach(b=>b.disabled=false)}
@@ -995,10 +998,11 @@ async function loadClients(){
   const slug=currentSlug,eventEpoch=adminLoadEpoch,clientEpoch=++adminClientEpoch;
   const state=$('#clientAccessState');
   if(!slug){$('#clientsBody').replaceChildren();state.textContent='Choose an event to manage timing-computer access.';return}
-  state.textContent='Loading timing-computer access...';
+  state.textContent='Loading timing-computer access...';window.MercuryAdminHistory?.summary();
   try{
     const j=await req(API+'/admin-event-settings?action=bridge-access&slug='+encodeURIComponent(slug),{headers:authHeaders(false)});
     if(clientEpoch!==adminClientEpoch||eventEpoch!==adminLoadEpoch||slug!==currentSlug)return;
+    window.MercuryAdminHistory?.summary(j);
     const allClients=Array.isArray(j.clients)?j.clients:[],leaseId=String(j.lease?.bridge_client_id||'');
     const retiredCount=allClients.filter(c=>c.active!==true).length;
     const clients=$('#showRetiredComputers').checked?allClients:allClients.filter(c=>c.active===true);
@@ -1017,7 +1021,7 @@ async function loadClients(){
     document.querySelectorAll('[data-access]').forEach(box=>box.onchange=()=>changeEventAccess(box.dataset.clientId,box.dataset.access));
   }catch(e){
     if(clientEpoch===adminClientEpoch&&eventEpoch===adminLoadEpoch&&slug===currentSlug){
-      state.textContent='Unable to load timing-computer access.';
+      state.textContent='Unable to load timing-computer access.';window.MercuryAdminHistory?.summary(null,true);
       $('#clientsBody').innerHTML='<tr><td colspan="8">Unable to load timing computers.</td></tr>';
     }
   }
@@ -1106,6 +1110,7 @@ window.startMercuryAdmin=()=>{if(token){showApp();loadEvents().catch(()=>showLog
 <script src="../assets/admin-tools.js"></script>
 <script src="../assets/duplicate-event.js"></script>
 <script src="../assets/delete-event.js"></script>
+<script src="../assets/admin-history.js"></script>
 <script>startMercuryAdmin();</script>
 </body>
 </html>
