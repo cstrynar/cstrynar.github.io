@@ -1,0 +1,7 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const h=require('../assets/event-history.js');
+const events=[{slug:'cider',name:'Cider',date:'October 18, 2026',status:'finished'},{slug:'spooky',name:'Spooky',date:'October 25, 2026',status:'finished'},{slug:'future',name:'Next race',date:'January 10, 2027',status:'setup'},{slug:'archived',name:'Archived',date:null,status:'archived'},{slug:'closed-today',name:'Closed today',date:'November 04, 2026',status:'official'}];
+test('past results newest first; terminal states always historical',()=>{assert.deepEqual(h.filter(events,'past','','2026-11-04').map(e=>e.slug),['closed-today','spooky','cider','archived']);});
+test('upcoming excludes completed and archived events',()=>{assert.deepEqual(h.filter(events,'current','','2026-11-04').map(e=>e.slug),['future']);});
+test('name/year searches and empty matches do not mutate source catalog',()=>{const before=JSON.stringify(events);assert.deepEqual(h.filter(events,'all','2027','2026-11-04').map(e=>e.slug),['future']);assert.equal(h.filter(events,'past','SPooKy','2026-11-04')[0].slug,'spooky');assert.equal(h.filter(events,'all','absent','2026-11-04').length,0);assert.equal(JSON.stringify(events),before);});
+test('undated upcoming last and date normalization',()=>{assert.equal(h.date({date:'October 05, 2026'}),'2026-10-05');assert.equal(h.date({date:'invalid'}),'');assert.deepEqual(h.filter([{slug:'a',name:'A'},{slug:'b',name:'B',event_date:'2027-01-01'}],'current','','2026-11-04').map(e=>e.slug),['b','a']);});
