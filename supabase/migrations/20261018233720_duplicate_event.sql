@@ -1,4 +1,4 @@
--- Additive only. Apply to an isolated Supabase environment first; never auto-run.
+-- Additive schema. Production rollout authorized November 4, 2026.
 -- Service-role-only RPCs use invoker rights: no SECURITY DEFINER / public execute.
 create table public.event_duplicate_operations (
  operation_id uuid primary key, admin_id uuid not null references public.admin_clients(id),
@@ -104,7 +104,7 @@ begin
    st:=st||jsonb_build_object(k,s->k);
   end loop;
   if s->>'recent_finishers_default_count' not in ('5','10','15','20') then raise exception 'invalid_display_configuration'; end if;
-  if coalesce(s->>'grade_source','') not in ('category','age') or coalesce(s->>'podium_mode','') not in ('featured','custom','off')
+  if coalesce(s->>'grade_source','') not in ('grade','category','age','city') or coalesce(s->>'podium_mode','') not in ('featured','custom','off')
     or jsonb_typeof(s->'podium_configs') is distinct from 'array' then raise exception 'invalid_display_configuration'; end if;
   if jsonb_array_length(s->'podium_configs')>100 or (s->>'podium_mode'='custom' and jsonb_array_length(s->'podium_configs')=0) then raise exception 'invalid_display_configuration'; end if;
   for item in select value from jsonb_array_elements(s->'podium_configs') loop

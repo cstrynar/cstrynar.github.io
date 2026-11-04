@@ -66,7 +66,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 <main id="appView" class="shell hidden">
   <div class="topbar">
     <div class="grow"><label for="eventSelect">Event</label><div class="actions event-scope" role="group" aria-label="Event list"><button type="button" class="secondary small" id="currentEventsBtn" aria-pressed="true">Current / Upcoming <span id="currentEventsCount"></span></button><button type="button" class="secondary small" id="pastEventsBtn" aria-pressed="false">Past / Archived <span id="pastEventsCount"></span></button></div><select id="eventSelect"></select></div>
-    <div class="actions"><button class="primary" id="newEventBtn">New event</button><button class="secondary" id="refreshBtn">Refresh</button><button class="secondary" id="logoutBtn">Log out</button></div>
+    <div class="actions"><button class="primary" id="newEventBtn">New event</button><button class="secondary" id="deleteEventBtn">Delete event</button><button class="secondary" id="refreshBtn">Refresh</button><button class="secondary" id="logoutBtn">Log out</button></div>
   </div>
 
   <nav class="tool-nav" aria-label="Admin views">
@@ -1105,6 +1105,7 @@ window.startMercuryAdmin=()=>{if(token){showApp();loadEvents().catch(()=>showLog
 <script src="../assets/qrcode.js"></script>
 <script src="../assets/admin-tools.js"></script>
 <script src="../assets/duplicate-event.js"></script>
+<script src="../assets/delete-event.js"></script>
 <script>startMercuryAdmin();</script>
 </body>
 </html>
