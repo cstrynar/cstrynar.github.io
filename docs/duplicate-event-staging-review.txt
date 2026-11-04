@@ -1,0 +1,137 @@
+Duplicate Event — staging discovery and second local review
+Verified 2026-10-19, read-only authorized metadata; no hosted writes performed.
+
+STAGING DESTINATION: NONE VERIFIED
+- Supabase list_projects returned five accessible projects: nudge; Taylor 5K
+  Planning; Executive Portal; Nudge Multiplayer Dev; Mercury Live Results.
+- The only Mercury project is Mercury Live Results, ref wajusbsyouyufpccixol,
+  organization yspnwzkbpnlxnfotzgzy, us-east-1, ACTIVE_HEALTHY, PostgreSQL 17.6.1.166.
+  Repository configuration and the existing project plan identify it as production.
+  It is NOT a staging destination and must not receive fixture writes.
+- list_branches(wajusbsyouyufpccixol) returned an empty branches array.
+- No separate Mercury staging ref was found in relevant repository configuration.
+  This conclusion covers the accessible authorized inventory, not unknown accounts.
+- The other projects belong to other applications and must not be repurposed.
+- Existing event-assets bucket metadata: public=true; 5,242,880-byte limit; PNG,
+  JPEG, WebP and SVG allowed. Existing anon/authenticated roles do not bypass RLS;
+  existing service_role does bypass RLS. No bucket/role setting was changed.
+
+EXACT MISSING REQUIREMENT
+An owner-selected, separately authorized isolated Mercury staging project and
+permission to bootstrap its schema/test identities, deploy the one new endpoint,
+and execute bounded fixture-only writes. Creation, credentials, access changes,
+branching, hosted migrations and deployments remain unauthorized in this task.
+Do not reuse production credentials/sessions/results or clone production data.
+No project ref, API key or test identity is invented by this plan.
+
+PROPOSED BOUNDED STAGING WORK — ONLY AFTER A DESTINATION IS VERIFIED AND APPROVED
+1. Record exact staging ref, organization, region and endpoint URL in a run manifest.
+   Add a hard target guard that refuses wajusbsyouyufpccixol and every nonapproved
+   ref. No production .env/key material copied. No grants of broader human/app roles.
+2. On a new empty project, separately review/apply only the Mercury schema and
+   existing Admin/public-function code needed for these tests, without records or
+   secrets. This prerequisite is distinct from the feature migration; the feature
+   migration cannot run against a blank database by itself.
+3. Apply exactly the reviewed Duplicate Event additive migration: two RLS-enabled
+   tracking tables, four indexes and three SECURITY INVOKER functions. Deploy only
+   admin-duplicate-event and a preview Admin wired exclusively to the verified
+   staging ref. No production push/domain assignment/release. Real existing Admin
+   auth and public-results functions must also exist in staging for hosted E2E.
+4. Use at most two synthetic source events (Cider-like 2 races/20 age-group division
+   rows, Spooky-like 1 timed 5K/no age groups). Never import Cider/Spooky records,
+   actual entrants, results, timing credentials, grants, leases or history.
+   If synthetic history/result/grant fixtures are needed, approve them separately
+   in the manifest: fake data only; disabled fake Bridge clients; inert/expired
+   grants/leases; no functioning timing credential or activation code.
+5. At most 12 destination event attempts, all private/setup/revision0, no Read or
+   Publish grants and no writer leases. Bound negative requests to 100 operation
+   IDs. Cover success, all configuration groups through read-only previews,
+   unique-slug races, source drift, double-submit, dropped responses, token expiry,
+   cross-admin ownership, cancel-before-reserve, cancel-during-copy, and uncertain
+   upload acknowledgement. Verify anonymous public event/results APIs reject each
+   private destination. No event is made public and no Bridge publish is enabled.
+6. At most four synthetic source logos (PNG/JPEG/WebP/SVG), each <=100 KiB, and at
+   most 12 independent destination-logo paths. Use staging event-assets only,
+   matching the current 5 MiB/type constraints. If matching the existing public
+   bucket behavior is approved, public content is synthetic non-sensitive logos
+   only. A private event does not make images in a public bucket confidential.
+7. Auth tests use staging-only test identities/session material supplied or seeded
+   through an approved secure path. If two test Admin identities are required for
+   ownership testing, authorize that setup explicitly; do not create them under
+   the current read-only task. No persistent access survives the test cleanup.
+
+CLEANUP PLAN / GUARDS
+- Keep a manifest of every fixture event, operation, worker and exact logo path.
+  No name-based broad deletion and no deletion outside that manifest.
+- Cancel incomplete operations through the endpoint. A cancellation tombstone
+  blocks delayed create/reserve requests. Cleanup refuses to report cancelled
+  while any recorded copy worker is unresolved or its tracked asset still exists.
+- A known finished worker settles and can finish cleanup. An upload with an
+  unknown acknowledgement remains unresolved; do NOT time it out or force-delete
+  its asset. First prove the originating writer is stopped and reconcile Storage
+  request/object state. Any targeted support SQL to settle that exact worker
+  requires separately authorized staging support privileges and evidence.
+- Once all writers are terminal and no operations are uncertain, delete only
+  manifest-owned destination/source synthetic assets via Storage API (not direct
+  storage.objects deletion). Verify absence. After preserving evidence, remove manifest-owned worker rows then operation
+  rows (using separately authorized staging support SQL), then fixture event child
+  rows and events, and finally staging-only test sessions/identities.
+- Tracking FKs intentionally retain provenance; do not remove operations before
+  reconciling assets. Keep the manifest/evidence, not session tokens or secrets.
+- Retain the isolated staging schema for future tests or delete the entire staging
+  project only if the owner separately authorizes that irreversible action.
+- Production Cider/Spooky, production assets, roles, RLS and timing access remain
+  untouched throughout staging preparation, tests and cleanup.
+
+MIGRATION SECURITY IMPLICATIONS
+- No CREATE/ALTER ROLE, no role membership grant, no existing-table GRANT/REVOKE,
+  no existing RLS policy modification, no storage bucket/policy modification, no
+  SECURITY DEFINER and no existing event/result/settings/client mutation.
+- New table access is revoked from PUBLIC/anon/authenticated. Only the already
+  privileged service_role receives SELECT/INSERT/UPDATE on the new tracking tables
+  and EXECUTE on the new functions. RLS is enabled with no public policies.
+- The new endpoint deliberately uses verify_jwt=false because Mercury's existing
+  opaque Admin session is not a Supabase Auth JWT. This setting applies only to
+  the new endpoint; it does not disable auth on an existing function. The handler
+  hashes the supplied Bearer session, checks expiry/active Admin, derives admin ID
+  itself, and passes its hash internally. SQL independently checks that same
+  session and locks/rechecks session/Admin immediately before event insertion.
+- Direct public/anonymous RPCs are denied. Operation ownership is checked against
+  the authenticated Admin; the browser cannot invoke worker/cleanup RPC modes or
+  supply an actor, service key, session hash or internal worker ID.
+- Read-only ACL checks also verified existing service_role SELECT/INSERT/UPDATE
+  rights on all required existing Admin/event/settings/race/policy/activity tables
+  and storage.objects. Row locks therefore require no added existing-table grant.
+- Service role already bypasses RLS (verified metadata); its existing broad role
+  attributes are not expanded. The new endpoint adds a narrowly authenticated
+  configuration-duplication capability. New functions/table privileges and a new
+  reachable endpoint still require security review before hosted deployment.
+- Source references add FK dependencies that constrain later hard deletion of a
+  source/Admin while retained operation provenance references it; they do not
+  modify those existing rows. Future hard-delete features must account for this.
+- Logos use the existing public bucket behavior; this is not a newly loosened ACL.
+  Event visibility and brand-asset confidentiality are different boundaries.
+
+SECOND LOCAL REVIEW FINDINGS AND FIXES
+A. Found: cancel could return not_found and discard the request before a delayed
+   create reached reservation. Fixed: durable owned cancellation tombstone; late
+   reserve is rejected. Added an explicit delayed-request interleaving test.
+B. Found: cancel could report cleanup complete while a copy could still finish.
+   Fixed: tracked copy workers register before any upload, cancel prevents new
+   workers, and cleanup waits for all known workers. Unknown upload outcomes never
+   silently settle. UI retains the request while cleanup_pending. No automatic
+   stale-worker expiry is used. Real process-crash reconciliation remains a hosted
+   operational acceptance gate, not a claim that separate systems are atomic.
+C. Found: the initial HTTP auth check could precede session expiry/revocation before
+   commit. Fixed: SQL binds each RPC to the actual hashed session/Admin, checks
+   current expiry, and rechecks/locks session and Admin before destination writes.
+D. Hardened: reject traversal/URL-like logo references, avoid collisions with any
+   existing event/reservation/asset prefix, and verify the fetched source identity
+   matches the selected source. Source locks/readbacks do not modify source data.
+E. Hardened: null/array JSON requests now produce a bounded validation error instead
+   of an unhandled exception. Copy failure also reconciles an already-completed
+   operation instead of falsely saying no event committed.
+F. Retained: immutable operation payload hash, unique slug, per-operation advisory
+   lock, fully allowlisted destination columns, private/setup/0/null publication,
+   no snapshots/finisher history/grants/leases/secrets, required exclusive lease,
+   independent verified logo bytes, and exactly one new provenance entry.

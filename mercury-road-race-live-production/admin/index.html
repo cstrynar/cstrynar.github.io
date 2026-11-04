@@ -31,6 +31,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 @media(max-width:720px){.row,.row3,.race-create-row,.podium-config-row,.course-record-row,.age-group-row,.clock-row{grid-template-columns:1fr}.podium-config-row button{margin-top:0}.topbar{align-items:stretch;flex-direction:column}.head{min-height:72px}.logo{height:54px}.product span{display:none}}
 </style>
 <link rel="stylesheet" href="../assets/admin-tools.css">
+<link rel="stylesheet" href="../assets/duplicate-event.css">
 </head>
 <body>
 <header><div class="shell head"><img class="logo" src="https://mercurytiming.com/mercury-logo.png" alt="Mercury Timing Systems"><div class="product"><b>Road Race Live Admin</b><span>Event setup + scoring controls</span></div></div></header>
@@ -65,7 +66,7 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
 <main id="appView" class="shell hidden">
   <div class="topbar">
     <div class="grow"><label for="eventSelect">Event</label><div class="actions event-scope" role="group" aria-label="Event list"><button type="button" class="secondary small" id="currentEventsBtn" aria-pressed="true">Current / Upcoming <span id="currentEventsCount"></span></button><button type="button" class="secondary small" id="pastEventsBtn" aria-pressed="false">Past / Archived <span id="pastEventsCount"></span></button></div><select id="eventSelect"></select></div>
-    <div class="actions"><button class="primary" id="newEventBtn">New event</button><button class="secondary" id="refreshBtn">Refresh</button><button class="secondary" id="logoutBtn">Log out</button></div>
+    <div class="actions"><button class="primary" id="newEventBtn">New event</button><button class="secondary" id="deleteEventBtn">Delete event</button><button class="secondary" id="refreshBtn">Refresh</button><button class="secondary" id="logoutBtn">Log out</button></div>
   </div>
 
   <nav class="tool-nav" aria-label="Admin views">
@@ -75,6 +76,22 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <button type="button" data-panel="supportPanel" aria-pressed="false">Support</button>
   </nav>
   <p id="adminEventState" class="status" role="status" hidden></p>
+  <section id="newEventChoice" class="card hidden" aria-labelledby="newEventChoiceTitle">
+    <h2 id="newEventChoiceTitle" tabindex="-1">New event</h2>
+    <p>Start with a blank setup or reuse a past event’s races, age groups and awards.</p>
+    <div class="actions" role="group" aria-label="How to create the event">
+      <button type="button" class="primary" id="createFromScratchBtn">Create from scratch</button>
+      <button type="button" class="secondary" id="chooseDuplicateBtn" aria-expanded="false" aria-controls="pastEventChoice">Duplicate a past event</button>
+    </div>
+    <div id="pastEventChoice" hidden style="margin-top:20px">
+      <label for="duplicateSourceSelect">Past event — most recent first</label>
+      <select id="duplicateSourceSelect" aria-describedby="duplicateSourceHelp"></select>
+      <p id="duplicateSourceHelp" class="hint"></p>
+      <button type="button" class="primary" id="continueDuplicateBtn">Continue</button>
+    </div>
+    <p id="newEventChoiceStatus" class="status hidden" role="status"></p>
+    <div class="actions" style="margin-top:20px"><button type="button" class="secondary" id="cancelEventChoiceBtn">Cancel</button></div>
+  </section>
   <section id="newEventCard" class="card hidden">
     <h2>Create New Event</h2>
     <p class="sub">Creates a clean revision-0 Mercury event. Enter the event details, then define each race, public race name, and scheduled start. Mercury derives the event's race/distance summary from those race rows automatically.</p>
@@ -97,6 +114,37 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     <div class="actions"><button type="button" class="primary" id="createEventBtn">Create clean event</button><button type="button" class="secondary" id="cancelNewEventBtn">Cancel</button><span id="createEventStatus" class="status hidden"></span></div>
   </section>
 
+
+<section id="duplicateEventCard" class="card" hidden aria-labelledby="duplicateTitle">
+ <div class="dup-steps"><span id="dupStep1">1 · Details &amp; configuration</span><span id="dupStep2">2 · Review &amp; create</span></div>
+ <h1 id="duplicateTitle">Duplicate Event</h1><p class="sub">Reuse a setup for a new year. The source event stays unchanged.</p>
+ <p id="dupSource" class="dup-source"></p><div id="dupError" class="status bad" role="alert" hidden></div>
+ <p id="dupStatus" class="status" role="status" aria-live="polite" hidden></p>
+ <div id="dupDetails"><div class="dup-grid"><div><h3>New event details</h3><div class="row">
+ <div class="dup-full"><label for="dupName">New event name · required</label><input id="dupName" maxlength="180" required><p class="hint">Enter the new edition name. Dates are never rolled forward automatically.</p></div>
+ <div><label for="dupDate">New date · required</label><input id="dupDate" type="date" required></div>
+ <div><label for="dupZone">Timezone</label><input id="dupZone" required></div>
+ <div class="dup-full"><label for="dupSlug">Unique event identifier · required</label><input id="dupSlug" maxlength="120" required><p class="hint">Used in the URL. Lowercase letters, numbers and hyphens.</p></div>
+ <div class="dup-full"><label for="dupLocation">Location · inherited, editable</label><input id="dupLocation" maxlength="500"></div></div>
+ <h3>Race definitions</h3><p class="hint">Review exact MYLAPS source labels, Mercury keys, public names and starts for the new event.</p>
+ <div id="dupRaceRows" class="dup-races"></div><button type="button" id="dupAddRace" class="secondary small">Add race</button>
+ <label for="dupFeatured" style="margin-top:14px">Featured race for podiums</label><select id="dupFeatured"></select>
+ </div><div><h3>Choose configuration</h3>
+ <label class="dup-check"><input type="checkbox" data-dup-group="races" checked><span><b>Race definitions &amp; featured podium race</b><small>Seed active source races in the editor. No inactive aliases.</small></span></label>
+ <label class="dup-check"><input type="checkbox" data-dup-group="awards" checked><span><b>Divisions &amp; awards</b><small>Overall places, age groups, special divisions and winner-removal rule.</small></span></label>
+ <label class="dup-check"><input type="checkbox" data-dup-group="branding" checked><span><b>Branding</b><small>Independent logo copy and accent color. Review dated artwork.</small></span></label>
+ <label class="dup-check"><input type="checkbox" data-dup-group="display" checked><span><b>Results display preferences</b><small>Field visibility and Recent Finishers settings.</small></span></label>
+ <label class="dup-check"><input type="checkbox" data-dup-group="team" checked><span><b>Team scoring rules</b><small>Rules only; no athletes, teams or scores.</small></span></label>
+ <label class="dup-check"><input type="checkbox" data-dup-group="starts"><span><b>Scheduled start times</b><small>Off by default. Seed TBD; clocks always reset. Manual new times may be entered.</small></span></label>
+ </div></div></div>
+ <div id="dupReview" hidden><div class="dup-grid"><div><h3>New event</h3><dl id="dupIdentity"></dl><h3>Effective configuration</h3><div id="dupSummary"></div></div><div><h3>Fresh start, every time</h3>
+ <div class="dup-safe"><b>PRIVATE · SETUP · REVISION 0</b><br>No spectator listing or Bridge publishing access.</div>
+ <ul class="dup-list"><li>New event and race record IDs</li><li>0 results / participants / snapshots</li><li>No publication or finisher history</li><li>All running clocks hidden and reset</li><li>No Read or Publish grants; no lease</li><li>Exclusive writer lease required</li><li>New duplication audit entry only</li></ul>
+ <div class="operator-guide"><b>Source preserved</b><p>Cider, Spooky and the selected source stay unchanged. Visibility and computer access are separate later actions.</p></div></div></div>
+ <label class="dup-check"><input type="checkbox" id="dupConfirm"><span><b>I reviewed the new identity and effective configuration.</b><small>Create a separate private event. Do not publish or grant access.</small></span></label></div>
+ <div class="dup-safe" id="dupSafety"><b>Always starts private · Setup · revision 0</b><br>No results, participants, history, writer lease, timing-computer access or secrets are copied. Exclusive writer lease remains required.</div>
+ <div class="dup-footer"><span class="hint">Configuration only · separate event</span><div class="actions"><button type="button" id="dupCancel" class="secondary">Cancel</button><button type="button" id="dupBack" class="secondary" hidden>Back to details</button><button type="button" id="dupRetry" class="secondary" hidden>Check creation status</button><button type="button" id="dupNext" class="primary">Review duplicate</button></div></div>
+</section>
   <div id="settingsPanel" class="admin-panel">
   <section class="card">
     <h2>Event Setup</h2>
@@ -686,16 +734,18 @@ async function setRaceClock(raceAliasId,mode,offsetSeconds){
 }
 
 function slugify(value){return String(value||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120)}
-function addNewRaceRow(seed={}){
+let newRaceInputId=0;
+function addNewRaceRow(seed={},container=$('#newRaceRows')){
   const row=document.createElement('div');row.className='race-create-row';
   row.innerHTML='<div><label>MYLAPS source label</label><input data-new-race="source" maxlength="160"></div><div><label>Mercury key</label><input data-new-race="key" maxlength="80" placeholder="5k"></div><div><label>Public race name</label><input data-new-race="display" maxlength="80"></div><div><label>Scheduled start</label><input data-new-race="start" type="time"></div><button type="button" class="danger small" aria-label="Remove race">Remove</button>';
+  for(const input of row.querySelectorAll('input')){input.id='race-input-'+(++newRaceInputId);input.previousElementSibling.htmlFor=input.id;}
   const source=row.querySelector('[data-new-race="source"]'),key=row.querySelector('[data-new-race="key"]'),display=row.querySelector('[data-new-race="display"]'),start=row.querySelector('[data-new-race="start"]');
   source.value=seed.source_label||'';key.value=seed.race_key||'';display.value=seed.display_label||'';start.value=String(seed.scheduled_start_time||'').slice(0,5);
   source.addEventListener('input',()=>{if(!key.dataset.touched)key.value=slugify(source.value);if(!display.dataset.touched)display.value=source.value});
   key.addEventListener('input',()=>{key.dataset.touched='1';key.value=slugify(key.value)});
   display.addEventListener('input',()=>{display.dataset.touched='1'});
-  row.querySelector('button').onclick=()=>{if($('#newRaceRows').children.length>1)row.remove()};
-  $('#newRaceRows').append(row);
+  row.querySelector('button').onclick=()=>{if(container.children.length>1){row.remove();container.dispatchEvent(new Event('input',{bubbles:true}))}};
+  container.append(row);
 }
 function resetExistingRaceForm(){
   for(const id of ['existingRaceSource','existingRaceKey','existingRaceDisplay','existingRaceStart'])$('#'+id).value='';
@@ -740,12 +790,39 @@ function setNewEventMode(active){
   }
   $('#eventSelect').disabled=active;$('#refreshBtn').disabled=active;$('#newEventBtn').disabled=active;$('#currentEventsBtn').disabled=active;$('#pastEventsBtn').disabled=active;
 }
+function pastEventsForDuplication(){
+  return eventCatalog.filter(e=>!eventIsCurrent(e)).slice().sort((a,b)=>
+    String(b.event_date||'').localeCompare(String(a.event_date||''))||
+    String(a.name||'').localeCompare(String(b.name||''))||String(a.slug||'').localeCompare(String(b.slug||'')));
+}
 function openNewEvent(){
+  if(window.MercuryDuplicate?.hasPending()){window.MercuryDuplicate.open();return}
+  setNewEventMode(true);$('#newEventCard').classList.add('hidden');$('#newEventChoice').classList.remove('hidden');
+  $('#pastEventChoice').hidden=true;$('#chooseDuplicateBtn').setAttribute('aria-expanded','false');
+  hideStatus($('#newEventChoiceStatus'));$('#newEventChoiceTitle').focus();
+}
+function showPastEventChoice(){
+  const select=$('#duplicateSourceSelect');select.replaceChildren();
+  const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Select a past event';select.append(placeholder);
+  for(const e of pastEventsForDuplication()){
+    const option=document.createElement('option');option.value=e.slug;option.textContent=e.name+' — '+(e.event_date||'No date');select.append(option);
+  }
+  const empty=select.options.length===1;select.disabled=empty;$('#continueDuplicateBtn').disabled=true;
+  $('#duplicateSourceHelp').textContent=empty?'No past events are available yet. You can create an event from scratch.':'Choose the edition to copy, then review the new date and configuration.';
+  select.onchange=()=>{$('#continueDuplicateBtn').disabled=!select.value};
+  $('#pastEventChoice').hidden=false;$('#chooseDuplicateBtn').setAttribute('aria-expanded','true');select.focus();
+}
+async function continueDuplicateEvent(){
+  const slug=$('#duplicateSourceSelect').value;if(!pastEventsForDuplication().some(e=>e.slug===slug))return;
+  $('#newEventChoice').classList.add('hidden');await window.MercuryDuplicate.open(slug);
+}
+function openScratchEvent(){
+  $('#newEventChoice').classList.add('hidden');
   newSlugTouched=false;setNewEventMode(true);hideStatus($('#createEventStatus'));
   for(const id of ['newEventName','newEventSlug','newEventDate','newEventLocation'])$('#'+id).value='';
   $('#newEventTimezone').value='America/New_York';$('#newEventAccent').value='#b30f2b';$('#newEventPublic').checked=false;$('#newRaceRows').replaceChildren();addNewRaceRow();$('#newEventName').focus();
 }
-function closeNewEvent(){setNewEventMode(false);hideStatus($('#createEventStatus'))}
+function closeNewEvent(){$('#newEventChoice').classList.add('hidden');setNewEventMode(false);hideStatus($('#createEventStatus'));$('#newEventBtn').focus()}
 async function createEvent(){
   const st=$('#createEventStatus');hideStatus(st);
   const races=[...document.querySelectorAll('#newRaceRows .race-create-row')].map(row=>({
@@ -1014,7 +1091,7 @@ async function changePassword(){
 
 // Only an explicit bulk-toggle change rewrites existing row divisions.
 $('#separateGenderAgeGroups').onchange=()=>{for(const row of document.querySelectorAll('[data-age-group-row]')){const divisions=$('#separateGenderAgeGroups').checked?['Male','Female']:['All'];row.dataset.divisions=JSON.stringify(divisions);row.querySelector('[data-age-scope]').textContent=divisions.join(' + ')}};
-$('#newEventBtn').onclick=openNewEvent;$('#cancelNewEventBtn').onclick=closeNewEvent;$('#addRaceBtn').onclick=()=>addNewRaceRow();$('#createEventBtn').onclick=createEvent;$('#addExistingRaceBtn').onclick=()=>setExistingRacePanel(true);$('#cancelExistingRaceBtn').onclick=()=>setExistingRacePanel(false);$('#saveExistingRaceBtn').onclick=addExistingRace;$('#standardAgeGroupsBtn').onclick=useStandardAgeGroups;$('#addAgeGroupBtn').onclick=()=>addAgeGroupRow();$('#clearAgeGroupsBtn').onclick=()=>{$('#ageGroupRows').replaceChildren();updateAgeGroupEmpty()};$('#newEventName').addEventListener('input',()=>{if(!newSlugTouched)$('#newEventSlug').value=slugify($('#newEventName').value)});$('#newEventSlug').addEventListener('input',()=>{newSlugTouched=true;$('#newEventSlug').value=slugify($('#newEventSlug').value)});
+$('#newEventBtn').onclick=openNewEvent;$('#createFromScratchBtn').onclick=openScratchEvent;$('#chooseDuplicateBtn').onclick=showPastEventChoice;$('#continueDuplicateBtn').onclick=continueDuplicateEvent;$('#cancelEventChoiceBtn').onclick=closeNewEvent;$('#cancelNewEventBtn').onclick=closeNewEvent;$('#addRaceBtn').onclick=()=>addNewRaceRow();$('#createEventBtn').onclick=createEvent;$('#addExistingRaceBtn').onclick=()=>setExistingRacePanel(true);$('#cancelExistingRaceBtn').onclick=()=>setExistingRacePanel(false);$('#saveExistingRaceBtn').onclick=addExistingRace;$('#standardAgeGroupsBtn').onclick=useStandardAgeGroups;$('#addAgeGroupBtn').onclick=()=>addAgeGroupRow();$('#clearAgeGroupsBtn').onclick=()=>{$('#ageGroupRows').replaceChildren();updateAgeGroupEmpty()};$('#newEventName').addEventListener('input',()=>{if(!newSlugTouched)$('#newEventSlug').value=slugify($('#newEventName').value)});$('#newEventSlug').addEventListener('input',()=>{newSlugTouched=true;$('#newEventSlug').value=slugify($('#newEventSlug').value)});
 $('#forgotPasswordBtn').onclick=openRecovery;$('#cancelRecoveryBtn').onclick=closeRecovery;$('#recoverPasswordBtn').onclick=recoverPassword;$('#recoveryPasswordVisibility').onclick=()=>setRecoveryPasswordVisible($('#recoveryPassword').type==='password');
 $('#passwordVisibility').onclick=()=>setPasswordVisible($('#password').type==='password');
 $('#existingRaceSource').addEventListener('input',()=>{if(!$('#existingRaceKey').dataset.touched)$('#existingRaceKey').value=slugify($('#existingRaceSource').value);if(!$('#existingRaceDisplay').dataset.touched)$('#existingRaceDisplay').value=$('#existingRaceSource').value});$('#existingRaceKey').addEventListener('input',()=>{$('#existingRaceKey').dataset.touched='1';$('#existingRaceKey').value=slugify($('#existingRaceKey').value)});$('#existingRaceDisplay').addEventListener('input',()=>{$('#existingRaceDisplay').dataset.touched='1'});
@@ -1027,6 +1104,8 @@ window.startMercuryAdmin=()=>{if(token){showApp();loadEvents().catch(()=>showLog
 </script>
 <script src="../assets/qrcode.js"></script>
 <script src="../assets/admin-tools.js"></script>
+<script src="../assets/duplicate-event.js"></script>
+<script src="../assets/delete-event.js"></script>
 <script>startMercuryAdmin();</script>
 </body>
 </html>

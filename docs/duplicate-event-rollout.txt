@@ -1,0 +1,105 @@
+Duplicate Event — LOCAL IMPLEMENTATION, NOT RELEASED
+Baseline: 95ea30b4784daa99f3932aa048e7f6e9ec185ee1
+Branch: feature/duplicate-event
+Owner approved design/defaults via parent; approval does not authorize production rollout.
+
+Architecture
+- New admin-duplicate-event Edge Function authenticates Mercury's existing opaque
+  Admin session and active admin identity, then calls a service-role-only RPC. SQL
+  independently checks the same hashed session and locks/rechecks it before writes.
+- No service key or credentials in browser assets. No result/participant APIs.
+- Additive migration: event_duplicate_operations and event_duplicate_workers
+  (RLS, no public policies), plus
+  three SECURITY INVOKER functions; EXECUTE revoked for PUBLIC/anon/authenticated.
+  Only the service role can use them. Existing policies, credentials and grants
+  are not changed by application runtime. Production migration is not applied.
+- Server computes allowlisted effective configuration; preview returns it before
+  confirmation. Unknown nested awards/team fields block the selected group.
+- Source fingerprint covers event/settings/active aliases and logo metadata.
+  Revalidate before reserve and commit; source drift requires a fresh review.
+- New source-local race keys are retained; row UUID/identity IDs are new. Clocks,
+  results/history/grants/leases never enter the destination write list.
+- Operation UUID is generated once and stored with immutable reviewed payload in
+  tab sessionStorage before sending. Repeated requests return the same event;
+  changing payload with the same UUID fails. A separate authenticated status GET
+  reconciles a dropped response; normal sign-in retains the request.
+- Logo bytes copy to <new-event-uuid>/event-logo.<ext> with no upsert. Readback SHA256
+  must equal source before commit. No source asset changes. Settings, event,
+  aliases, lease-required policy, provenance and operation completion commit in
+  one database transaction. No event is exposed during reservation or asset copy.
+- Storage and PostgreSQL do not share a distributed transaction. A copied asset
+  from an interrupted request stays durably owned by its pending operation, with
+  no event created; resume reuses it. Cancel marks cleanup state before deleting
+  the independent asset and never deletes a completed event. Cleanup failures
+  remain recorded and retryable. Operations are retained, never auto-purged.
+
+Known operational limits / release gates
+1. Hosted Supabase staging acceptance remains REQUIRED: real existing Admin auth,
+   RLS/REST RPC grants, Storage 400/404 semantics, SVG/PNG/JPEG/WebP copies, cache
+   behavior, Edge runtime limits, cancellation/retry interleavings and public API
+   exclusion. Local integration uses real PostgreSQL 17 with schema-shaped fixtures,
+   but Storage/Auth transports are fakes. Do not claim hosted E2E acceptance.
+2. Abandoned operation/asset inventory needs an operator cleanup procedure. Review
+   pending/cleanup_pending AND cancelled operations before removing tracked assets.
+   Active/unknown copy workers block a final cancelled state and asset deletion;
+   the UI retains the request. Never force-settle an unknown writer merely because
+   time passed. Prove it is stopped and reconcile its exact object before cleanup.
+   Never delete source logos or completed-event paths. No cleanup job is auto-enabled in this patch.
+3. Full database schema is represented by inspected public column metadata in the
+   fixture harness; production triggers/FKs/RLS and storage schema integration
+   require staging verification against the current real schema.
+4. Safe retries are scoped to the originating tab sessionStorage. Another tab/new
+   device must recover via operation ID and slug rather than invent a new request.
+   Do not clear site data during an uncertain create. A support-side operation
+   lookup remains needed if the original tab/sessionStorage is lost.
+5. Existing create-event and settings saves remain separate-write legacy flows.
+   Duplicate Event alone uses the new atomic transaction. Current creation and
+   awards/result behaviors passed existing offline regression tests.
+
+Reproducible isolated tests
+- PostgreSQL 17, Node 26, psql; no npm production dependencies.
+- Initialize a NEW temporary cluster in /tmp, bind 127.0.0.1:55439 only, and create
+  a database named mercury_duplicate_fixture. Never point tests at production.
+- In that cluster only create roles anon/authenticated and service_role BYPASSRLS.
+  Apply supabase/tests/fixture-schema.sql, then the migration to that fixture DB.
+- DUPLICATE_TEST_PORT=55439 node supabase/tests/duplicate-event.test.mjs
+  Harness refuses other port/database names and uses synthetic source records.
+- node mercury-road-race-live-production/tests/duplicate-event-browser.cjs
+  Set PLAYWRIGHT_PATH to installed playwright package if necessary; CHROME may
+  point to a local Chrome binary. Every request intercepted; no production API.
+  QA_OUTPUT chooses screenshot/report directory.
+- node mercury-road-race-live-production/tests/regressions.cjs
+  Existing offline regression suite blocks HTTP(S).
+- Pinned local tool: deno@2.9.6 check supabase/functions/admin-duplicate-event/index.ts
+- git diff --check; compile inline Admin scripts with node:vm.Script.
+
+Proposed rollout sequence — requires separate owner authorization
+A. Review local branch, SQL privilege audit and screenshots against approved mockup.
+   Reconcile/rebase on then-current production main without overwriting other work.
+B. Provision/select an isolated authorized Supabase staging target. Apply additive
+   migration there, deploy new function there and configure matching preview Admin.
+   Existing Mercury opaque auth is manually validated inside the function, so the
+   function verify_jwt=false setting is deliberate, matching the existing Admin
+   auth scheme; this is not an unauthenticated endpoint.
+C. Execute real fixture acceptance: Cider-like two-race awards including false
+   remove-overall, Spooky-like single timed race/no age groups, all copy options,
+   malformed nested configuration, source drift, conflict races/slugs, expired
+   session, lost HTTP responses, real logo copy/cleanup, concurrent create/cancel.
+   Prove anonymous public event/results APIs cannot expose private destination.
+D. Owner reviews evidence and authorizes exact production migration/function/UI
+   release. Apply additive migration BEFORE deploying new endpoint and frontend.
+   New endpoint may deploy before UI; old UI remains compatible. No real event is
+   created as part of release. Read-only verify Cider and Spooky remain unchanged.
+E. Monitor only new endpoint failures and operation states. First real duplicate
+   is a separately authorized operator action; public visibility and grants remain
+   distinct later decisions. Do not notify Connor without explicit authorization.
+
+Rollback
+- Restore previous Admin frontend; disable/remove only the new endpoint if needed.
+- Keep additive operations table/functions and tracked assets until every pending
+  or completed operation is reconciled. Do not drop schema or delete created
+  event records as automatic rollback. No existing event, credential, grant,
+  source logo or production result is modified by this rollback plan.
+
+Read docs/duplicate-event-staging-review.txt for verified absence of a hosted
+Mercury staging target, bounded proposed operations and the second review fixes.
