@@ -206,6 +206,7 @@ dialog h3{font-size:28px;margin:0 0 20px}
         </div>
       </div>
     </section>
+    <div id="sponsorTop" hidden></div>
     <div class="summary-grid" id="summaryGrid">
       <article class="stat finishers-stat"><span class="stat-label">Finishers</span><strong id="finishers">0</strong></article>
       <article class="stat podium-stat male-podium"><span class="stat-label" id="malePodiumLabel">Male Top 3</span><div class="podium-list" id="malePodium"></div></article>
@@ -287,11 +288,14 @@ dialog h3{font-size:28px;margin:0 0 20px}
 
       <div class="notice"><div class="notice-icon">i</div><div><strong>Results are preliminary while the race is in progress.</strong><p>Times, places, and divisions can change as Mercury Timing reviews live scoring data.</p></div></div>
     </section>
+    <div id="sponsorBottom" hidden></div>
     </div>
   </div>
 </main>
 <footer><div class="shell footer-inner"><span>Powered by Mercury Timing Systems</span><span>Mercury Road Race Live • v0.11 R31</span><span id="lastRevision">Feed revision 0</span></div></footer>
 <dialog id="runnerDialog"><button class="dialog-close" id="closeDialog" aria-label="Close">×</button><p class="eyebrow" style="color:var(--accent)">Runner Details</p><h3 id="dialogName"></h3><div id="dialogGrid" class="dialog-grid"></div></dialog>
+<link rel="stylesheet" href="assets/sponsors.css">
+<script src="assets/sponsors.js"></script>
 <script src="assets/event-history.js"></script>
 <script>
 const SUPABASE_URL="https://wajusbsyouyufpccixol.supabase.co";
@@ -628,6 +632,7 @@ function render(){
  search.disabled=!shown('showName')&&!shown('showBib');if(search.disabled)search.value='';
  search.placeholder=search.disabled?'Search unavailable':shown('showName')&&shown('showBib')?'Search runner or bib':shown('showName')?'Search runner':'Search bib';
 
+ window.MercurySponsors.render(snapshot.sponsor);
  const accent=snapshot.branding?.accentColor||"#b30f2b";document.documentElement.style.setProperty("--accent",accent);
  const ev=snapshot.event||{};$("#eventName").textContent=ev.name||"Mercury Road Race Live";$("#eventMeta").textContent=[ev.location,ev.date,ev.startTime].filter(Boolean).join(" • ")||"Live road-race results";
  const selectedRace=races.find(r=>r.key===currentRaceKey);updateRaceClock(races);$("#resultsTitle").textContent=selectedRace?`${raceDisplay(selectedRace.label||selectedRace.key)} Results`:ev.distance?`${ev.distance} Results`:"Results";document.title=ev.name?`${ev.name} — Mercury Road Race Live`:"Mercury Road Race Live";

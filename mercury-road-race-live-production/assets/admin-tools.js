@@ -3,8 +3,9 @@
   'use strict';
   const el=id=>document.getElementById(id);
   let epoch=0,slug='',eventData=null,verified=null,verifyController=null,supportController=null;
-  let sponsorURL='',logoEpoch=0,supportCache=null,copyBusy=false,shareBusy=false;
-  const draft={name:'',website:'',alt:'',results:true,print:false};
+  let sponsorBusy=false;const sponsors=Array.from({length:3},()=>({name:'',website:'',alt:'',url:'',file:null,removeLogo:false,generation:0}));
+  let logoEpoch=0,supportCache=null,copyBusy=false,shareBusy=false;
+  const draft={results:false,top:false,print:false};
   const isLocal=['localhost','127.0.0.1','[::1]'].includes(location.hostname);
   const shareActions=['copyEventLink','shareEventLink','previewSign'];
   function feedback(id,msg,bad=false){const n=el(id);n.textContent=msg;n.dataset.error=String(bad);n.style.color=bad?'var(--bad)':'';}
@@ -20,20 +21,18 @@
   }
   function timedController(){const c=new AbortController();const timer=setTimeout(()=>c.abort(),10000);return {c,finish:()=>clearTimeout(timer)};}
   function clear(){
-    epoch++;slug='';eventData=null;verified=null;supportCache=null;verifyController?.abort();supportController?.abort();logoEpoch++;
+    el('saveSponsor').disabled=true;epoch++;slug='';eventData=null;verified=null;supportCache=null;verifyController?.abort();supportController?.abort();logoEpoch++;
     copyBusy=false;shareBusy=false;setShareEnabled(false);el('eventQr').replaceChildren();el('shareLink').value='';el('shareName').textContent='No verified public event';el('shareMeta').textContent='';
     feedback('shareState','Choose an event to verify its public link.');feedback('shareFeedback','');
     el('verifyEventLink').disabled=true;el('refreshSupport').disabled=true;
     for(const id of ['supportEvent','supportSnapshot','supportClients','supportActivity'])el(id).replaceChildren();
     feedback('supportState','Choose an event.');el('supportContext').textContent='Choose an event.';
-    Object.assign(draft,{name:'',website:'',alt:'',results:true,print:false});if(sponsorURL)URL.revokeObjectURL(sponsorURL);sponsorURL='';
-    for(const id of ['sponsorName','sponsorWebsite','sponsorAlt','sponsorLogo'])el(id).value='';
-    el('sponsorResults').checked=true;el('sponsorPrint').checked=false;
+    loadSponsor({});
     el('sponsorEventName').textContent='Choose an event';el('sponsorEventMeta').textContent='';feedback('sponsorError','');renderSponsor();closePrint();
   }
   async function eventChanged(value,data){
     if(!value||data?.event?.slug!==value)return;
-    slug=value;eventData=data;el('verifyEventLink').disabled=false;el('refreshSupport').disabled=false;
+    slug=value;eventData=data;loadSponsor(data.settings?.sponsor||{});el('saveSponsor').disabled=sponsorBusy;el('verifyEventLink').disabled=false;el('refreshSupport').disabled=false;
     el('sponsorEventName').textContent=data.event.name||value;el('sponsorEventMeta').textContent=[data.event.event_date,data.event.location].filter(Boolean).join(' / ');
     el('supportContext').textContent=data.event.name||value;
     if(document.querySelector('[data-panel="supportPanel"]').getAttribute('aria-pressed')==='true')refreshSupport();
@@ -75,31 +74,55 @@
     catch(e){if(generation===epoch&&verified===v){if(e.name==='AbortError')feedback('shareFeedback','Share cancelled. The event link is unchanged.');else manualCopy('Sharing could not open. Copy the selected event link.');}}
     finally{if(generation===epoch){shareBusy=false;el('shareEventLink').disabled=!verified;}}
   }
-  function sponsorBlock(forPrint=false){
-    if(!draft.name.trim()||!(forPrint?draft.print:draft.results))return null;
-    const block=document.createElement('section');block.className='sponsor-block';const label=document.createElement('small');label.textContent=forPrint?'Supported by':'Event sponsor';block.append(label);
-    const row=document.createElement('div');row.className='sponsor-identity';block.append(row);
-    if(sponsorURL){const img=document.createElement('img');img.src=sponsorURL;img.alt=draft.alt.trim()||draft.name.trim()+' logo';img.onerror=()=>img.remove();row.append(img);}
-    const url=safeWebsite(draft.website);const name=document.createElement(url&&!forPrint?'a':'strong');name.textContent=draft.name.trim();
-    if(url&&!forPrint){name.href=url;name.target='_blank';name.rel='noopener noreferrer';}
-    row.append(name);return block;
+  function sponsorBlock(forPrint=false,atTop=false){
+    if(!(forPrint?draft.print:atTop?draft.top:draft.results))return null;
+    const count=Number(el('sponsorCount').value),active=sponsors.slice(0,count).filter(s=>s.name.trim()||s.url);
+    if(!active.length)return null;
+    const block=document.createElement('section');block.className='sponsor-block';
+    const label=document.createElement('small');label.textContent=forPrint?'Supported by':active.length===1?'Event sponsor':'Event sponsors';block.append(label);
+    const group=document.createElement('div');group.className='sponsor-preview-group';group.dataset.count=String(active.length);block.append(group);
+    for(const s of active){
+      const row=document.createElement('div');row.className='sponsor-identity';group.append(row);
+      if(s.url){const img=document.createElement('img');img.src=s.url;img.alt=s.alt||s.name+' logo';row.append(img);}
+      const url=safeWebsite(s.website),name=document.createElement(url&&!forPrint?'a':'strong');name.textContent=s.name;
+      if(url&&!forPrint){name.href=url;name.target='_blank';name.rel='noopener noreferrer';}row.append(name);
+    }return block;
   }
   function renderSponsor(){
-    const block=sponsorBlock();el('sponsorPlacement').replaceChildren(...(block?[block]:[]));el('sponsorEmpty').hidden=!!block;
+    const top=sponsorBlock(false,true),bottom=sponsorBlock();
+    el('sponsorTopPlacement').replaceChildren(...(top?[top]:[]));el('sponsorPlacement').replaceChildren(...(bottom?[bottom]:[]));el('sponsorEmpty').hidden=!!(top||bottom);
   }
   function updateDraft(){
-    for(const [field,id] of [['name','sponsorName'],['website','sponsorWebsite'],['alt','sponsorAlt']])draft[field]=el(id).value;
-    draft.results=el('sponsorResults').checked;draft.print=el('sponsorPrint').checked;
-    const invalid=safeWebsite(draft.website)===null;el('sponsorWebsite').setAttribute('aria-invalid',String(invalid));
-    feedback('sponsorError',invalid?'Use a complete http:// or https:// address. This preview is unlinked.':'Preview only. Nothing has been published.',invalid);renderSponsor();closePrint();
+    const count=Number(el('sponsorCount').value);let invalid=false;
+    sponsors.forEach((s,i)=>{el('sponsorFields'+i).hidden=i>=count;for(const [k,id] of [['name','sponsorName'],['website','sponsorWebsite'],['alt','sponsorAlt']])s[k]=el(id+i).value;const bad=i<count&&safeWebsite(s.website)===null;el('sponsorWebsite'+i).setAttribute('aria-invalid',String(bad));invalid ||= bad;});
+    draft.top=el('sponsorTop').checked;draft.results=el('sponsorResults').checked;draft.print=el('sponsorPrint').checked;
+    feedback('sponsorError',invalid?'Use a complete http:// or https:// website address.':'Preview updated. Click Save sponsors to publish.',invalid);renderSponsor();closePrint();return !invalid;
   }
-  async function logoSelected(){
-    const n=++logoEpoch,file=el('sponsorLogo').files[0];if(!file)return;
-    if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>2*1024*1024){el('sponsorLogo').value='';feedback('sponsorError','Choose a PNG, JPEG or WebP logo under 2 MB.',true);return;}
+  async function logoSelected(i){
+    const s=sponsors[i],n=++s.generation,file=el('sponsorLogo'+i).files[0];if(!file)return;
+    if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>2*1024*1024){el('sponsorLogo'+i).value='';feedback('sponsorError','Choose a PNG, JPEG or WebP logo under 2 MB.',true);return;}
     const url=URL.createObjectURL(file),img=new Image();img.src=url;
-    try{await img.decode();if(n!==logoEpoch){URL.revokeObjectURL(url);return;}if(img.naturalWidth>8000||img.naturalHeight>8000)throw new Error();
-      if(sponsorURL)URL.revokeObjectURL(sponsorURL);sponsorURL=url;updateDraft();
-    }catch{URL.revokeObjectURL(url);if(n===logoEpoch)feedback('sponsorError','The logo could not be read. The sponsor name remains available.',true);}
+    try{await img.decode();if(n!==s.generation){URL.revokeObjectURL(url);return;}if(img.naturalWidth>8000||img.naturalHeight>8000)throw Error();if(s.url.startsWith('blob:'))URL.revokeObjectURL(s.url);s.url=url;s.file=file;s.removeLogo=false;updateDraft();}
+    catch{URL.revokeObjectURL(url);if(n===s.generation)feedback('sponsorError','The logo could not be read.',true);}
+  }
+  function loadSponsor(saved){
+    const items=Array.isArray(saved.items)?saved.items:[];el('sponsorCount').value=String(Math.max(1,Math.min(3,items.length)));
+    sponsors.forEach((s,i)=>{s.generation++;if(s.url.startsWith('blob:'))URL.revokeObjectURL(s.url);const item=items[i]||{};
+      Object.assign(s,{name:item.name||'',website:item.website||'',alt:item.alt||'',file:null,removeLogo:false,url:item.logoPath?API.replace(/\/functions\/v1\/?$/,'')+'/storage/v1/object/public/event-assets/'+item.logoPath.split('/').map(encodeURIComponent).join('/'):''});
+      for(const [k,id] of [['name','sponsorName'],['website','sponsorWebsite'],['alt','sponsorAlt']])el(id+i).value=s[k];el('sponsorLogo'+i).value='';el('sponsorFields'+i).hidden=i>=Number(el('sponsorCount').value);
+    });
+    draft.top=saved.top===true;draft.results=saved.bottom===true;draft.print=saved.print===true;
+    el('sponsorTop').checked=draft.top;el('sponsorResults').checked=draft.results;el('sponsorPrint').checked=draft.print;renderSponsor();
+  }
+  async function saveSponsor(){
+    if(!slug||sponsorBusy||!updateDraft())return;
+    const generation=epoch,target=slug,form=new FormData(),items=sponsors.slice(0,Number(el('sponsorCount').value)).map((s,i)=>{if(s.file)form.append('file'+i,s.file);return {name:s.name,website:s.website,alt:s.alt,removeLogo:s.removeLogo};});
+    form.append('sponsor',JSON.stringify({items,top:draft.top,bottom:draft.results,print:draft.print}));
+    sponsorBusy=true;el('saveSponsor').disabled=true;feedback('sponsorError','Saving sponsors…');
+    try {const response=await req(API+'/admin-event-settings?action=sponsor&slug='+encodeURIComponent(target),{method:'POST',headers:authHeaders(false),body:form});
+      if(generation!==epoch||target!==slug)return;loadSponsor(response.sponsor);feedback('sponsorError','Sponsors saved. Their selected placements are available on the results page.');
+    } catch(e){if(generation===epoch)feedback('sponsorError','Sponsors not saved: '+e.message,true);}
+    finally{sponsorBusy=false;el('saveSponsor').disabled=!slug;}
   }
   const dialog=document.createElement('dialog');dialog.id='printDialog';dialog.setAttribute('aria-labelledby','printTitle');
   dialog.innerHTML='<div class="print-controls"><strong id="printTitle">Printable sign preview</strong><label for="paperSize">Paper</label><select id="paperSize"><option value="Letter">Letter</option><option value="A4">A4</option></select><button type="button" class="primary" id="printSign">Print sign</button><button type="button" class="secondary" id="closeSign">Close</button><span id="printFeedback" role="status"></span></div><article id="printSheet" class="sign-sheet"></article>';
@@ -173,8 +196,8 @@
   dialog.addEventListener('close',()=>{if(!dialog.open){printVersion=null;pageStyle.textContent='';document.body.classList.remove('mercury-printing');}});
   window.addEventListener('beforeprint',()=>{if(dialog.open&&verified&&printVersion===verified)document.body.classList.add('mercury-printing');});
   window.addEventListener('afterprint',()=>document.body.classList.remove('mercury-printing'));
-  el('previewSponsor').onclick=updateDraft;el('sponsorLogo').onchange=logoSelected;
-  el('removeSponsorLogo').onclick=()=>{logoEpoch++;if(sponsorURL)URL.revokeObjectURL(sponsorURL);sponsorURL='';el('sponsorLogo').value='';updateDraft();};
+  el('saveSponsor').onclick=saveSponsor;el('previewSponsor').onclick=updateDraft;el('sponsorCount').onchange=updateDraft;
+  for(let i=0;i<3;i++){el('sponsorLogo'+i).onchange=()=>logoSelected(i);el('removeSponsorLogo'+i).onclick=()=>{const s=sponsors[i];s.generation++;if(s.url.startsWith('blob:'))URL.revokeObjectURL(s.url);s.url='';s.file=null;s.removeLogo=true;el('sponsorLogo'+i).value='';updateDraft();};}
   el('refreshSupport').onclick=refreshSupport;
   window.MercuryTools={clear,eventChanged};clear();
 })();

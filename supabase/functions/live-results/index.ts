@@ -163,7 +163,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const settingsRes = await fetch(
-    `${supabaseUrl}/rest/v1/event_settings?select=timezone,show_gun_time,show_chip_time,show_pace,event_logo_path,event_logo_alt,accent_color,show_overall_place,show_bib,show_name,show_gender,show_age,show_age_group,show_grade,grade_source,show_team,show_recent_finishers,recent_finishers_default_count,show_entry_list,show_podium,podium_mode,podium_configs,featured_race_key,course_records,awards,team_scoring&event_id=eq.${event.id}&limit=1`,
+    `${supabaseUrl}/rest/v1/event_settings?select=sponsor,timezone,show_gun_time,show_chip_time,show_pace,event_logo_path,event_logo_alt,accent_color,show_overall_place,show_bib,show_name,show_gender,show_age,show_age_group,show_grade,grade_source,show_team,show_recent_finishers,recent_finishers_default_count,show_entry_list,show_podium,podium_mode,podium_configs,featured_race_key,course_records,awards,team_scoring&event_id=eq.${event.id}&limit=1`,
     { headers: h },
   );
   if (settingsRes.ok) {
@@ -332,6 +332,13 @@ Deno.serve(async (req: Request) => {
       startTime: event.start_time_label,
       distance: event.distance_label,
     },
+    sponsor: {
+      top: settings?.sponsor?.top === true, bottom: settings?.sponsor?.bottom === true,
+      items: (Array.isArray(settings?.sponsor?.items) ? settings.sponsor.items.slice(0,3) : []).map((s:any)=>({
+        name:String(s.name||''),website:String(s.website||''),alt:String(s.alt||''),
+        logoUrl:s.logoPath ? `${supabaseUrl}/storage/v1/object/public/event-assets/${String(s.logoPath).split('/').map(encodeURIComponent).join('/')}` : null,
+      })),
+    },
     branding: {
       eventLogoUrl,
       eventLogoAlt: settings?.event_logo_alt ?? null,
@@ -369,5 +376,6 @@ Deno.serve(async (req: Request) => {
     results,
   });
 });
+
 
 
