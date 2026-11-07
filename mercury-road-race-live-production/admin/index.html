@@ -381,22 +381,41 @@ button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:poin
     </div><button type="button" class="secondary" id="verifyEventLink">Check public link again</button>
   </section>
   <section id="sponsorPanel" class="admin-panel" hidden>
-    <h1>Branding &amp; sponsors</h1><p class="sub">Local draft preview. Sponsor changes are not saved or published.</p>
+    <h1>Branding &amp; sponsors</h1><p class="sub">Save sponsor details and choose where they appear on this event’s results page.</p>
     <div class="sponsor-grid">
       <section class="card"><h2>Sponsor placement</h2>
-        <label for="sponsorName">Sponsor name</label><input id="sponsorName" maxlength="100">
-        <label for="sponsorWebsite">Website (optional)</label><input id="sponsorWebsite" type="url" placeholder="https://" maxlength="2048" aria-describedby="sponsorError">
-        <label for="sponsorLogo">Logo (optional PNG, JPEG or WebP)</label><input id="sponsorLogo" type="file" accept="image/png,image/jpeg,image/webp">
-        <label for="sponsorAlt">Logo description</label><input id="sponsorAlt" maxlength="160">
+        <label for="sponsorCount">Number of sponsors</label><select id="sponsorCount"><option value="1">1 sponsor</option><option value="2">2 sponsors</option><option value="3">3 sponsors</option></select>
+        <fieldset id="sponsorFields0" ><legend>Sponsor 1</legend>
+          <label for="sponsorName0">Sponsor name</label><input id="sponsorName0" maxlength="100">
+          <label for="sponsorWebsite0">Website (optional)</label><input id="sponsorWebsite0" type="url" placeholder="https://" maxlength="2048">
+          <label for="sponsorLogo0">Logo (PNG, JPEG or WebP, up to 2 MB)</label><input id="sponsorLogo0" type="file" accept="image/png,image/jpeg,image/webp">
+          <label for="sponsorAlt0">Logo description</label><input id="sponsorAlt0" maxlength="160">
+          <button type="button" class="secondary" id="removeSponsorLogo0">Remove logo</button>
+        </fieldset>
+        <fieldset id="sponsorFields1" hidden><legend>Sponsor 2</legend>
+          <label for="sponsorName1">Sponsor name</label><input id="sponsorName1" maxlength="100">
+          <label for="sponsorWebsite1">Website (optional)</label><input id="sponsorWebsite1" type="url" placeholder="https://" maxlength="2048">
+          <label for="sponsorLogo1">Logo (PNG, JPEG or WebP, up to 2 MB)</label><input id="sponsorLogo1" type="file" accept="image/png,image/jpeg,image/webp">
+          <label for="sponsorAlt1">Logo description</label><input id="sponsorAlt1" maxlength="160">
+          <button type="button" class="secondary" id="removeSponsorLogo1">Remove logo</button>
+        </fieldset>
+        <fieldset id="sponsorFields2" hidden><legend>Sponsor 3</legend>
+          <label for="sponsorName2">Sponsor name</label><input id="sponsorName2" maxlength="100">
+          <label for="sponsorWebsite2">Website (optional)</label><input id="sponsorWebsite2" type="url" placeholder="https://" maxlength="2048">
+          <label for="sponsorLogo2">Logo (PNG, JPEG or WebP, up to 2 MB)</label><input id="sponsorLogo2" type="file" accept="image/png,image/jpeg,image/webp">
+          <label for="sponsorAlt2">Logo description</label><input id="sponsorAlt2" maxlength="160">
+          <button type="button" class="secondary" id="removeSponsorLogo2">Remove logo</button>
+        </fieldset>
+        <div class="switchline"><input id="sponsorTop" type="checkbox"><label for="sponsorTop">Show below race heading</label></div>
         <div class="switchline"><input id="sponsorResults" type="checkbox" checked><label for="sponsorResults">Show below results</label></div>
         <div class="switchline"><input id="sponsorPrint" type="checkbox"><label for="sponsorPrint">Include on printed sign</label></div>
         <p id="sponsorError" class="hint" role="status" aria-live="polite"></p>
-        <div class="actions"><button type="button" class="primary" id="previewSponsor">Preview changes</button><button type="button" class="secondary" id="removeSponsorLogo">Remove logo</button></div>
-        <p class="hint">Drafts clear on event change, admin refresh or sign-out. Existing event branding is unchanged.</p>
+        <div class="actions"><button type="button" class="primary" id="saveSponsor">Save sponsors</button><button type="button" class="secondary" id="previewSponsor">Preview changes</button></div>
+        <p class="hint">Click Save sponsors to publish your changes. Check both placement options to show the sponsor group in both locations.</p>
       </section>
       <section class="card"><h2>Public placement preview</h2><p class="hint">Illustrative preview only. No participant data is displayed.</p>
         <div class="preview-hero"><h3 id="sponsorEventName">Choose an event</h3><p id="sponsorEventMeta"></p></div>
-        <div class="preview-results"><h3>Results</h3><p>Race results remain above the sponsor area.</p></div>
+        <div id="sponsorTopPlacement"></div><div class="preview-results"><h3>Results</h3><p>Race results appear between the selected sponsor placements.</p></div>
         <div id="sponsorPlacement"></div><p id="sponsorEmpty" class="hint">No sponsor configured. The sponsor area is omitted.</p>
       </section>
     </div>
