@@ -92,7 +92,22 @@
     const top=sponsorBlock(false,true),bottom=sponsorBlock();
     el('sponsorTopPlacement').replaceChildren(...(top?[top]:[]));el('sponsorPlacement').replaceChildren(...(bottom?[bottom]:[]));el('sponsorEmpty').hidden=!!(top||bottom);
   }
+  function updateLogoGuidance(){
+    const count=Number(el('sponsorCount').value);
+    const sizes={1:['1800 × 300','6:1','One centered, wide sponsor area'],2:['900 × 300','3:1','Two equal columns'],3:['600 × 300','2:1','Three equal columns']};
+    const [pixels,ratio,layout]=sizes[count]||sizes[1];
+    let hint=el('sponsorSizeGuide');
+    if(!hint){hint=document.createElement('p');hint.id='sponsorSizeGuide';hint.className='hint';hint.setAttribute('aria-live','polite');el('sponsorCount').insertAdjacentElement('afterend',hint);}
+    hint.textContent=layout+'. Suggested size per logo: '+pixels+' pixels ('+ratio+' width to height). Crop extra white or transparent margins so the artwork fills its image. Transparent PNG is recommended. These are suggestions, not upload requirements: other shapes remain proportional without cropping or stretching. On phones, sponsors stack and scale down.';
+    for(let i=0;i<3;i++){
+      const input=el('sponsorLogo'+i);input.setAttribute('aria-describedby','sponsorLogoGuide'+i);
+      let note=el('sponsorLogoGuide'+i);
+      if(!note){note=document.createElement('p');note.id='sponsorLogoGuide'+i;note.className='hint';input.insertAdjacentElement('afterend',note);}
+      note.textContent='Suggested: '+pixels+' px • '+ratio+' aspect ratio • up to 2 MB.';
+    }
+  }
   function updateDraft(){
+    updateLogoGuidance();
     const count=Number(el('sponsorCount').value);let invalid=false;
     sponsors.forEach((s,i)=>{el('sponsorFields'+i).hidden=i>=count;for(const [k,id] of [['name','sponsorName'],['website','sponsorWebsite'],['alt','sponsorAlt']])s[k]=el(id+i).value;const bad=i<count&&safeWebsite(s.website)===null;el('sponsorWebsite'+i).setAttribute('aria-invalid',String(bad));invalid ||= bad;});
     draft.top=el('sponsorTop').checked;draft.results=el('sponsorResults').checked;draft.print=el('sponsorPrint').checked;
@@ -112,7 +127,7 @@
       for(const [k,id] of [['name','sponsorName'],['website','sponsorWebsite'],['alt','sponsorAlt']])el(id+i).value=s[k];el('sponsorLogo'+i).value='';el('sponsorFields'+i).hidden=i>=Number(el('sponsorCount').value);
     });
     draft.top=saved.top===true;draft.results=saved.bottom===true;draft.print=saved.print===true;
-    el('sponsorTop').checked=draft.top;el('sponsorResults').checked=draft.results;el('sponsorPrint').checked=draft.print;renderSponsor();
+    el('sponsorTop').checked=draft.top;el('sponsorResults').checked=draft.results;el('sponsorPrint').checked=draft.print;updateLogoGuidance();renderSponsor();
   }
   async function saveSponsor(){
     if(!slug||sponsorBusy||!updateDraft())return;
